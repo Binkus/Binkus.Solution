@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="AvaloniaProject">
+    <option name="projectPerEditor">
+      <map>
+        <entry key="DDS/DDS/App.axaml" value="DDS/DDS.Desktop/DDS.Desktop.csproj" />
+        <entry key="DDS/DDS/Views/MainView.axaml" value="DDS/DDS.Desktop/DDS.Desktop.csproj" />
+        <entry key="DDS/DDS/Views/MainWindow.axaml" value="DDS/DDS.Desktop/DDS.Desktop.csproj" />
+        <entry key="DDS/DDS/Views/SecondTestView.axaml" value="DDS/DDS.Desktop/DDS.Desktop.csproj" />
+        <entry key="DDS/DDS/Views/TestView.axaml" value="DDS/DDS.Desktop/DDS.Desktop.csproj" />
+      </map>
+    </option>
+  </component>
+</project>

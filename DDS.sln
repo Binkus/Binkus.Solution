@@ -10,6 +10,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Web", "DDS\DDS.Web\DDS.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS", "DDS\DDS\DDS.csproj", "{2B4CCA97-7AE9-49A8-AFDB-2D8CB72F224B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Mobile", "DDS.Mobile\DDS.Mobile.csproj", "{6C2FB1A8-C309-4B12-B859-5447B09A5DBF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -40,5 +42,9 @@ Global
 		{2B4CCA97-7AE9-49A8-AFDB-2D8CB72F224B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2B4CCA97-7AE9-49A8-AFDB-2D8CB72F224B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2B4CCA97-7AE9-49A8-AFDB-2D8CB72F224B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6C2FB1A8-C309-4B12-B859-5447B09A5DBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6C2FB1A8-C309-4B12-B859-5447B09A5DBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6C2FB1A8-C309-4B12-B859-5447B09A5DBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6C2FB1A8-C309-4B12-B859-5447B09A5DBF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

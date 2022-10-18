@@ -18,12 +18,20 @@ namespace DDS
         {
             if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
             {
-                var view = new MainView { DataContext = new MainViewModel() };
-                
-                desktop.MainWindow = new MainWindow
-                {
-                    DataContext = new MainWindowViewModel { MainView = view }
-                };
+                var provider = Globals.ServiceProvider;
+
+                var view = provider.GetRequiredService<MainView>();
+
+
+                desktop.MainWindow = provider.GetRequiredService<MainWindow>();
+
+
+                // var view = new MainView { DataContext = new MainViewModel() };
+                //
+                // desktop.MainWindow = new MainWindow
+                // {
+                //     DataContext = new MainWindowViewModel { MainView = view }
+                // };
             }
             else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
             {

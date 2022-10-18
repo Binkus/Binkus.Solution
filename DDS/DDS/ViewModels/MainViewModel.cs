@@ -2,18 +2,28 @@
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
+using DDS.Services;
 using ReactiveUI.Fody.Helpers;
 
 namespace DDS.ViewModels
 {
     public partial class MainViewModel : ViewModelBase, IScreen
     {
+        private readonly IAvaloniaEssentials _avaloniaEssentials;
+
         public string Greeting => "Greetings from MainView";
 
         public RoutingState Router { get; } = new();
 
-        public MainViewModel()
+        public MainViewModel(IAvaloniaEssentials? avaloniaEssentials = null)
         {
+            _avaloniaEssentials ??= avaloniaEssentials ?? Globals.ServiceProvider.GetService<IAvaloniaEssentials>()!;
+            
+            // if (Globals.IsClassicDesktopStyleApplicationLifetime)
+            // {
+            //     _avaloniaEssentials = new AvaloniaEssentialsDesktopService();
+            // }
+            
             HostScreen = this;
             
             GoTest = ReactiveCommand.CreateFromObservable(
@@ -36,5 +46,16 @@ namespace DDS.ViewModels
         public ReactiveCommand<Unit, IRoutableViewModel?> GoBack { get; } 
         public ReactiveCommand<Unit, IRoutableViewModel> GoTest { get; }
         public ReactiveCommand<Unit, IRoutableViewModel> GoSecondTest { get; }
+
+
+        [RelayCommand]
+        async Task OpenFilePicker()
+        {
+            var fileResult = await _avaloniaEssentials.FilePickerAsync();
+            var fullPath = fileResult.FullPath;
+            Console.WriteLine($"fullPath={fullPath}");
+
+            // "/data/data/com.CompanyName.DDS/cache/2203693cc04e0bf9499e13/fddcfde940edf0449f1/Screenshot_20221018-034552.png"
+        }
     }
 }

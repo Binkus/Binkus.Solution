@@ -1,0 +1,57 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>net6.0-android</TargetFramework>
+        <LangVersion>latest</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <WarningsAsErrors>Nullable</WarningsAsErrors>
+        <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+        <ApplicationId>com.CompanyName.DDS</ApplicationId>
+        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <AndroidPackageFormat>apk</AndroidPackageFormat>
+        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+<!--        <UseMaui>true</UseMaui>-->
+<!--        <UsingMauiEssentials>true</UsingMauiEssentials>--> <!-- not working -->
+        <UseMauiEssentials>true</UseMauiEssentials>
+<!--        <AndroidUseAapt2>True</AndroidUseAapt2>-->
+<!--        <AndroidPackageFormats>aab;apk</AndroidPackageFormats>-->
+<!--        <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>-->
+<!--        <AndroidDexTool>r8</AndroidDexTool>-->
+<!--        <AndroidLinkTool>r8</AndroidLinkTool>-->
+    </PropertyGroup>
+    <ItemGroup>
+        <AndroidResource Include="Icon.png">
+            <Link>Resources\drawable\Icon.png</Link>
+        </AndroidResource>
+    </ItemGroup>
+
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+<!--        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>-->
+<!--        <RunAOTCompilation>True</RunAOTCompilation>-->
+<!--        <EnableLLVM>True</EnableLLVM>-->
+<!--        <AndroidEnableProfiledAot>True</AndroidEnableProfiledAot>-->
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <RunAOTCompilation>True</RunAOTCompilation>
+        <EnableLLVM>True</EnableLLVM>
+        <AndroidEnableProfiledAot>True</AndroidEnableProfiledAot>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.5.1.1" />
+        <PackageReference Include="Xamarin.AndroidX.Lifecycle.ViewModel" Version="2.5.1.1" />
+        <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="6.0.0" />
+<!--        <PackageReference Include="Xamarin.Essentials" Version="1.7.3" />-->
+    </ItemGroup>
+
+    <ItemGroup>
+<!--        <ProjectReference Include="..\DDS.Mobile\DDS.Mobile.csproj" />-->
+<!--        <ProjectReference Include="..\DDS\DDS.csproj" PrivateAssets="None" />-->
+        <ProjectReference Include="..\DDS\DDS.csproj" />
+    </ItemGroup>
+</Project>

@@ -3,18 +3,18 @@ using Avalonia.Platform.Storage;
 
 namespace DDS.Services;
 
-public class AvaloniaEssentialsDesktopService : IAvaloniaEssentials
+public class AvaloniaEssentialsCommonService : IAvaloniaEssentials
 {
     private readonly Lazy<TopLevel> _topLevel;
 
 
-    public AvaloniaEssentialsDesktopService()
+    public AvaloniaEssentialsCommonService()
     {
         _topLevel = null!;
     }
     
     [ActivatorUtilitiesConstructor]
-    public AvaloniaEssentialsDesktopService(Lazy<TopLevel> topLevel)
+    public AvaloniaEssentialsCommonService(Lazy<TopLevel> topLevel)
     {
         _topLevel = topLevel;
     }

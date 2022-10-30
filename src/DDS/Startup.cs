@@ -1,5 +1,6 @@
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.VisualTree;
+using DDS.Services;
 using Splat;
 using Splat.Microsoft.Extensions.DependencyInjection;
 
@@ -7,27 +8,16 @@ namespace DDS;
 
 public static class Startup
 {
-    // public static void ConfigureApp<TAppBuilder>(this AppBuilderBase<TAppBuilder> builder)
+    // private static Action<IServiceCollection>? ConfigureAppServicesAfterEverythingElseAction { get; set; }
+    
+    // public static TAppBuilder ConfigureAppServicesAfterEverythingElse<TAppBuilder>(
+    //     this TAppBuilder appBuilder, Action<IServiceCollection>? serviceCollectionAction = default
+    // )
     //     where TAppBuilder : AppBuilderBase<TAppBuilder>, new()
     // {
-    //     // builder.
+    //     ConfigureAppServicesAfterEverythingElseAction = serviceCollectionAction;
+    //     return appBuilder;
     // }
-    
-    // public static void ConfigureApp<TAppBuilder>(this IServiceCollection services)
-    // {
-    //     services.AddSingleton<IService,Service>();
-    // }
-
-    private static Action<IServiceCollection>? ConfigureAppServicesAfterEverythingElseAction { get; set; }
-    
-    public static TAppBuilder ConfigureAppServicesAfterEverythingElse<TAppBuilder>(
-        this TAppBuilder appBuilder, Action<IServiceCollection>? serviceCollectionAction = default
-    )
-        where TAppBuilder : AppBuilderBase<TAppBuilder>, new()
-    {
-        ConfigureAppServicesAfterEverythingElseAction = serviceCollectionAction;
-        return appBuilder;
-    }
     
     public static TAppBuilder ConfigureAppServices<TAppBuilder>(
         this TAppBuilder appBuilder, Action<IServiceCollection>? serviceCollectionAction = default
@@ -44,7 +34,7 @@ public static class Startup
         where TAppBuilder : AppBuilderBase<TAppBuilder>, new()
     {
         Globals.ISetGlobals.IsDesignMode = Design.IsDesignMode;
-        services.UseMicrosoftDependencyResolver(); // Splat extension method working on static Locator
+        services.UseMicrosoftDependencyResolver();
         var resolver = Locator.CurrentMutable;
         resolver.InitializeSplat();
         resolver.InitializeReactiveUI();
@@ -60,7 +50,7 @@ public static class Startup
             // callback after Application has been constructed; Application itself may register services
             // which is why we build the ServiceProvider after it has been built,
             // ServiceProvider.UseMicrosoftDependencyResolver (extension method by Splat) throws exception
-            // when tried to BuildServiceProvider before App has been built
+            // when BuildServiceProvider before App has been built, order matters
 
             if (!appBuilderAfterSetup.ApplicationType!.IsAssignableTo(typeof(App)))
                 throw new InvalidOperationException("App has to implement IAppCore");
@@ -76,18 +66,13 @@ public static class Startup
                 Globals.ISetGlobals.IsClassicDesktopStyleApplicationLifetime =
                     appBuilderAfterSetup.Instance.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime;
             }
-            // services.AddSingleton(new ViewViewModelLifetimeManager());
             _ = services.ConfigureAppServiceProvider();
-            // Locator.CurrentMutable.RegisterConstant<IServiceProvider>(provider);
-            // Might be already registered somewhere (AvaloniaLocator.CurrentMutable.BindToSelf(Instance)
-            // in AppBuilderBase - and currently not needed:
-            // Locator.CurrentMutable.RegisterConstant<IAppCore>((IAppCore)appBuilderAfterSetup.Instance);
         });
     
     private static IServiceProvider ConfigureAppServiceProvider(this IServiceCollection services)
     {
         _ = services.ConfigureAppServices(); // => kick-starting all our registrations
-        ConfigureAppServicesAfterEverythingElseAction?.Invoke(services);
+        // ConfigureAppServicesAfterEverythingElseAction?.Invoke(services);
         Globals.ISetGlobals.ServiceProvider = services.BuildServiceProvider();
         Globals.ServiceProvider.UseMicrosoftDependencyResolver();
         // ExecuteOnServiceProviderCreation!.ForEach(action => action.Invoke(Globals.ServiceProvider));
@@ -107,20 +92,8 @@ public static class Startup
     public static IServiceCollection ConfigureAppServices(this IServiceCollection services)
         => Globals.IsDesignMode ? services : services
             .AddLazyResolution()
-            .AddViewAndViewModels()
-            // .AddLazyResolution()
-            // .AddAppLogging()
-            // .AddDbServices()
-            // .AddAppServices()
-            // .AddMediatR(typeof(IAssemblyMarkerCommonCoreAbstractions), typeof(IAssemblyMarkerCommonCore), 
-            //     typeof(IAssemblyMarkerAvaloniaAppCore), typeof(IAssemblyMarkerAvaloniaApp))
-            // .AddCustomViewLocator()
-            // .AddViewModels()
-            // .AddViewModelsFromFacade()
-            // .AddIViewsForViewModels()
-            // .AddViewsForViewModels()
-    
-            ;
+            .AddSingleton<IAvaloniaEssentials,AvaloniaEssentialsCommonService>()
+            .AddViewAndViewModels();
     
     private static IServiceCollection AddLazyResolution(this IServiceCollection services) 
         => services.AddTransient(
@@ -136,7 +109,7 @@ public static class Startup
     }
 
 
-    public static IServiceCollection AddViewAndViewModels(this IServiceCollection service)
+    private static IServiceCollection AddViewAndViewModels(this IServiceCollection service)
         => service
             .AddSingleton<MainViewModel>()
             // .AddSingleton<MainWindowViewModel,MainWindowViewModel>(p => ActivatorUtilities.CreateInstance<MainWindowViewModel>(p))
@@ -150,23 +123,11 @@ public static class Startup
             // .AddSingleton<>()
             ;
 
-    public static IServiceCollection AddWindows(this IServiceCollection service)
+    private static IServiceCollection AddWindows(this IServiceCollection service)
         => !Globals.IsClassicDesktopStyleApplicationLifetime 
-            ? service.AddSingleton<TopLevel>(p => (TopLevel)p.GetRequiredService<MainView>().GetVisualRoot()!)
+            ? service.AddTransient<TopLevel>(p => (TopLevel)p.GetRequiredService<MainView>().GetVisualRoot()!)
             : service.AddSingleton<TopLevel>(p => p.GetRequiredService<MainWindow>())
             .AddSingleton<MainWindowViewModel>(p => new MainWindowViewModel { MainView = p.GetRequiredService<MainView>() })
             .AddSingleton<MainWindow>(p => new MainWindow { DataContext = p.GetRequiredService<MainWindowViewModel>() } )
             ;
-
-
-
-    // void bla()
-    // {
-    //     var view = new MainView { DataContext = new MainViewModel() };
-    //             
-    //     desktop.MainWindow = new MainWindow
-    //     {
-    //         DataContext = new MainWindowViewModel { MainView = view }
-    //     };
-    // }
 }

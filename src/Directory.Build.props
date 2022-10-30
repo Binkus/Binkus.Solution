@@ -1,5 +1,10 @@
 <Project>
   <PropertyGroup>
     <AvaloniaVersion>11.0.0-preview3</AvaloniaVersion>
+    <DotnetVersionLowerShared>net6.0</DotnetVersionLowerShared>
+    <DotnetVersionUpperShared>net6.0</DotnetVersionUpperShared>
+    <DotnetVersionDesktop>net6.0</DotnetVersionDesktop>
+    <DotnetVersionMobile>net6.0</DotnetVersionMobile>
+    <DotnetVersionWeb>net7.0</DotnetVersionWeb>
   </PropertyGroup>
 </Project>

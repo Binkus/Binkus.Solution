@@ -20,9 +20,14 @@
     </Grid.RowDefinitions>
     <reactiveUi:RoutedViewHost Grid.Row="0" Router="{Binding Router}">
       <reactiveUi:RoutedViewHost.DefaultContent>
-        <TextBlock Text="{Binding Greeting}"
-                   HorizontalAlignment="Center"
-                   VerticalAlignment="Center" />
+        <StackPanel>
+          <TextBlock Text="{Binding Greeting}"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center" />
+          <TextBlock Text="{Binding GotPath}"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center" />
+        </StackPanel>
       </reactiveUi:RoutedViewHost.DefaultContent>
       <reactiveUi:RoutedViewHost.ViewLocator>
         <!-- See AppViewLocator.cs section below -->

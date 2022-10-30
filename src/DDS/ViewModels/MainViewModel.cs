@@ -13,6 +13,8 @@ namespace DDS.ViewModels
 
         public string Greeting => "Greetings from MainView";
 
+        [Reactive] public string GotPath { get; set; } = "";
+
         public RoutingState Router { get; } = new();
 
         // Necessary for Designer: 
@@ -58,7 +60,8 @@ namespace DDS.ViewModels
         {
             var fileResult = await _avaloniaEssentials.FilePickerAsync();
             var fullPath = fileResult.FullPath;
-            Console.WriteLine($"fullPath={fullPath}");
+            GotPath = $"fullPath={fullPath}";
+            // Console.WriteLine($"fullPath={fullPath}");
 
             // "/data/data/com.CompanyName.DDS/cache/2203693cc04e0bf9499e13/fddcfde940edf0449f1/Screenshot_20221018-034552.png"
         }

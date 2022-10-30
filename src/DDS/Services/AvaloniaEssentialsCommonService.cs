@@ -21,20 +21,6 @@ public class AvaloniaEssentialsCommonService : IAvaloniaEssentials
     
     public async Task<Models.FileResult> FilePickerAsync(bool allowMultiple = false)
     {
-        // fileResult = await FilePicker.PickAsync(new PickOptions { });
-        
-        // var result = await new OpenFileDialog()
-        // {
-        //     Title = "Open file",
-        //     // Filters = GetFilters(),
-        //     // Directory = lastSelectedDirectory,
-        //     // Almost guaranteed to exist
-        //     InitialFileName = Assembly.GetEntryAssembly()?.GetModules().FirstOrDefault()?.FullyQualifiedName
-        // }.ShowAsync(_window);
-
-        // var win = Globals.ServiceProvider.GetRequiredService<MainWindow>();
-
-        // var results = await win.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         var results = await _topLevel.Value.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions
         {
             AllowMultiple = allowMultiple
@@ -55,24 +41,17 @@ public class AvaloniaEssentialsCommonService : IAvaloniaEssentials
                     ContentType = "",
                     FileName = fileName,
                     FullPath = fullPath,
-                    ReadStream = null!
-            
+                    StorageFiles = results
                 };  
             }
-            
-                      
-        } 
-        
-        
-        // dynamic fileResult = null!;
+        }
         
         return new Models.FileResult
         {
             ContentType = "",
             FileName = "",
             FullPath = "",
-            ReadStream = null!
-            
+            StorageFiles = null
         };
     }
 }

@@ -125,7 +125,7 @@ public static class Startup
 
     private static IServiceCollection AddWindows(this IServiceCollection service)
         => !Globals.IsClassicDesktopStyleApplicationLifetime 
-            ? service.AddTransient<TopLevel>(p => (TopLevel)p.GetRequiredService<MainView>().GetVisualRoot()!)
+            ? service.AddSingleton<TopLevel>(p => (TopLevel)p.GetRequiredService<MainView>().GetVisualRoot()!)
             : service.AddSingleton<TopLevel>(p => p.GetRequiredService<MainWindow>())
             .AddSingleton<MainWindowViewModel>(p => new MainWindowViewModel { MainView = p.GetRequiredService<MainView>() })
             .AddSingleton<MainWindow>(p => new MainWindow { DataContext = p.GetRequiredService<MainWindowViewModel>() } )

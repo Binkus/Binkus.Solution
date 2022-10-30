@@ -13,23 +13,18 @@ namespace DDS.ViewModels
 
         public string Greeting => "Greetings from MainView";
 
-        [Reactive] public string GotPath { get; set; } = "";
+        [Reactive] public string GotPath { get; set; } = "fullPath is empty";
 
         public RoutingState Router { get; } = new();
 
         // Necessary for Designer: 
 #pragma warning disable CS8618
-        public MainViewModel() : base(default) { }
+        public MainViewModel() : this(default) { }
 #pragma warning restore CS8618
 
         public MainViewModel(IAvaloniaEssentials? avaloniaEssentials)
         {
             _avaloniaEssentials ??= avaloniaEssentials ?? Globals.ServiceProvider.GetService<IAvaloniaEssentials>()!;
-            
-            // if (Globals.IsClassicDesktopStyleApplicationLifetime)
-            // {
-            //     _avaloniaEssentials = new AvaloniaEssentialsDesktopService();
-            // }
             
             HostScreen = this;
             
@@ -54,16 +49,12 @@ namespace DDS.ViewModels
         public ReactiveCommand<Unit, IRoutableViewModel> GoTest { get; }
         public ReactiveCommand<Unit, IRoutableViewModel> GoSecondTest { get; }
 
-
         [RelayCommand]
         async Task OpenFilePicker()
         {
             var fileResult = await _avaloniaEssentials.FilePickerAsync();
             var fullPath = fileResult.FullPath;
-            GotPath = $"fullPath={fullPath}";
-            // Console.WriteLine($"fullPath={fullPath}");
-
-            // "/data/data/com.CompanyName.DDS/cache/2203693cc04e0bf9499e13/fddcfde940edf0449f1/Screenshot_20221018-034552.png"
+            GotPath = fileResult.Exists ? $"fullPath={fullPath}" : "fullPath is empty";
         }
     }
 }

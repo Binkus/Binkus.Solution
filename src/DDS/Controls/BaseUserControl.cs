@@ -53,4 +53,9 @@ public abstract class
         Dispose();
         return default;
     }
+    
+    Window GetWindow() => this.VisualRoot as Window ?? throw new NullReferenceException("Invalid Owner");
+    TopLevel GetTopLevel() => this.VisualRoot as TopLevel ?? throw new NullReferenceException("Invalid Owner");
+    Avalonia.Input.IInputRoot GetInputRoot() => this.VisualRoot as Avalonia.Input.IInputRoot 
+                                                ?? throw new NullReferenceException("Invalid Owner");
 }

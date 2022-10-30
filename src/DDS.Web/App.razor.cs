@@ -7,19 +7,6 @@ namespace DDS.Web;
 
 public partial class App
 {
-    // protected override void OnParametersSet()
-    // {
-    //     base.OnParametersSet();
-    //
-    //     WebAppBuilder.Configure<DDS.App>()
-    //         // .UseReactiveUI()
-    //         .ConfigureAppServices(services =>
-    //         {
-    //             
-    //         })
-    //         .SetupWithSingleViewLifetime();
-    // }
-    
     [SupportedOSPlatform("browser")]
     protected override void OnParametersSet()
     {

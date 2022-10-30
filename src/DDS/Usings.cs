@@ -1,5 +1,4 @@
 global using ViewModelBase = DDS.ViewModels.ViewModelBase;
-// global using VM = DDS.ViewModels;
 global using DDS.Controls;
 global using DDS.ViewModels;
 global using DDS.Views;

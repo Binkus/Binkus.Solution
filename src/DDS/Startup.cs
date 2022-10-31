@@ -62,20 +62,28 @@ public static class Startup
     private static IServiceProvider ConfigureAppServiceProvider(this IServiceCollection services)
     {
         _ = services.ConfigureAppServices(); // => kick-starting all our registrations
-        // ConfigureAppServicesAfterEverythingElseAction?.Invoke(services);
         Globals.ISetGlobalsOnlyOnceOnStartup.ServiceProvider = services.BuildServiceProvider();
         Globals.ServiceProvider.UseMicrosoftDependencyResolver();
-        // ExecuteOnServiceProviderCreation!.ForEach(action => action.Invoke(Globals.ServiceProvider));
-        if (Globals.IsDesignMode) return Globals.ServiceProvider;
+
+        if (Globals.IsDesignMode)
+        {
+            // Skip DB Migration when Design Mode
+            Globals.ISetGlobalsOnlyOnceOnStartup.DbMigrationTask = Task.CompletedTask;
+            return Globals.ServiceProvider;
+        }
+        
+        // // Future DB setup
         // SQLitePCL.Batteries_V2.Init();
-        // Globals.DbMigrationTask = Task.Run(() =>
-        // {
-        //     ExecuteOnServiceProviderCreation.Clear();
-        //     ExecuteOnServiceProviderCreation = null;
-        //     using var scope = IAppCore.ServiceProvider.CreateScope(); // IAppCore.Instance.Services.CreateScope();
-        //     using var context = scope.ServiceProvider.GetRequiredService<AvaloniaDbContext>();
-        //     return context.Database.MigrateAsync();
-        // });
+        Globals.ISetGlobalsOnlyOnceOnStartup.DbMigrationTask = Task.Run(() =>
+        {
+            // ExecuteOnServiceProviderCreation.Clear();
+            // ExecuteOnServiceProviderCreation = null;
+            // using var scope = IAppCore.ServiceProvider.CreateScope();
+            // using var context = scope.ServiceProvider.GetRequiredService<AvaloniaDbContext>();
+            // return context.Database.MigrateAsync();
+            // ReSharper disable once ConvertToLambdaExpression
+            return Task.CompletedTask;
+        });
         return Globals.ServiceProvider;
     }
     

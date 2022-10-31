@@ -11,7 +11,7 @@ public static class Globals
 
     internal interface ISetGlobalsOnlyOnceOnStartup
     {
-        [UsedImplicitly] static App? InstanceNullable { internal get => _instanceNullable; set => _instanceNullable = value.D(); }
+        [UsedImplicitly] static App? InstanceNullable { internal get => _instanceNullable; set => _instanceNullable = D(value); }
         [UsedImplicitly] static bool IsDesignMode { private get => Globals.IsDesignMode; set => Globals.IsDesignMode = value.D(); }
         [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Globals.ServiceProvider; set => Globals.ServiceProvider = value.D(); }
         [UsedImplicitly] static object ApplicationLifetime { private get => Globals.ApplicationLifetime; set => Globals.ApplicationLifetime = value.D(); }
@@ -21,15 +21,24 @@ public static class Globals
         {
             private get => Globals.IsClassicDesktopStyleApplicationLifetime; set => Globals.IsClassicDesktopStyleApplicationLifetime = value.D();
         }
+        
+        [UsedImplicitly] static Task DbMigrationTask  { private get => Globals.DbMigrationTask; set => Globals.DbMigrationTask = value.D(); }
 
-        [UsedImplicitly] static void FinishGlobalsSetupByMakingGlobalsImmutable() => _startupDone = true.D();
+        [UsedImplicitly] static void FinishGlobalsSetupByMakingGlobalsImmutable()
+        {
+            if (ServiceProvider is null || (!IsDesignMode && ApplicationLifetime is null) || _instanceNullable is null || DbMigrationTask is null)
+            {
+                throw new NullReferenceException("Globals setup has not been done correctly");
+            }
+            _startupDone = true.D();
+        }
     }
     
     #region Static Globals
 
-    public static readonly Stopwatch Stopwatch = new();
-    public static Task InitStartup = null!;
-    public static Task DbMigrationTask = null!;
+    // public static readonly Stopwatch Stopwatch = new();
+    // public static Task InitStartup = null!;
+    [UsedImplicitly] public static Task DbMigrationTask { get; private set; } = null!;
     
     private static App? _instanceNullable;
     [UsedImplicitly] public static App Instance 

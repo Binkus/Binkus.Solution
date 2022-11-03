@@ -1,10 +1,10 @@
-﻿using System;
-using System.Reactive.Disposables;
-using ReactiveUI;
+﻿using System.Reactive.Disposables;
+
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace DDS.ViewModels;
 
-public class ViewModelBase : ReactiveObject, IRoutableViewModel, IActivatableViewModel
+public abstract class ViewModelBase : ReactiveObject, IRoutableViewModel, IActivatableViewModel
 {
     public string? UrlPathSegment { get; }
     public IScreen HostScreen { get; init; }
@@ -19,19 +19,12 @@ public class ViewModelBase : ReactiveObject, IRoutableViewModel, IActivatableVie
     }
     
     protected ViewModelBase() : this(default) { }
-    public ViewModelBase(IScreen? hostScreen)
+
+    protected ViewModelBase(IScreen? hostScreen)
     {
         ViewModelName = this.GetType().UnderlyingSystemType.Name;
         UrlPathSegment = $"/{CustomViewName.ToLowerInvariant()}";
         HostScreen = hostScreen!;
-        
-        this.WhenActivated((CompositeDisposable disposables) =>
-        {
-            /* handle activation */
-            Disposable
-                .Create(() => { /* handle deactivation */ })
-                .DisposeWith(disposables);
-        });
         
         this.WhenActivated(disposables => 
         {
@@ -47,4 +40,6 @@ public class ViewModelBase : ReactiveObject, IRoutableViewModel, IActivatableVie
     
     protected virtual void HandleActivation() { }
     protected virtual void HandleDeactivation() { }
+    
+    public IServiceProvider Services { get; protected init; } = Globals.ServiceProvider;
 }

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
@@ -22,18 +22,19 @@ namespace DDS.ViewModels
         public MainViewModel() : this(default) { }
 #pragma warning restore CS8618
 
-        public MainViewModel(IAvaloniaEssentials? avaloniaEssentials)
+        public MainViewModel(IAvaloniaEssentials? avaloniaEssentials, 
+            Lazy<TestViewModel> testViewModel, Lazy<SecondTestViewModel> secondTestViewModel)
         {
             _avaloniaEssentials ??= avaloniaEssentials ?? Globals.ServiceProvider.GetService<IAvaloniaEssentials>()!;
             
             HostScreen = this;
             
             GoTest = ReactiveCommand.CreateFromObservable(
-                () => Router.NavigateAndReset.Execute(new TestViewModel() { HostScreen = this }),
+                () => Router.Navigate.Execute(testViewModel.Value),
                 canExecute: this.WhenAnyObservable(x => x.Router.CurrentViewModel).Select(x => x is not TestViewModel)
             );
             GoSecondTest = ReactiveCommand.CreateFromObservable(
-                () => Router.NavigateAndReset.Execute(new SecondTestViewModel() { HostScreen = this }),
+                () => Router.Navigate.Execute(secondTestViewModel.Value),
                 canExecute: this.WhenAnyObservable(x => x.Router.CurrentViewModel).Select(x => x is not SecondTestViewModel)
             );
             

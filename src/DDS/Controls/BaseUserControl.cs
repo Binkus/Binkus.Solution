@@ -55,6 +55,8 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
         return default;
     }
     
+    public IServiceProvider Services { get; protected init; } = Globals.ServiceProvider;
+    
     public Window GetWindow() => this.VisualRoot as Window ?? throw new NullReferenceException("Invalid Owner");
     public TopLevel GetTopLevel() => this.VisualRoot as TopLevel ?? throw new NullReferenceException("Invalid Owner");
     public Avalonia.Input.IInputRoot GetInputRoot() => this.VisualRoot as Avalonia.Input.IInputRoot 

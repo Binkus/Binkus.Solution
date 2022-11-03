@@ -113,6 +113,7 @@ public static class Startup
             // .AddSingleton<MainView>(p => new MainView { DataContext = p.GetRequiredService<MainViewModel>() } )
             .AddSingleton<ReactiveUI.IViewLocator,ReactiveViewLocator>()
             .AddViewAndViewModels<MainView,MainViewModel>(ServiceLifetime.Singleton)
+            .AddSingleton<IScreen>(p => p.GetRequiredService<MainViewModel>())
             .AddViewAndViewModels<SecondTestView,SecondTestViewModel>(ServiceLifetime.Singleton)
             .AddViewAndViewModels<TestView,TestViewModel>(ServiceLifetime.Singleton)
             .AddWindows() 
@@ -122,29 +123,50 @@ public static class Startup
         => lifetime == ServiceLifetime.Scoped ? p.CreateScope().ServiceProvider : p;
     
     
-    private static IServiceCollection AddViewAndViewModels<TView,TViewModel>(this IServiceCollection services, 
-        ServiceLifetime lifetime, Action<IServiceProvider, TView>? postViewCreationAction = default, 
-        Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default) 
+    private static IServiceCollection AddViewAndViewModels<TView,TViewModel>(this IServiceCollection services,
+        ServiceLifetime lifetime,
+        Func<IServiceProvider, TView>? viewImplFactory = default,
+        Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
+        Action<IServiceProvider, TView>? postViewCreationAction = default, 
+        Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default,
+        bool setDataContext = true)
         where TView : ContentControl, IViewFor<TViewModel>
         where TViewModel : ViewModelBase
     {
         services.Add(ServiceDescriptor.Describe(typeof(TViewModel), p =>
         {
             p = p.ToScopedWhenScoped(lifetime);
-            var viewModel = ActivatorUtilities.CreateInstance<TViewModel>(p);
+            var viewModel = viewModelImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance<TViewModel>(p);
             postViewModelCreationAction?.Invoke(p, viewModel);
             return viewModel;
         }, lifetime is ServiceLifetime.Scoped ? ServiceLifetime.Transient : lifetime));
+
+        // Bug potentially in ReactiveUI|Avalonia, navigation back and forth results in view not shown when Singleton
+        // Avalonia 11.0.0-Preview3 , so view has to be Transient right now:
+        var viewLifetime = ServiceLifetime.Transient;
+        
         services.Add(ServiceDescriptor.Describe(typeof(TView), p =>
         {
-            p = p.ToScopedWhenScoped(lifetime);
-            var view = ActivatorUtilities.CreateInstance<TView>(p);
-            view.DataContext = p.GetRequiredService<TViewModel>();
+            // p = p.ToScopedWhenScoped(lifetime);
+            var view = viewImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance<TView>(p);
+            if (setDataContext) view.DataContext = p.GetRequiredService<TViewModel>();
             postViewCreationAction?.Invoke(p, view);
             return view;
-            // return new TView { DataContext = p.GetRequiredService<TViewModel>() };
-        // }, lifetime is ServiceLifetime.Scoped ? ServiceLifetime.Transient : lifetime));
-        }, ServiceLifetime.Transient));
+        }, viewLifetime));
+        
+        services.Add(ServiceDescriptor.Describe(typeof(IViewFor<TViewModel>), 
+            p => p.GetRequiredService<TView>(), viewLifetime));
+        
+        if (typeof(TView).IsAssignableTo(typeof(BaseUserControl<TViewModel>)))
+        {
+            services.Add(ServiceDescriptor.Describe(typeof(BaseUserControl<TViewModel>), 
+                p => p.GetRequiredService<TView>(), viewLifetime));
+        }
+        else if (typeof(TView).IsAssignableTo(typeof(BaseWindow<TViewModel>)))
+        {
+            services.Add(ServiceDescriptor.Describe(typeof(BaseWindow<TViewModel>), 
+                p => p.GetRequiredService<TView>(), viewLifetime));
+        }
         ReactiveViewLocator.DictOfViews[typeof(TViewModel)] = typeof(TView);
         return services;
     }

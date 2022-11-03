@@ -52,30 +52,6 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IDisp
         Dispose();
         return default;
     }
+
+    public IServiceProvider Services { get; protected init; } = Globals.ServiceProvider;
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// protected override void OnDataContextChanged(EventArgs e)
-// {
-//     // ViewModel = (TViewModel?)DataContext;
-//     base.OnDataContextChanged(e);
-// }
-    
-// public new TViewModel? DataContext { get => (TViewModel?)base.DataContext; set => base.DataContext = value; }

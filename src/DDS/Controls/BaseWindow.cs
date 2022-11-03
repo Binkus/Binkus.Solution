@@ -11,7 +11,7 @@ namespace DDS.Controls;
 
 public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IDisposable, IAsyncDisposable
     // , Window, IViewFor<TViewModel>
-    where TViewModel : ViewModelBase, new() // new() not needed
+    where TViewModel : ViewModelBase// new() not needed
 {
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
     public new TViewModel ViewModel { get => base.ViewModel!; /*protected init => base.ViewModel = value;*/ }

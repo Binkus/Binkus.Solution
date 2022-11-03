@@ -18,7 +18,7 @@
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
-    <reactiveUi:RoutedViewHost Grid.Row="0" Router="{Binding Router}">
+    <reactiveUi:RoutedViewHost Grid.Row="0" Router="{Binding Router}" x:Name="RoutedViewHost">
       <reactiveUi:RoutedViewHost.DefaultContent>
         <StackPanel>
           <TextBlock Text="{Binding Greeting}"
@@ -29,10 +29,11 @@
                      VerticalAlignment="Center" />
         </StackPanel>
       </reactiveUi:RoutedViewHost.DefaultContent>
-      <reactiveUi:RoutedViewHost.ViewLocator>
+      <!-- <reactiveUi:RoutedViewHost.ViewLocator /> -->
+      <!-- <reactiveUi:RoutedViewHost.ViewLocator> -->
         <!-- See AppViewLocator.cs section below -->
-        <controls:ReactiveViewLocator />
-      </reactiveUi:RoutedViewHost.ViewLocator>
+        <!-- <controls:ReactiveViewLocator /> -->
+      <!-- </reactiveUi:RoutedViewHost.ViewLocator> -->
     </reactiveUi:RoutedViewHost>
     <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="15">
       <StackPanel.Styles>

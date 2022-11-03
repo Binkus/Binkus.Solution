@@ -88,7 +88,7 @@ public static class Startup
     }
     
     public static IServiceCollection ConfigureAppServices(this IServiceCollection services)
-        => Globals.IsDesignMode ? services : services
+        => services
             .AddLazyResolution()
             .AddSingleton<IAvaloniaEssentials,AvaloniaEssentialsCommonService>()
             .AddViewAndViewModels();
@@ -107,25 +107,57 @@ public static class Startup
     }
 
 
-    private static IServiceCollection AddViewAndViewModels(this IServiceCollection service)
-        => service
-            .AddSingleton<MainViewModel>()
-            // .AddSingleton<MainWindowViewModel,MainWindowViewModel>(p => ActivatorUtilities.CreateInstance<MainWindowViewModel>(p))
-            .AddSingleton<MainView>(p => new MainView { DataContext = p.GetRequiredService<MainViewModel>() } )
-            
+    private static IServiceCollection AddViewAndViewModels(this IServiceCollection services)
+        => services
+            // .AddSingleton<MainViewModel>()
+            // .AddSingleton<MainView>(p => new MainView { DataContext = p.GetRequiredService<MainViewModel>() } )
+            .AddSingleton<ReactiveUI.IViewLocator,ReactiveViewLocator>()
+            .AddViewAndViewModels<MainView,MainViewModel>(ServiceLifetime.Singleton)
+            .AddViewAndViewModels<SecondTestView,SecondTestViewModel>(ServiceLifetime.Singleton)
+            .AddViewAndViewModels<TestView,TestViewModel>(ServiceLifetime.Singleton)
             .AddWindows() 
-            
-            // .AddSingleton<MainWindowViewModel>(p => new MainWindowViewModel { MainView = p.GetRequiredService<MainView>() } )
-            
-            // .AddSingleton<MainWindow>(p => new MainWindow { DataContext = p.GetRequiredService<MainWindowViewModel>() } )
-            // .AddSingleton<>()
             ;
+
+    private static IServiceProvider ToScopedWhenScoped(this IServiceProvider p, ServiceLifetime lifetime = ServiceLifetime.Scoped) 
+        => lifetime == ServiceLifetime.Scoped ? p.CreateScope().ServiceProvider : p;
+    
+    
+    private static IServiceCollection AddViewAndViewModels<TView,TViewModel>(this IServiceCollection services, 
+        ServiceLifetime lifetime, Action<IServiceProvider, TView>? postViewCreationAction = default, 
+        Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default) 
+        where TView : ContentControl, IViewFor<TViewModel>
+        where TViewModel : ViewModelBase
+    {
+        services.Add(ServiceDescriptor.Describe(typeof(TViewModel), p =>
+        {
+            p = p.ToScopedWhenScoped(lifetime);
+            var viewModel = ActivatorUtilities.CreateInstance<TViewModel>(p);
+            postViewModelCreationAction?.Invoke(p, viewModel);
+            return viewModel;
+        }, lifetime is ServiceLifetime.Scoped ? ServiceLifetime.Transient : lifetime));
+        services.Add(ServiceDescriptor.Describe(typeof(TView), p =>
+        {
+            p = p.ToScopedWhenScoped(lifetime);
+            var view = ActivatorUtilities.CreateInstance<TView>(p);
+            view.DataContext = p.GetRequiredService<TViewModel>();
+            postViewCreationAction?.Invoke(p, view);
+            return view;
+            // return new TView { DataContext = p.GetRequiredService<TViewModel>() };
+        // }, lifetime is ServiceLifetime.Scoped ? ServiceLifetime.Transient : lifetime));
+        }, ServiceLifetime.Transient));
+        ReactiveViewLocator.DictOfViews[typeof(TViewModel)] = typeof(TView);
+        return services;
+    }
 
     private static IServiceCollection AddWindows(this IServiceCollection service)
         => !Globals.IsClassicDesktopStyleApplicationLifetime 
             ? service.AddSingleton<TopLevel>(p => (TopLevel)p.GetRequiredService<MainView>().GetVisualRoot()!)
             : service.AddSingleton<TopLevel>(p => p.GetRequiredService<MainWindow>())
-            .AddSingleton<MainWindowViewModel>(p => new MainWindowViewModel { MainView = p.GetRequiredService<MainView>() })
-            .AddSingleton<MainWindow>(p => new MainWindow { DataContext = p.GetRequiredService<MainWindowViewModel>() } )
+            // .AddSingleton<MainWindowViewModel>(p => new MainWindowViewModel { MainView = p.GetRequiredService<MainView>() })
+            // .AddSingleton<MainWindow>(p => new MainWindow { DataContext = p.GetRequiredService<MainWindowViewModel>() } )
+            // .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Singleton, 
+            //     postViewModelCreationAction: (p, vm) 
+            //         => vm.MainView = p.GetRequiredService<MainView>())
+            .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Singleton)
             ;
 }

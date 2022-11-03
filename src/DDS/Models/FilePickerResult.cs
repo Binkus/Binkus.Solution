@@ -2,9 +2,9 @@ using Avalonia.Platform.Storage;
 
 namespace DDS.Models;
 
-public struct FileResult
+public struct FilePickerResult
 {
-    public FileResult()
+    public FilePickerResult()
     {
     }
 

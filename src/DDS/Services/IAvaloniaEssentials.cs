@@ -2,5 +2,5 @@ namespace DDS.Services;
 
 public interface IAvaloniaEssentials
 {
-    Task<Models.FileResult> FilePickerAsync(bool allowMultiple = false);
+    Task<Models.FilePickerResult> FilePickerAsync(bool allowMultiple = false);
 }

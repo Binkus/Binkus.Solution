@@ -10,12 +10,11 @@ using ReactiveUI;
 
 namespace DDS.Controls;
 
-public abstract class 
-    BaseUserControl<TViewModel> : ReactiveUserControl<TViewModel>
+public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewModel>, IDisposable, IAsyncDisposable
     // , UserControl, IViewFor<TViewModel> 
     where TViewModel : ViewModelBase //, new() // TViewModel : class // new() not needed
 {
-    public new TViewModel DataContext { get => (TViewModel)base.DataContext!; set => base.DataContext = value; }
+    public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
     public new TViewModel ViewModel { get => base.ViewModel!; /*protected init => base.ViewModel = value;*/ }
 
     protected BaseUserControl(TViewModel viewModel) : this() => base.DataContext = viewModel;
@@ -25,6 +24,8 @@ public abstract class
         {
             if (base.DataContext is null or not TViewModel) 
                 throw new InvalidOperationException($"{nameof(base.DataContext)} of {GetType().Name} is null.");
+
+            Console.Write($"    |_ {DataContext.ViewModelName} _ View Activated\n");
         }).DisposeWith(ViewDisposables!);
     }
     
@@ -54,8 +55,8 @@ public abstract class
         return default;
     }
     
-    Window GetWindow() => this.VisualRoot as Window ?? throw new NullReferenceException("Invalid Owner");
-    TopLevel GetTopLevel() => this.VisualRoot as TopLevel ?? throw new NullReferenceException("Invalid Owner");
-    Avalonia.Input.IInputRoot GetInputRoot() => this.VisualRoot as Avalonia.Input.IInputRoot 
+    public Window GetWindow() => this.VisualRoot as Window ?? throw new NullReferenceException("Invalid Owner");
+    public TopLevel GetTopLevel() => this.VisualRoot as TopLevel ?? throw new NullReferenceException("Invalid Owner");
+    public Avalonia.Input.IInputRoot GetInputRoot() => this.VisualRoot as Avalonia.Input.IInputRoot 
                                                 ?? throw new NullReferenceException("Invalid Owner");
 }

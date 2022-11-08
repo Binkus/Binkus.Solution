@@ -6,10 +6,13 @@ public class ReactiveViewLocator : IViewLocator
     {
     }
     
-    public static Dictionary<Type, Type> DictOfViews { get; } = new(); 
+    public static Dictionary<string, Type> DictOfViews { get; } = new(); 
 
-    public IViewFor ResolveView<T>(T? viewModel, string? contract = null) =>
+    public IViewFor? ResolveView<T>(T? viewModel, string? contract = null) =>
         // ReSharper disable once HeapView.PossibleBoxingAllocation
-        Globals.ServiceProvider.GetService(DictOfViews[viewModel?.GetType() ?? throw new NullReferenceException()]) 
-            as IViewFor ?? throw new NullReferenceException();
+        // BTW ViewModel property of the returned IViewFor will be set automatically to the same ViewModel as parameter
+        // "T? viewModel" by ViewModelViewHost and RoutedViewHost, which are the ones who can call this method
+        // the latter RoutedViewHost calls this method
+        Globals.ServiceProvider.GetService(DictOfViews[viewModel!.GetType().UnderlyingSystemType.FullName!]) 
+            as IViewFor;
 }

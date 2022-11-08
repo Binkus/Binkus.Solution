@@ -1,4 +1,4 @@
-﻿using System.Reactive.Disposables;
+using System.Reactive.Disposables;
 
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -28,14 +28,15 @@ public abstract class ViewModelBase : ReactiveObject, IRoutableViewModel, IActiv
         
         this.WhenActivated(disposables => 
         {
-#if DEBUG
-            Console.WriteLine(UrlPathSegment + ":");
-#endif
+            Debug.WriteLine(UrlPathSegment + ":");
+
             HandleActivation();
             Disposable
                 .Create(HandleDeactivation)
                 .DisposeWith(disposables);
         });
+        
+        Debug.WriteLine("c:"+ViewModelName);
     }
     
     protected virtual void HandleActivation() { }

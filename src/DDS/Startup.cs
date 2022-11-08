@@ -24,10 +24,10 @@ public static class Startup
     {
         Globals.ISetGlobalsOnlyOnceOnStartup.IsDesignMode = Design.IsDesignMode;
         services.UseMicrosoftDependencyResolver();
-        var resolver = Locator.CurrentMutable;
-        resolver.InitializeSplat();
-        resolver.InitializeReactiveUI();
-        appBuilder.UseReactiveUI();
+        // var resolver = Locator.CurrentMutable;
+        // resolver.InitializeSplat(); // already called twice, once by static init by splat with splat di, once MS DI
+        // resolver.InitializeReactiveUI(); // already called with MS DI - total call count: once, after appBuilder.UseReactiveUI()
+        appBuilder.UseReactiveUI(); // Most of ReactiveUI is initialized here already, so DI additions below here: 
         serviceCollectionAction?.Invoke(services);
         return appBuilder.ConfigureBuilder(services);
     }
@@ -47,7 +47,7 @@ public static class Startup
             if (Globals.ISetGlobalsOnlyOnceOnStartup.InstanceNullable == null)
                 throw new InvalidOperationException("App has to implement IAppCore or Instance is absent, " +
                                     "consider checking breaking changes of recent Avalonia updates");
-            if (!Globals.IsDesignMode) // => lifetime null
+            if (!Globals.IsDesignMode) // => appBuilderAfterSetup.Instance.ApplicationLifetime is null when IsDesignMode
             {
                 Globals.ISetGlobalsOnlyOnceOnStartup.ApplicationLifetime = appBuilderAfterSetup.Instance?.ApplicationLifetime
                                                           ?? throw new InvalidOperationException(
@@ -112,7 +112,7 @@ public static class Startup
             // .AddSingleton<MainViewModel>()
             // .AddSingleton<MainView>(p => new MainView { DataContext = p.GetRequiredService<MainViewModel>() } )
             .AddSingleton<ReactiveUI.IViewLocator,ReactiveViewLocator>()
-            .AddViewAndViewModels<MainView,MainViewModel>(ServiceLifetime.Singleton)
+            .AddViewAndViewModels<MainView,MainViewModel>(ServiceLifetime.Singleton, setDataContext: true)
             .AddSingleton<IScreen>(p => p.GetRequiredService<MainViewModel>())
             .AddViewAndViewModels<SecondTestView,SecondTestViewModel>(ServiceLifetime.Singleton)
             .AddViewAndViewModels<TestView,TestViewModel>(ServiceLifetime.Singleton)
@@ -129,9 +129,9 @@ public static class Startup
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
         Action<IServiceProvider, TView>? postViewCreationAction = default, 
         Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default,
-        bool setDataContext = true)
+        bool setDataContext = false)
         where TView : ContentControl, IViewFor<TViewModel>
-        where TViewModel : ViewModelBase
+        where TViewModel : class
     {
         services.Add(ServiceDescriptor.Describe(typeof(TViewModel), p =>
         {
@@ -167,7 +167,7 @@ public static class Startup
             services.Add(ServiceDescriptor.Describe(typeof(BaseWindow<TViewModel>), 
                 p => p.GetRequiredService<TView>(), viewLifetime));
         }
-        ReactiveViewLocator.DictOfViews[typeof(TViewModel)] = typeof(TView);
+        ReactiveViewLocator.DictOfViews[typeof(TViewModel).FullName ?? throw new NullReferenceException()] = typeof(TView);
         return services;
     }
 
@@ -180,6 +180,6 @@ public static class Startup
             // .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Singleton, 
             //     postViewModelCreationAction: (p, vm) 
             //         => vm.MainView = p.GetRequiredService<MainView>())
-            .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Singleton)
+            .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Singleton, setDataContext: true)
             ;
 }

@@ -1,8 +1,4 @@
-﻿using System.Diagnostics;
-using System.Diagnostics.CodeAnalysis;
-using System.Reactive.Disposables;
-
-// ReSharper disable MemberCanBePrivate.Global
+﻿// ReSharper disable MemberCanBePrivate.Global
 
 namespace DDS.ViewModels;
 

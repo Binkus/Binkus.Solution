@@ -1,5 +1,3 @@
-using ReactiveUI.Fody.Helpers;
-
 namespace DDS.ViewModels;
 
 public class MainWindowViewModel : ViewModelBase

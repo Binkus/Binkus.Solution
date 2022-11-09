@@ -1,7 +1,5 @@
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.VisualTree;
-using DDS.Services;
-using Splat;
 using Splat.Microsoft.Extensions.DependencyInjection;
 
 namespace DDS;

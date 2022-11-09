@@ -13,8 +13,7 @@ public static class Startup
     {
         return appBuilder.ConfigureAppServices(new ServiceCollection(), serviceCollectionAction);
     }
-    
-    
+
     private static TAppBuilder ConfigureAppServices<TAppBuilder>(
         this TAppBuilder appBuilder,  IServiceCollection services, Action<IServiceCollection>? serviceCollectionAction
     )
@@ -22,9 +21,6 @@ public static class Startup
     {
         Globals.ISetGlobalsOnlyOnceOnStartup.IsDesignMode = Design.IsDesignMode;
         services.UseMicrosoftDependencyResolver();
-        // var resolver = Locator.CurrentMutable;
-        // resolver.InitializeSplat(); // already called twice, once by static init by splat with splat di, once MS DI
-        // resolver.InitializeReactiveUI(); // already called with MS DI - total call count: once, after appBuilder.UseReactiveUI()
         appBuilder.UseReactiveUI(); // Most of ReactiveUI is initialized here already, so DI additions below here: 
         serviceCollectionAction?.Invoke(services);
         return appBuilder.ConfigureBuilder(services);
@@ -107,9 +103,7 @@ public static class Startup
 
     private static IServiceCollection AddViewAndViewModels(this IServiceCollection services)
         => services
-            // .AddSingleton<MainViewModel>()
-            // .AddSingleton<MainView>(p => new MainView { DataContext = p.GetRequiredService<MainViewModel>() } )
-            .AddSingleton<ReactiveUI.IViewLocator,ReactiveViewLocator>()
+            .AddSingleton<IViewLocator,ReactiveViewLocator>()
             .AddViewAndViewModels<MainView,MainViewModel>(ServiceLifetime.Singleton, setDataContext: true)
             .AddSingleton<IScreen>(p => p.GetRequiredService<MainViewModel>())
             .AddViewAndViewModels<SecondTestView,SecondTestViewModel>(ServiceLifetime.Singleton)
@@ -131,6 +125,7 @@ public static class Startup
         where TView : ContentControl, IViewFor<TViewModel>
         where TViewModel : class
     {
+        // Register ViewModel
         services.Add(ServiceDescriptor.Describe(typeof(TViewModel), p =>
         {
             p = p.ToScopedWhenScoped(lifetime);
@@ -139,13 +134,12 @@ public static class Startup
             return viewModel;
         }, lifetime is ServiceLifetime.Scoped ? ServiceLifetime.Transient : lifetime));
 
-        // Bug potentially in ReactiveUI|Avalonia, navigation back and forth results in view not shown when Singleton
-        // Avalonia 11.0.0-Preview3 , so view has to be Transient right now:
+        // Register View
+        // Views should be Transient when not [SingleInstanceView], but Singleton or scoped can be buggy except for MainView.
         var viewLifetime = ServiceLifetime.Transient;
         
         services.Add(ServiceDescriptor.Describe(typeof(TView), p =>
         {
-            // p = p.ToScopedWhenScoped(lifetime);
             var view = viewImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance<TView>(p);
             if (setDataContext) view.DataContext = p.GetRequiredService<TViewModel>();
             postViewCreationAction?.Invoke(p, view);
@@ -173,11 +167,6 @@ public static class Startup
         => !Globals.IsClassicDesktopStyleApplicationLifetime 
             ? service.AddSingleton<TopLevel>(p => (TopLevel)p.GetRequiredService<MainView>().GetVisualRoot()!)
             : service.AddSingleton<TopLevel>(p => p.GetRequiredService<MainWindow>())
-            // .AddSingleton<MainWindowViewModel>(p => new MainWindowViewModel { MainView = p.GetRequiredService<MainView>() })
-            // .AddSingleton<MainWindow>(p => new MainWindow { DataContext = p.GetRequiredService<MainWindowViewModel>() } )
-            // .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Singleton, 
-            //     postViewModelCreationAction: (p, vm) 
-            //         => vm.MainView = p.GetRequiredService<MainView>())
             .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Singleton, setDataContext: true)
             ;
 }

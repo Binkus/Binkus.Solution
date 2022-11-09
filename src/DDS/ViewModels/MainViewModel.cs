@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
@@ -19,9 +19,10 @@ namespace DDS.ViewModels
 
         // Necessary for Designer: 
 #pragma warning disable CS8618
-        public MainViewModel() : this(default) { }
+        public MainViewModel() { }
 #pragma warning restore CS8618
 
+        [ActivatorUtilitiesConstructor]
         public MainViewModel(IAvaloniaEssentials? avaloniaEssentials, 
             Lazy<TestViewModel> testViewModel, Lazy<SecondTestViewModel> secondTestViewModel)
         {
@@ -53,6 +54,7 @@ namespace DDS.ViewModels
         [RelayCommand]
         async Task OpenFilePicker()
         {
+            if (Globals.IsDesignMode) return;
             var fileResult = await _avaloniaEssentials.FilePickerAsync();
             var fullPath = fileResult.FullPath;
             GotPath = fileResult.Exists ? $"fullPath={fullPath}" : "fullPath is empty";

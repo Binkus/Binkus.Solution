@@ -2,7 +2,7 @@
     <PropertyGroup>
         <OutputType>WinExe</OutputType>
         <TargetFramework>$(DotnetVersionDesktop)</TargetFramework>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>$(DotnetLangVersionDesktop)</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>Nullable</WarningsAsErrors>

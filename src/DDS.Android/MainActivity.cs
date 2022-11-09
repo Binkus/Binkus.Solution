@@ -1,4 +1,5 @@
-﻿using Android.Content.PM;
+﻿using Android.App;
+using Android.Content.PM;
 using Avalonia.Android;
 
 namespace DDS.Android

@@ -10,3 +10,4 @@ global using Avalonia.ReactiveUI;
 global using Avalonia.Controls;
 global using System.Reactive;
 global using System.Reactive.Linq;
+global using JetBrains.Annotations;

@@ -1,3 +1,5 @@
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Disposables;
 
 // ReSharper disable MemberCanBePrivate.Global
@@ -7,7 +9,16 @@ namespace DDS.ViewModels;
 public abstract class ViewModelBase : ReactiveObject, IRoutableViewModel, IActivatableViewModel
 {
     public string? UrlPathSegment { get; }
-    public IScreen HostScreen { get; init; }
+
+    private IScreen? _hostScreen;
+    
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public IScreen HostScreen
+    {
+        get => _hostScreen ??= Services.GetRequiredService<IScreen>();
+        protected init => this.RaiseAndSetIfChanged(ref _hostScreen, value);
+    }
+
     public ViewModelActivator Activator { get; } = new();
     
     public string ViewModelName { get; private init; }
@@ -17,15 +28,14 @@ public abstract class ViewModelBase : ReactiveObject, IRoutableViewModel, IActiv
         get => _customViewName ??= ViewModelName.EndsWith("ViewModel") ? ViewModelName[..^9] : ViewModelName;
         set => this.RaiseAndSetIfChanged(ref _customViewName, value);
     }
-    
-    protected ViewModelBase() : this(default) { }
 
-    protected ViewModelBase(IScreen? hostScreen)
+    protected ViewModelBase(IScreen hostScreen) : this() => _hostScreen = hostScreen;
+    
+    protected ViewModelBase()
     {
-        ViewModelName = this.GetType().UnderlyingSystemType.Name;
+        ViewModelName = GetType().UnderlyingSystemType.Name;
         UrlPathSegment = $"/{CustomViewName.ToLowerInvariant()}";
-        HostScreen = hostScreen!;
-        
+
         this.WhenActivated(disposables => 
         {
             Debug.WriteLine(UrlPathSegment + ":");

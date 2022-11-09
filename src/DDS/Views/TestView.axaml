@@ -3,10 +3,17 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:viewModels="clr-namespace:DDS.ViewModels"
+             xmlns:local="clr-namespace:DDS"
              mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
              x:Class="DDS.Views.TestView"
              Foreground="White"
-             Background="#171C2C">
+             Background="#171C2C"
+             >
+    <!-- d:DataContext="{d:DesignInstance viewModels:TestViewModel}" -->
+    <!-- d:DataContext="{x:Static local:Globals.Instance,x:Type viewModels:TestViewModel}" -->
+    <!-- d:DataContext="{d:DesignData Type=viewModels:TestViewModel,IsDesignTimeCreatable=False}" -->
+    <!-- d:DataContext="{x:Static local:Globals.TestViewModel}" -->
+    
     <Design.DataContext>
         <viewModels:TestViewModel />
     </Design.DataContext>

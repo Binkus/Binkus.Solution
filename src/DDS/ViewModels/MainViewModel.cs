@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Reactive.Disposables;
 using System.Threading.Tasks;
 using CommunityToolkit.Mvvm.Input;
@@ -17,15 +17,16 @@ namespace DDS.ViewModels
 
         public RoutingState Router { get; } = new();
 
-        // Necessary for Designer: 
-#pragma warning disable CS8618
-        public MainViewModel() : this(default) { }
-#pragma warning restore CS8618
-
+//         // Necessary for Designer: 
+// #pragma warning disable CS8618
+//         public MainViewModel() : this(default) { }
+// #pragma warning restore CS8618
+// #pragma warning disable CS8618
         public MainViewModel(IAvaloniaEssentials? avaloniaEssentials, 
             Lazy<TestViewModel> testViewModel, Lazy<SecondTestViewModel> secondTestViewModel)
         {
             _avaloniaEssentials ??= avaloniaEssentials ?? Globals.ServiceProvider.GetService<IAvaloniaEssentials>()!;
+            // Console.WriteLine($"avaloniaEssentials is null = {_avaloniaEssentials == null}");
             
             HostScreen = this;
             

@@ -11,9 +11,12 @@
         <ApplicationVersion>1</ApplicationVersion>
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
         <AndroidPackageFormat>apk</AndroidPackageFormat>
-        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+        <MSBuildEnableWorkloadResolver>true</MSBuildEnableWorkloadResolver>
+<!--        <EmbedAssembliesIntoApk>false</EmbedAssembliesIntoApk>-->
+<!--        <AndroidFastDeploymentType>Dexes</AndroidFastDeploymentType>-->
+<!--        <AndroidUseAssemblyStore>false</AndroidUseAssemblyStore>-->
 <!--        <UseMaui>true</UseMaui>-->
-        <UseMauiEssentials>true</UseMauiEssentials>
+<!--        <UseMauiEssentials>true</UseMauiEssentials>-->
 <!--        <AndroidUseAapt2>True</AndroidUseAapt2>-->
 <!--        <AndroidPackageFormats>aab;apk</AndroidPackageFormats>-->
 <!--        <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>-->
@@ -27,10 +30,17 @@
     </ItemGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Debug'">
-<!--        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>-->
-<!--        <RunAOTCompilation>True</RunAOTCompilation>-->
+        <!--        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>-->
+        <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
+
+        <!--        <RunAOTCompilation>True</RunAOTCompilation>-->
 <!--        <EnableLLVM>True</EnableLLVM>-->
 <!--        <AndroidEnableProfiledAot>True</AndroidEnableProfiledAot>-->
+    
+<!--      <AndroidSupportedAbis>armeabi-v7a;x86;arm64-v8a;x86_64</AndroidSupportedAbis>-->
+<!--      <AndroidEnableMultiDex>true</AndroidEnableMultiDex>-->
+<!--      <AndroidDexTool>d8</AndroidDexTool>-->
+<!--      <AndroidLinkMode>SdkOnly</AndroidLinkMode>-->
     </PropertyGroup>
 
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
@@ -45,6 +55,7 @@
         <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+<!--        <PackageReference Include="ReactiveUI.Fody" Version="18.3.1" PrivateAssets="all" />-->
 <!--        <PackageReference Include="Xamarin.Essentials" Version="1.7.3" />-->
     </ItemGroup>
 

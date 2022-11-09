@@ -2,8 +2,11 @@ namespace DDS.Controls;
 
 public class ReactiveViewLocator : IViewLocator
 {
-    public ReactiveViewLocator() // DI is working here, ReactiveViewLocator is Singleton
+    private readonly IServiceProvider _services;
+
+    public ReactiveViewLocator(IServiceProvider services) // DI is working here, ReactiveViewLocator is Singleton
     {
+        _services = services;
     }
     
     public static Dictionary<string, Type> DictOfViews { get; } = new(); 
@@ -15,4 +18,35 @@ public class ReactiveViewLocator : IViewLocator
         // the latter RoutedViewHost calls this method
         Globals.ServiceProvider.GetService(DictOfViews[viewModel!.GetType().UnderlyingSystemType.FullName!]) 
             as IViewFor;
+
+    // public IViewFor? ResolveByReflection<T>(T? viewModel, string? contract = null) // ResolveByReflection
+    // {
+    //     // Find view's by chopping of the 'Model' on the view model name
+    //     // MyApp.ShellViewModel => MyApp.ShellView
+    //     var viewModelName = viewModel?.GetType().FullName;
+    //     var viewTypeName = viewModelName?.TrimEnd("Model".ToCharArray());
+    //
+    //     if (string.IsNullOrEmpty(viewTypeName))
+    //     {
+    //         return null;
+    //     }
+    //     
+    //     try
+    //     {
+    //         var viewType = Type.GetType(viewTypeName);
+    //         if (viewType == null)
+    //         {
+    //             // this.Log().Error($"Could not find the view {viewTypeName} for view model {viewModelName}.");
+    //             return null;
+    //         }
+    //         return ActivatorUtilities.GetServiceOrCreateInstance(_services, viewType) as IViewFor;
+    //     }
+    //     catch (Exception)
+    //     {
+    //         // this.Log().Error($"Could not instantiate view {viewTypeName}.");
+    //         throw;
+    //     }
+    // }
 }
+
+ 

@@ -9,6 +9,9 @@ namespace DDS.Android
         ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize)]
     public class MainActivity : AvaloniaMainActivity
     {
-        
+        public override void OnBackPressed()
+        {
+            // base.OnBackPressed(); // => OnResume or OnCreate => InvalidOperationException cause building again
+        }
     }
 }

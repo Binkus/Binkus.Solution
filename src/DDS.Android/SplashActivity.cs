@@ -12,7 +12,7 @@ namespace DDS.Android
     public class SplashActivity : AvaloniaSplashActivity<App>
     {
         protected override Avalonia.AppBuilder CustomizeAppBuilder(Avalonia.AppBuilder builder)
-            => base.CustomizeAppBuilder(builder)
+            => Globals.IsStartupDone ? base.CustomizeAppBuilder(builder) : base.CustomizeAppBuilder(builder) 
                 .ConfigureAppServices()
                 // .ConfigureAppServicesAfterEverythingElse(services =>
                 //     services.AddSingleton<IAvaloniaEssentials, AvaloniaEssentialsDesktopService>()

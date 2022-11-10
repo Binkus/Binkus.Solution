@@ -55,6 +55,7 @@ public static class Startup
     
     private static IServiceProvider ConfigureAppServiceProvider(this IServiceCollection services)
     {
+        StartupFacade.ConfigureServices(services);
         _ = services.ConfigureAppServices(); // => kick-starting all our registrations
         Globals.ISetGlobalsOnlyOnceOnStartup.ServiceProvider = services.BuildServiceProvider();
         Globals.ServiceProvider.UseMicrosoftDependencyResolver();
@@ -102,21 +103,26 @@ public static class Startup
 
 
     private static IServiceCollection AddViewAndViewModels(this IServiceCollection services)
-        => services
-            .AddSingleton<IViewLocator,ReactiveViewLocator>()
-            .AddViewAndViewModels<MainView,MainViewModel>(ServiceLifetime.Singleton, setDataContext: true)
+    {
+        services
+            .AddSingleton<IViewLocator, ReactiveViewLocator>()
+            .AddViewAndViewModels<MainView, MainViewModel>(ServiceLifetime.Singleton, setDataContext: true)
             .AddSingleton<NavigationViewModel>()
-            .AddSingleton<IScreen,NavigationViewModel>(p => p.GetRequiredService<NavigationViewModel>())
-            .AddViewAndViewModels<SecondTestView,SecondTestViewModel>(ServiceLifetime.Singleton)
-            .AddViewAndViewModels<TestView,TestViewModel>(ServiceLifetime.Singleton)
-            .AddWindows() 
+            .AddSingleton<IScreen, NavigationViewModel>(p => p.GetRequiredService<NavigationViewModel>())
+            // .AddViewAndViewModels<SecondTestView,SecondTestViewModel>(ServiceLifetime.Singleton)
+            // .AddViewAndViewModels<TestView,TestViewModel>(ServiceLifetime.Singleton)
             ;
+        StartupFacade.ConfigureViewViewModels(services);
+        services.AddWindows();
+        StartupFacade.ConfigureWindowViewModels(services);
+        return services;
+    }
 
     private static IServiceProvider ToScopedWhenScoped(this IServiceProvider p, ServiceLifetime lifetime = ServiceLifetime.Scoped) 
         => lifetime == ServiceLifetime.Scoped ? p.CreateScope().ServiceProvider : p;
     
     
-    private static IServiceCollection AddViewAndViewModels<TView,TViewModel>(this IServiceCollection services,
+    public static IServiceCollection AddViewAndViewModels<TView,TViewModel>(this IServiceCollection services,
         ServiceLifetime lifetime,
         Func<IServiceProvider, TView>? viewImplFactory = default,
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,

@@ -2,8 +2,10 @@ namespace DDS.ViewModels;
 
 public class NavigationViewModel : ViewModelBase, IScreen
 {
+    [IgnoreDataMember]
     public override RoutingState Router { get; } = new();
     
+    [IgnoreDataMember]
     public ReactiveCommand<Unit, IRoutableViewModel?> GoBack { get; }
 
     public NavigationViewModel()

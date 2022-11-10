@@ -1,14 +1,13 @@
 ﻿namespace DDS.ViewModels;
 
-public sealed partial class MainViewModel : ViewModelBase //, IScreen
+public sealed partial class MainViewModel : ViewModelBase
 {
     private readonly IAvaloniaEssentials _avaloniaEssentials;
 
     public string Greeting => "Greetings from MainView";
 
-    // [Reactive] public string GotPath { get; set; } = "fullPath is empty"; // ReactiveUI.Fody
-    // // alternative through CommunityToolkit.Mvvm
-    [ObservableProperty] private string _gotPath = "fullPath is empty";
+    [ObservableProperty] 
+    private string _gotPath = "fullPath is empty";
 
     public NavigationViewModel Navigation { get; }
 
@@ -33,16 +32,8 @@ public sealed partial class MainViewModel : ViewModelBase //, IScreen
             () => Router.Navigate.Execute(secondTestViewModel.Value),
             canExecute: this.WhenAnyObservable(x => x.Router.CurrentViewModel).Select(x => x is not SecondTestViewModel)
         );
-            
-        // var canGoBack = this
-        //     .WhenAnyValue(x => x.Router.NavigationStack.Count)
-        //     .Select(count => count > 0);
-        // GoBack = ReactiveCommand.CreateFromObservable(
-        //     () => Router.NavigateBack.Execute(Unit.Default),
-        //     canGoBack);
     }
-        
-    // public ReactiveCommand<Unit, IRoutableViewModel?> GoBack { get; } 
+    
     public ReactiveCommand<Unit, IRoutableViewModel> GoTest { get; }
     public ReactiveCommand<Unit, IRoutableViewModel> GoSecondTest { get; }
 

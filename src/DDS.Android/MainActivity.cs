@@ -24,8 +24,6 @@ namespace DDS.Android
         {
             // base.OnBackPressed(); // => OnResume or OnCreate => InvalidOperationException cause building again
 
-            // _navigation.Value.GoBack.Execute(Unit.Default);
-
             if (((ICommand)_navigation.Value.GoBack).CanExecute(null))
                 _navigation.Value.GoBack.Execute(Unit.Default).Subscribe();
         }

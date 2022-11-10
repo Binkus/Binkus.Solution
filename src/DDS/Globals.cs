@@ -4,9 +4,18 @@ namespace DDS;
 
 public static class Globals
 {
-    private static bool _startupDone;
-    private static T D<T>(this T t) => 
-        _startupDone ? throw new InvalidOperationException("Startup is already done, Globals are immutable") : t;
+    private static readonly object Locke = new();
+
+    private static volatile bool _startupDone;
+
+    private static T D<T>(this T t)
+    {
+        lock (Locke) return _startupDone 
+                ? throw new InvalidOperationException("Startup is already done, Globals are immutable") 
+                : t;
+    }
+
+    [UsedImplicitly] public static bool IsStartupDone { get { lock (Locke) return _startupDone; } }
 
     internal interface ISetGlobalsOnlyOnceOnStartup
     {
@@ -29,7 +38,7 @@ public static class Globals
             {
                 throw new NullReferenceException("Globals setup has not been done correctly");
             }
-            _startupDone = true.D();
+            lock (Locke) _startupDone = true.D();
         }
     }
     

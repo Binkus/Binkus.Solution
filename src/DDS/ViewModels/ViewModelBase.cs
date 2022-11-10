@@ -17,6 +17,8 @@ public abstract class ViewModelBase : ObservableObject,
         protected init => this.RaiseAndSetIfChanged(ref _hostScreen, value);
     }
 
+    [IgnoreDataMember] public virtual RoutingState Router => HostScreen.Router;
+
     [IgnoreDataMember] public ViewModelActivator Activator { get; } = new();
     
     [IgnoreDataMember] public string ViewModelName { get; private init; }

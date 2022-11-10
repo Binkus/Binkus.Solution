@@ -105,7 +105,9 @@ public static class Startup
         => services
             .AddSingleton<IViewLocator,ReactiveViewLocator>()
             .AddViewAndViewModels<MainView,MainViewModel>(ServiceLifetime.Singleton, setDataContext: true)
-            .AddSingleton<IScreen>(p => p.GetRequiredService<MainViewModel>())
+            // .AddSingleton<IScreen>(p => p.GetRequiredService<MainViewModel>())
+            .AddSingleton<NavigationViewModel>()
+            .AddSingleton<IScreen,NavigationViewModel>(p => p.GetRequiredService<NavigationViewModel>())
             .AddViewAndViewModels<SecondTestView,SecondTestViewModel>(ServiceLifetime.Singleton)
             .AddViewAndViewModels<TestView,TestViewModel>(ServiceLifetime.Singleton)
             .AddWindows() 

@@ -2,6 +2,7 @@
 using Android.Content;
 using Android.OS;
 using Avalonia.Android;
+using DDS.Android.Services;
 using DDS.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Application = Android.App.Application;
@@ -13,7 +14,7 @@ namespace DDS.Android
     {
         protected override Avalonia.AppBuilder CustomizeAppBuilder(Avalonia.AppBuilder builder)
             => Globals.IsStartupDone ? base.CustomizeAppBuilder(builder) : base.CustomizeAppBuilder(builder) 
-                .ConfigureAppServices()
+                .ConfigureAppServices(services => services.AddSingleton<ICloseAppService,CloseAppService>())
                 // .ConfigureAppServicesAfterEverythingElse(services =>
                 //     services.AddSingleton<IAvaloniaEssentials, AvaloniaEssentialsDesktopService>()
                 // )

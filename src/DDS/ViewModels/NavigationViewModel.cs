@@ -3,13 +3,21 @@ namespace DDS.ViewModels;
 public class NavigationViewModel : ViewModelBase, IScreen
 {
     [IgnoreDataMember]
-    public override RoutingState Router { get; } = new();
+    public sealed override RoutingState Router { get; } = new();
     
     [IgnoreDataMember]
     public ReactiveCommand<Unit, IRoutableViewModel?> GoBack { get; }
 
-    public NavigationViewModel()
+    [IgnoreDataMember]
+    public sealed override IScreen HostScreen { get => base.HostScreen; protected init => base.HostScreen = value; }
+
+    public NavigationViewModel() : this(Globals.Services) { }
+    
+    [ActivatorUtilitiesConstructor]
+    public NavigationViewModel(IServiceProvider services) : base(services)
     {
+        HostScreen = this;
+        
         var canGoBack = this
             .WhenAnyValue(x => x.Router.NavigationStack.Count)
             .Select(count => count > 0);

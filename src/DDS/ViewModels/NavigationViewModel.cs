@@ -34,7 +34,6 @@ public class NavigationViewModel : ViewModelBase, IScreen
         if (((ICommand)cmd).CanExecute(null) is false) return false;
         cmd.Execute(Unit.Default).Subscribe();
         return true;
-        // Router.Navigate.Execute(GetService<TViewModel>());
     }
     
     public bool NavigateAndReset<TViewModel>() where TViewModel : class, IRoutableViewModel
@@ -43,6 +42,5 @@ public class NavigationViewModel : ViewModelBase, IScreen
         if (((ICommand)cmd).CanExecute(null) is false) return false;
         cmd.Execute(Unit.Default).Subscribe();
         return true;
-        // Router.NavigateAndReset.Execute(GetService<TViewModel>());
     }
 }

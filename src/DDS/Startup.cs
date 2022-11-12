@@ -1,3 +1,5 @@
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.VisualTree;
 using Splat.Microsoft.Extensions.DependencyInjection;
@@ -82,8 +84,9 @@ public static class Startup
         return Globals.Services;
     }
     
-    public static IServiceCollection ConfigureAppServices(this IServiceCollection services)
+    private static IServiceCollection ConfigureAppServices(this IServiceCollection services)
         => services
+            .AddTaskResolution()
             .AddLazyResolution()
             .AddSingleton<IAvaloniaEssentials,AvaloniaEssentialsCommonService>()
             .AddViewAndViewModels();
@@ -93,7 +96,7 @@ public static class Startup
             typeof(Lazy<>),
             typeof(LazilyResolved<>));
 
-    private class LazilyResolved<T> : Lazy<T> where T : notnull
+    private sealed class LazilyResolved<T> : Lazy<T> where T : notnull
     {
         public LazilyResolved(IServiceProvider serviceProvider)
             : base(serviceProvider.GetRequiredService<T>)
@@ -101,6 +104,16 @@ public static class Startup
         }
     }
 
+    private static IServiceCollection AddTaskResolution(this IServiceCollection services)
+        => services.AddTransient(typeof(Task<>), typeof(TaskResolved<>));
+            
+    private sealed class TaskResolved<T> : Task<T> where T : notnull
+    {
+        public TaskResolved(IServiceProvider serviceProvider)
+            : base(serviceProvider.GetRequiredService<T>)
+        {
+        }
+    }
 
     private static IServiceCollection AddViewAndViewModels(this IServiceCollection services)
     {

@@ -1,10 +1,10 @@
-﻿// ReSharper disable MemberCanBePrivate.Global
+// ReSharper disable MemberCanBePrivate.Global
 
 namespace DDS.ViewModels;
 
 [DataContract]
 public abstract class ViewModelBase : ObservableObject,
-    IReactiveNotifyPropertyChanged<IReactiveObject>, IRoutableViewModel, IActivatableViewModel
+    IReactiveNotifyPropertyChanged<IReactiveObject>, IRoutableViewModel, IActivatableViewModel, IProvideServices
 {
     [IgnoreDataMember] public string? UrlPathSegment { get; }
 
@@ -56,7 +56,14 @@ public abstract class ViewModelBase : ObservableObject,
     protected virtual void HandleActivation() { }
     protected virtual void HandleDeactivation() { }
     
-    [IgnoreDataMember] public IServiceProvider Services { get; protected init; } = Globals.ServiceProvider;
+    [IgnoreDataMember] public IServiceProvider Services { get; protected init; } = Globals.Services;
+
+    public TService GetService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
+    
+    public object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
+
+    
+    //
 
     #region Compatibility for ReactiveUI, IReactiveObject x ObservableObject, CommunityToolkit.Mvvm
 

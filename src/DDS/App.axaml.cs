@@ -15,13 +15,13 @@ public sealed partial class App : Application
     {
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            desktop.MainWindow = Globals.ServiceProvider.GetRequiredService<MainWindow>();
+            desktop.MainWindow = Globals.Services.GetRequiredService<MainWindow>();
             desktop.MainWindow.Height = 920;
             desktop.MainWindow.Width = 460;
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
-            singleViewPlatform.MainView = Globals.ServiceProvider.GetRequiredService<MainView>();
+            singleViewPlatform.MainView = Globals.Services.GetRequiredService<MainView>();
         }
 
         base.OnFrameworkInitializationCompleted();

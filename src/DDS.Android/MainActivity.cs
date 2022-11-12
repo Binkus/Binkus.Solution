@@ -21,7 +21,7 @@ namespace DDS.Android
         public MainActivity()
         {
             CurrentMainActivity = this;
-            _navigation = Globals.ServiceProvider.GetRequiredService<Lazy<NavigationViewModel>>();
+            _navigation = Globals.Services.GetRequiredService<Lazy<NavigationViewModel>>();
         }
 
         private int _backCounter;
@@ -51,6 +51,11 @@ namespace DDS.Android
                 _backCounter = 0;
             });
 
-        private static void KillApp() => Globals.ServiceProvider.GetRequiredService<ICloseAppService>().CloseApp();
+        private static void KillApp()
+        {
+            // TODO - Dialog
+
+            Globals.Services.GetRequiredService<ICloseAppService>().CloseApp();
+        }
     }
 }

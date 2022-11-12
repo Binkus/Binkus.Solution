@@ -11,7 +11,7 @@
         <ApplicationVersion>1</ApplicationVersion>
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
         <AndroidPackageFormat>apk</AndroidPackageFormat>
-        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
+<!--        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>-->
 <!--        <UseMaui>true</UseMaui>-->
         <UseMauiEssentials>true</UseMauiEssentials>
         <TargetFrameworkVersion>v11.0</TargetFrameworkVersion>

@@ -3,7 +3,7 @@
 using System.Reactive.Disposables;
 namespace DDS.Controls;
 
-public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReactiveViewFor<TViewModel> //, IDisposable, IAsyncDisposable
+public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReactiveViewFor<TViewModel>, IProvideServices //, IDisposable, IAsyncDisposable
     where TViewModel : class
 {
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
@@ -16,13 +16,37 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
         {
             if (base.DataContext is null or not TViewModel) 
                 throw new InvalidOperationException($"{nameof(base.DataContext)} of {GetType().Name} is null.");
-            // base.DataContext ??= ActivatorUtilities.GetServiceOrCreateInstance<TViewModel>(IAppCore.ServiceProvider);
-        });//.DisposeWith(ViewDisposables!);
+            
+            HandleActivation();
+            
+            Disposable
+                .Create(DeactivateView)
+                .DisposeWith(disposables);
+        });
+    }
+    
+    protected virtual void HandleActivation() {}
+    protected virtual void HandleDeactivation() {}
+    private void DeactivateView()
+    {
+        Dispose(true);
+        HandleDeactivation();
     }
 
     protected CompositeDisposable? ViewDisposables { get; private set; } = new();
 
-    public IServiceProvider Services { get; protected init; } = Globals.ServiceProvider;
+    private IServiceProvider? _services;
+    
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public IServiceProvider Services
+    {
+        get => _services ??= (_services = (base.DataContext as IProvideServices)?.Services) ?? Globals.Services;
+        protected init => _services = value;
+    }
+    
+    public TService GetService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
+    
+    public object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
 
     protected virtual void Dispose(bool disposing)
     {
@@ -51,4 +75,13 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
     // {
     //     Dispose(false);
     // }
+}
+
+static class Whatever
+{
+    public static T Test<T>(this T t)
+    {
+        Console.WriteLine("LIZZ WAS HERE");
+        return t;
+    }
 }

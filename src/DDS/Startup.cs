@@ -7,22 +7,22 @@ namespace DDS;
 public static class Startup
 {
     public static TAppBuilder ConfigureAppServices<TAppBuilder>(
-        this TAppBuilder appBuilder, Action<IServiceCollection>? serviceCollectionAction = default
+        this TAppBuilder appBuilder, Action<IServiceCollection>? servicesAction = default
     )
         where TAppBuilder : AppBuilderBase<TAppBuilder>, new()
     {
-        return appBuilder.ConfigureAppServices(new ServiceCollection(), serviceCollectionAction);
+        return appBuilder.ConfigureAppServices(new ServiceCollection(), servicesAction);
     }
 
     private static TAppBuilder ConfigureAppServices<TAppBuilder>(
-        this TAppBuilder appBuilder,  IServiceCollection services, Action<IServiceCollection>? serviceCollectionAction
+        this TAppBuilder appBuilder,  IServiceCollection services, Action<IServiceCollection>? servicesAction
     )
         where TAppBuilder : AppBuilderBase<TAppBuilder>, new()
     {
         Globals.ISetGlobalsOnlyOnceOnStartup.IsDesignMode = Design.IsDesignMode;
         services.UseMicrosoftDependencyResolver();
         appBuilder.UseReactiveUI(); // Most of ReactiveUI is initialized here already, so DI additions below here: 
-        serviceCollectionAction?.Invoke(services);
+        servicesAction?.Invoke(services);
         return appBuilder.ConfigureBuilder(services);
     }
     
@@ -58,13 +58,13 @@ public static class Startup
         StartupFacade.ConfigureServices(services);
         _ = services.ConfigureAppServices(); // => kick-starting all our registrations
         Globals.ISetGlobalsOnlyOnceOnStartup.ServiceProvider = services.BuildServiceProvider();
-        Globals.ServiceProvider.UseMicrosoftDependencyResolver();
+        Globals.Services.UseMicrosoftDependencyResolver();
 
         if (Globals.IsDesignMode)
         {
             // Skip DB Migration when Design Mode
             Globals.ISetGlobalsOnlyOnceOnStartup.DbMigrationTask = Task.CompletedTask;
-            return Globals.ServiceProvider;
+            return Globals.Services;
         }
         
         // // Future DB setup
@@ -79,7 +79,7 @@ public static class Startup
             // ReSharper disable once ConvertToLambdaExpression
             return Task.CompletedTask;
         });
-        return Globals.ServiceProvider;
+        return Globals.Services;
     }
     
     public static IServiceCollection ConfigureAppServices(this IServiceCollection services)

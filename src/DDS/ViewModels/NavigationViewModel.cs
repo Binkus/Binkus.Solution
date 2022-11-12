@@ -1,3 +1,5 @@
+using System.Windows.Input;
+
 namespace DDS.ViewModels;
 
 public class NavigationViewModel : ViewModelBase, IScreen
@@ -24,5 +26,23 @@ public class NavigationViewModel : ViewModelBase, IScreen
         GoBack = ReactiveCommand.CreateFromObservable(
             () => Router.NavigateBack.Execute(Unit.Default),
             canGoBack);
+    }
+
+    public bool Navigate<TViewModel>() where TViewModel : class, IRoutableViewModel
+    {
+        using var cmd = NavigateReactiveCommand<TViewModel>();
+        if (((ICommand)cmd).CanExecute(null) is false) return false;
+        cmd.Execute(Unit.Default).Subscribe();
+        return true;
+        // Router.Navigate.Execute(GetService<TViewModel>());
+    }
+    
+    public bool NavigateAndReset<TViewModel>() where TViewModel : class, IRoutableViewModel
+    {
+        using var cmd = NavigateAndResetReactiveCommand<TViewModel>();
+        if (((ICommand)cmd).CanExecute(null) is false) return false;
+        cmd.Execute(Unit.Default).Subscribe();
+        return true;
+        // Router.NavigateAndReset.Execute(GetService<TViewModel>());
     }
 }

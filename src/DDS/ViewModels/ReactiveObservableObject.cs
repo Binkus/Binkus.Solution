@@ -1,5 +1,6 @@
 namespace DDS.ViewModels;
 
+[DataContract]
 public abstract class ReactiveObservableObject : ObservableObject,
     IReactiveNotifyPropertyChanged<IReactiveObject>, IReactiveObject
 {

@@ -34,8 +34,9 @@ public sealed partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    void OpenDialog()
+    Task OpenDialog()
     {
+        return Task.CompletedTask;
 
     }
 }

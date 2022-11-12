@@ -1,11 +1,15 @@
 namespace DDS.ViewModels;
 
-public class MainWindowViewModel : ViewModelBase
+public sealed partial class MainWindowViewModel : ViewModelBase
 {
+    // empty ctor for Designer
+    public MainWindowViewModel() : this(Globals.GetService<MainView>()) { }
+    
+    [ActivatorUtilitiesConstructor, UsedImplicitly]
     public MainWindowViewModel(MainView mainView)
     {
         MainView = mainView;
     }
-    
-    [Reactive] public ReactiveUserControl<MainViewModel>? MainView { get; set; }
+
+    [ObservableProperty] private ReactiveUserControl<MainViewModel>? _mainView;
 }

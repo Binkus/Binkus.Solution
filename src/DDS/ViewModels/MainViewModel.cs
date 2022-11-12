@@ -1,4 +1,4 @@
-﻿namespace DDS.ViewModels;
+namespace DDS.ViewModels;
 
 public sealed partial class MainViewModel : ViewModelBase
 {
@@ -9,29 +9,34 @@ public sealed partial class MainViewModel : ViewModelBase
     [ObservableProperty] 
     private string _gotPath = "fullPath is empty";
 
-    public NavigationViewModel Navigation { get; }
+    // public NavigationViewModel Navigation { get; }
 
-    // Necessary for Designer: 
-#pragma warning disable CS8618
-    public MainViewModel() { }
-#pragma warning restore CS8618
+    // Necessary for Designer:
+    public MainViewModel() : this(Globals.Services) { }
 
     [ActivatorUtilitiesConstructor, UsedImplicitly]
-    public MainViewModel(NavigationViewModel navigation, IAvaloniaEssentials? avaloniaEssentials, 
-        Lazy<TestViewModel> testViewModel, Lazy<SecondTestViewModel> secondTestViewModel)
+    public MainViewModel(IServiceProvider services
+        // , NavigationViewModel navigation, IAvaloniaEssentials? avaloniaEssentials, 
+        // Lazy<TestViewModel> testViewModel
+        ) : base(services)
     {
-        _avaloniaEssentials ??= avaloniaEssentials ?? Globals.ServiceProvider.GetService<IAvaloniaEssentials>()!;
+        // Services = services;
+        _avaloniaEssentials = GetService<IAvaloniaEssentials>()!;
+        // _avaloniaEssentials ??= avaloniaEssentials ?? GetService<IAvaloniaEssentials>()!;
 
-        HostScreen = Navigation = navigation;
+        // HostScreen = Navigation = navigation;
 
-        GoTest = ReactiveCommand.CreateFromObservable(
-            () => Router.Navigate.Execute(testViewModel.Value),
-            canExecute: this.WhenAnyObservable(x => x.Router.CurrentViewModel).Select(x => x is not TestViewModel)
-        );
-        GoSecondTest = ReactiveCommand.CreateFromObservable(
-            () => Router.Navigate.Execute(secondTestViewModel.Value),
-            canExecute: this.WhenAnyObservable(x => x.Router.CurrentViewModel).Select(x => x is not SecondTestViewModel)
-        );
+        // GoTest = ReactiveCommand.CreateFromObservable(
+        //     () => Router.Navigate.Execute(GetService<TestViewModel>()),
+        //     canExecute: this.WhenAnyObservable(x => x.Router.CurrentViewModel).Select(x => x is not TestViewModel)
+        // );
+        // GoSecondTest = ReactiveCommand.CreateFromObservable(
+        //     () => Router.Navigate.Execute(GetService<SecondTestViewModel>()), // Transient needs resolvation each cmd execution
+        //     canExecute: this.WhenAnyObservable(x => x.Router.CurrentViewModel).Select(x => x is not SecondTestViewModel)
+        // );
+
+        GoTest = NavigateReactiveCommand<TestViewModel>();
+        GoSecondTest = NavigateReactiveCommand<SecondTestViewModel>();
     }
     
     public ReactiveCommand<Unit, IRoutableViewModel> GoTest { get; }
@@ -44,5 +49,11 @@ public sealed partial class MainViewModel : ViewModelBase
         var fileResult = await _avaloniaEssentials.FilePickerAsync();
         var fullPath = fileResult.FullPath;
         GotPath = fileResult.Exists ? $"fullPath={fullPath}" : "fullPath is empty";
+    }
+
+    [RelayCommand]
+    void OpenDialog()
+    {
+
     }
 }

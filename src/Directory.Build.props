@@ -1,6 +1,6 @@
 <Project>
   <PropertyGroup>
-    <AvaloniaVersion>11.0.0-preview3</AvaloniaVersion>
+    <AvaloniaVersion>11.0.0-preview4</AvaloniaVersion>
     <DotnetLangVersionShared>latest</DotnetLangVersionShared>
     <DotnetLangVersionDesktop>latest</DotnetLangVersionDesktop>
     <DotnetLangVersionMobile>latest</DotnetLangVersionMobile>

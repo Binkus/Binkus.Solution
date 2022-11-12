@@ -1,4 +1,4 @@
-// ReSharper disable MemberCanBePrivate.Global
+﻿// ReSharper disable MemberCanBePrivate.Global
 
 namespace DDS.ViewModels;
 
@@ -8,14 +8,18 @@ public abstract class ViewModelBase : ObservableObject,
 {
     [IgnoreDataMember] public string? UrlPathSegment { get; }
 
-    [IgnoreDataMember] private IScreen? _hostScreen;
+    [IgnoreDataMember] private Lazy<IScreen>? _lazyHostScreen;
     
     [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    public IScreen HostScreen
+    public virtual IScreen HostScreen
     {
-        get => _hostScreen ??= Services.GetRequiredService<IScreen>();
-        protected init => this.RaiseAndSetIfChanged(ref _hostScreen, value);
+        get => _lazyHostScreen?.Value ?? this.RaiseAndSetIfChanged(
+            ref _lazyHostScreen, new Lazy<IScreen>(GetService<IScreen>()))!.Value;
+        protected init => this.RaiseAndSetIfChanged(ref _lazyHostScreen, new Lazy<IScreen>(value));
     }
+    
+    [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public NavigationViewModel Navigation => HostScreen as NavigationViewModel ?? GetService<NavigationViewModel>();
 
     [IgnoreDataMember] public virtual RoutingState Router => HostScreen.Router;
 
@@ -31,7 +35,9 @@ public abstract class ViewModelBase : ObservableObject,
         set => this.RaiseAndSetIfChanged(ref _customViewName, value);
     }
 
-    protected ViewModelBase(IScreen hostScreen) : this() => _hostScreen = hostScreen;
+    protected ViewModelBase(IScreen hostScreen) : this() => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
+    protected ViewModelBase(Lazy<IScreen> lazyHostScreen) : this() => _lazyHostScreen = lazyHostScreen;
+    protected ViewModelBase(IServiceProvider services) : this() => Services = services;
     
     protected ViewModelBase()
     {
@@ -63,6 +69,23 @@ public abstract class ViewModelBase : ObservableObject,
     public object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
 
     
+    //
+
+    protected ReactiveCommand<Unit, IRoutableViewModel> NavigateReactiveCommand<TViewModel>(
+        ) where TViewModel : class, IRoutableViewModel 
+        => CreateNavigationReactiveCommandFromObservable<TViewModel>(new Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>>(() => Router.Navigate));
+    
+    protected ReactiveCommand<Unit, IRoutableViewModel> NavigateAndResetReactiveCommand<TViewModel>(
+        ) where TViewModel : class, IRoutableViewModel 
+        => CreateNavigationReactiveCommandFromObservable<TViewModel>(new Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>>(() => Router.NavigateAndReset));
+
+    protected ReactiveCommand<Unit, IRoutableViewModel> CreateNavigationReactiveCommandFromObservable<TViewModel>(
+        Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>> navi) where TViewModel : class, IRoutableViewModel 
+        => ReactiveCommand.CreateFromObservable(
+            () => navi.Value.Execute(GetService<TViewModel>()),
+            canExecute: this.WhenAnyObservable(x => x.Router.CurrentViewModel).Select(x => x is not TViewModel)
+        );
+
     //
 
     #region Compatibility for ReactiveUI, IReactiveObject x ObservableObject, CommunityToolkit.Mvvm

@@ -8,6 +8,7 @@
         <WarningsAsErrors>Nullable</WarningsAsErrors>
         <!--Temporal hack that fixes compilation in VS-->
         <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+        <RootNamespace>DDS.Web</RootNamespace>
     </PropertyGroup>
 
     <!-- In debug, make builds faster by reducing optimizations -->

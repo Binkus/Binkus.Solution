@@ -15,6 +15,7 @@
 <!--        <UseMaui>true</UseMaui>-->
         <UseMauiEssentials>true</UseMauiEssentials>
         <TargetFrameworkVersion>v11.0</TargetFrameworkVersion>
+        <RootNamespace>DDS.Android</RootNamespace>
 <!--        <AndroidUseAapt2>True</AndroidUseAapt2>-->
 <!--        <AndroidPackageFormats>aab;apk</AndroidPackageFormats>-->
 <!--        <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>-->
@@ -50,7 +51,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DDS.Mobile\DDS.Mobile.csproj" PrivateAssets="None" />
+        <ProjectReference Include="..\DDS.Avalonia.Mobile\DDS.Avalonia.Mobile.csproj" PrivateAssets="None" />
 <!--        <ProjectReference Include="..\DDS\DDS.csproj" PrivateAssets="None" />-->
     </ItemGroup>
 </Project>

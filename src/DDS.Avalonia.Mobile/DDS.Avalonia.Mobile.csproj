@@ -9,6 +9,7 @@
         <Nullable>enable</Nullable>
         <WarningsAsErrors>Nullable</WarningsAsErrors>
         <UseMauiEssentials>true</UseMauiEssentials>
+        <RootNamespace>DDS.Mobile</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>        

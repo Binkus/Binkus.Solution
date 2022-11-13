@@ -1,14 +1,14 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Android", "src\DDS.Android\DDS.Android.csproj", "{18DC94AC-29A0-4378-B732-0CC9EA9D9072}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Avalonia.Android", "src\DDS.Avalonia.Android\DDS.Avalonia.Android.csproj", "{18DC94AC-29A0-4378-B732-0CC9EA9D9072}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Desktop", "src\DDS.Desktop\DDS.Desktop.csproj", "{B2FF64A9-8D6F-48A1-843E-0E84AD444310}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Avalonia.Desktop", "src\DDS.Avalonia.Desktop\DDS.Avalonia.Desktop.csproj", "{B2FF64A9-8D6F-48A1-843E-0E84AD444310}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Web", "src\DDS.Web\DDS.Web.csproj", "{67685C4A-2044-4BB8-9183-479FA3DC7121}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Avalonia.Web", "src\DDS.Avalonia.Web\DDS.Avalonia.Web.csproj", "{67685C4A-2044-4BB8-9183-479FA3DC7121}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Avalonia", "src\DDS.Avalonia\DDS.Avalonia.csproj", "{2B4CCA97-7AE9-49A8-AFDB-2D8CB72F224B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Mobile", "src\DDS.Mobile\DDS.Mobile.csproj", "{6C2FB1A8-C309-4B12-B859-5447B09A5DBF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Avalonia.Mobile", "src\DDS.Avalonia.Mobile\DDS.Avalonia.Mobile.csproj", "{6C2FB1A8-C309-4B12-B859-5447B09A5DBF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

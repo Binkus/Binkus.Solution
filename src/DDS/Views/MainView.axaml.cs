@@ -16,5 +16,26 @@ public sealed partial class MainView : BaseUserControl<MainViewModel>
         InitializeComponent();
         // Optional, but gets resolved anyway but by default, but for each navigation, with this change only once:
         RoutedViewHost.ViewLocator = viewLocator;
+        
+        this.WhenActivated((CompositeDisposable d) =>
+        {
+            var topLevel = GetTopLevel();
+            
+            // Disposable.Create();
+        });
+
+        // this.WhenActivated((CompositeDisposable d) =>
+        // {
+        //     try
+        //     {
+        //         SecondTestView.MainViewTopLevel = GetTopLevel();
+        //     }
+        //     catch (Exception e)
+        //     {
+        //         //
+        //     }    
+        // });
+        
+        
     }
 }

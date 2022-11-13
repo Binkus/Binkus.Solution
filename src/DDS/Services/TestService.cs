@@ -4,7 +4,7 @@ public class TestService
 {
     public Func<string> Fn { get; }
 
-    public IServiceProvider Services { get; } = Globals.ServiceProvider;
+    public IServiceProvider Services { get; } = Globals.Services;
     
     public TestService(IServiceProvider services, TestInnerService service)
     {

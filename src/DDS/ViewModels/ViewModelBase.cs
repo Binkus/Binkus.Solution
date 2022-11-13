@@ -53,10 +53,10 @@ public abstract class ViewModelBase : ReactiveObservableObject,
                 .Create(HandleDeactivation)
                 .DisposeWith(disposables);
         });
-        
+
         Debug.WriteLine("c:"+ViewModelName);
     }
-    
+
     protected virtual void HandleActivation() { }
     protected virtual void HandleDeactivation() { }
     
@@ -83,4 +83,9 @@ public abstract class ViewModelBase : ReactiveObservableObject,
             () => navi.Value.Execute(GetService<TViewModel>()),
             canExecute: this.WhenAnyObservable(x => x.Router.CurrentViewModel).Select(x => x is not TViewModel)
         );
+
+    void Test()
+    {
+        // var a = this.WhenAnyObservable(x => x._lazyHostScreen != null && x._lazyHostScreen.IsValueCreated).Subscribe();
+    }
 }

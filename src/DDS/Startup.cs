@@ -103,9 +103,10 @@ public static class Startup
         {
         }
     }
-
+    
     private static IServiceCollection AddTaskResolution(this IServiceCollection services)
         => services.AddTransient(typeof(Task<>), typeof(TaskResolved<>));
+            // .AddTransient(typeof(Task<>).MakeGenericType(typeof(Lazy<>)), typeof(TaskLazilyResolved<,>))
             
     private sealed class TaskResolved<T> : Task<T> where T : notnull
     {
@@ -114,6 +115,43 @@ public static class Startup
         {
         }
     }
+    
+    // private static IServiceCollection AddBaseViewResolution(this IServiceCollection services)
+    //     => services.AddTransient(typeof(BaseUserControl<>), typeof(BaseUserControlResolved<>));
+    //
+    // private sealed partial class BaseUserControlResolved<T> : BaseUserControl<T> where T : class
+    // {
+    //     public BaseUserControlResolved(IServiceProvider serviceProvider)
+    //         // : base(serviceProvider.GetRequiredService<T>)
+    //     {
+    //         Services = serviceProvider;
+    //         Avalonia.Markup.Xaml.AvaloniaXamlLoader.Load(this);
+    //     }
+    // }
+    
+    // private sealed class TaskLazilyResolved<TL, T> : Task<T> where TL : Lazy<T>
+    // {
+    //     public TaskLazilyResolved(Lazy<T> lazy)
+    //         : base(() => lazy.Value)
+    //     {
+    //     }
+    // }
+    
+    // [AsyncMethodBuilder(typeof (AsyncValueTaskMethodBuilder<>))]
+    // [StructLayout(LayoutKind.Auto)]
+    // private readonly struct ValueTaskResolved<TResult> : IEquatable<ValueTask<TResult>> where TResult : notnull
+    // {
+    //     private IEquatable<ValueTask<TResult>> _equatableImplementation;
+    //
+    //     public ValueTaskResolved(IServiceProvider serviceProvider)
+    //     {
+    //     }
+    //
+    //     public bool Equals(ValueTask<TResult> other)
+    //     {
+    //         return _equatableImplementation.Equals(other);
+    //     }
+    // }
 
     private static IServiceCollection AddViewAndViewModels(this IServiceCollection services)
     {

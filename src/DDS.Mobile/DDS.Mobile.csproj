@@ -12,7 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>        
-        <ProjectReference Include="..\DDS\DDS.csproj" PrivateAssets="None" />
+        <ProjectReference Include="..\DDS.Avalonia\DDS.Avalonia.csproj" PrivateAssets="None" />
     </ItemGroup>
 
     <ItemGroup>    

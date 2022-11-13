@@ -33,7 +33,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DDS\DDS.csproj" />
+        <ProjectReference Include="..\DDS.Avalonia\DDS.Avalonia.csproj" />
     </ItemGroup>
 
 </Project>

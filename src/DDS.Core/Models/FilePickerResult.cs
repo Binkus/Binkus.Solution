@@ -1,5 +1,3 @@
-using Avalonia.Platform.Storage;
-
 namespace DDS.Avalonia.Models;
 
 public struct FilePickerResult
@@ -16,5 +14,5 @@ public struct FilePickerResult
 
     public string FullPath { get; set; } = "";
     
-    public IReadOnlyList<IStorageFile>? StorageFiles { get; init; } = null;
+    public IReadOnlyList<object>? StorageFiles { get; init; } = null;
 }

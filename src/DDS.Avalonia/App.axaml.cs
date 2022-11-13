@@ -4,7 +4,7 @@ using Avalonia.Markup.Xaml;
 
 namespace DDS.Avalonia;
 
-public sealed partial class App : Application
+public sealed partial class App : Application, IAppCore
 {
     public override void Initialize()
     {

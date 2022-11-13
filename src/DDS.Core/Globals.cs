@@ -17,9 +17,9 @@ public static class Globals
 
     [UsedImplicitly] public static bool IsStartupDone { get { lock (Locke) return _startupDone; } }
 
-    internal interface ISetGlobalsOnlyOnceOnStartup
+    public interface ISetGlobalsOnlyOnceOnStartup
     {
-        [UsedImplicitly] static App? InstanceNullable { internal get => _instanceNullable; set => _instanceNullable = D(value); }
+        [UsedImplicitly] static IAppCore? InstanceNullable { get => _instanceNullable; set => _instanceNullable = D(value); }
         [UsedImplicitly] static bool IsDesignMode { private get => Globals.IsDesignMode; set => Globals.IsDesignMode = value.D(); }
         [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Globals.Services; set => Globals.Services = value.D(); }
         [UsedImplicitly] static object ApplicationLifetime { private get => Globals.ApplicationLifetime; set => Globals.ApplicationLifetime = value.D(); }
@@ -48,8 +48,8 @@ public static class Globals
     // public static Task InitStartup = null!;
     [UsedImplicitly] public static Task DbMigrationTask { get; private set; } = null!;
     
-    private static App? _instanceNullable;
-    [UsedImplicitly] public static App Instance 
+    private static IAppCore? _instanceNullable;
+    [UsedImplicitly] public static IAppCore Instance 
         => _instanceNullable ?? throw new NullReferenceException($"{nameof(_instanceNullable)} is null");
     
     [UsedImplicitly] public static bool IsDesignMode { get; private set; }

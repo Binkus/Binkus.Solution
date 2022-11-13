@@ -1,9 +1,10 @@
 using Avalonia.Input;
+using DDS.Core.Controls;
 
 namespace DDS.Avalonia.Controls;
 
-public interface IReactiveViewFor<T> : IViewFor<T>, IProvideServices
-    where T : class
+public interface IReactiveViewFor<TViewModel> : ICoreViewFor<TViewModel>
+    where TViewModel : class
 {
     TopLevel GetTopLevel();
 

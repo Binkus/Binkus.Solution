@@ -9,7 +9,7 @@
         <Nullable>enable</Nullable>
         <WarningsAsErrors>Nullable</WarningsAsErrors>
         <UseMauiEssentials>true</UseMauiEssentials>
-        <RootNamespace>DDS.Mobile</RootNamespace>
+        <RootNamespace>DDS.Avalonia.Mobile</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>        

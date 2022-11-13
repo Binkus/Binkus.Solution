@@ -1,4 +1,4 @@
-namespace DDS.Controls;
+namespace DDS.Avalonia.Controls;
 
 public class ReactiveViewLocator : IViewLocator
 {

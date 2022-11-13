@@ -1,10 +1,11 @@
 using System.Diagnostics;
 using System.Reactive.Disposables;
+using Avalonia.Input;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable MemberCanBeProtected.Global
 
-namespace DDS.Controls;
+namespace DDS.Avalonia.Controls;
 
 public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewModel>, IReactiveViewFor<TViewModel>
     where TViewModel : class
@@ -57,7 +58,7 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
     
     public Window GetWindow() => this.VisualRoot as Window ?? throw new NullReferenceException("Invalid Owner");
     public TopLevel GetTopLevel() => this.VisualRoot as TopLevel ?? throw new NullReferenceException("Invalid Owner");
-    public Avalonia.Input.IInputRoot GetInputRoot() => this.VisualRoot as Avalonia.Input.IInputRoot 
+    public IInputRoot GetInputRoot() => this.VisualRoot as IInputRoot 
                                                 ?? throw new NullReferenceException("Invalid Owner");
     
     

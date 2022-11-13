@@ -1,6 +1,6 @@
 using Avalonia.Platform.Storage;
 
-namespace DDS.Services;
+namespace DDS.Avalonia.Services;
 
 public class AvaloniaEssentialsCommonService : IAvaloniaEssentials
 {

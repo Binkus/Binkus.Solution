@@ -1,9 +1,9 @@
 ﻿using Avalonia;
-using DDS.Desktop.Services;
-using DDS.Services;
+using DDS.Avalonia.Desktop.Services;
+using DDS.Avalonia.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DDS.Desktop
+namespace DDS.Avalonia.Desktop
 {
     internal static class Program
     {

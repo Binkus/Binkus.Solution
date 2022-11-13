@@ -1,4 +1,4 @@
-namespace DDS.ViewModels;
+namespace DDS.Avalonia.ViewModels;
 
 public sealed partial class MainWindowViewModel : ViewModelBase
 {

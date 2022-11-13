@@ -1,6 +1,6 @@
-using DDS.Services;
+using DDS.Avalonia.Services;
 
-namespace DDS.Android.Services;
+namespace DDS.Avalonia.Android.Services;
 
 public class CloseAppService : ICloseAppService
 {

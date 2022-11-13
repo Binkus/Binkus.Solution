@@ -1,4 +1,4 @@
-namespace DDS.Services;
+namespace DDS.Avalonia.Services;
 
 public interface ICloseAppService
 {

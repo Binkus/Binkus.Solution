@@ -3,11 +3,11 @@ using System.Windows.Input;
 using Android.App;
 using Android.Content.PM;
 using Avalonia.Android;
-using DDS.Services;
-using DDS.ViewModels;
+using DDS.Avalonia.Services;
+using DDS.Avalonia.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace DDS.Android
+namespace DDS.Avalonia.Android
 {
     [Activity(Label = "DDS.Android", Theme = "@style/MyTheme.NoActionBar", Icon = "@drawable/icon",
         LaunchMode = LaunchMode.SingleTop,

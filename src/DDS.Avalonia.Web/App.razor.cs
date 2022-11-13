@@ -3,14 +3,14 @@ using Avalonia;
 using Avalonia.ReactiveUI;
 using Avalonia.Web.Blazor;
 
-namespace DDS.Web;
+namespace DDS.Avalonia.Web;
 
 public partial class App
 {
     [SupportedOSPlatform("browser")]
     protected override void OnParametersSet()
     {
-        AppBuilder.Configure<DDS.App>()
+        AppBuilder.Configure<DDS.Avalonia.App>()
             .UseBlazor()
             .ConfigureAppServices(services =>
             {

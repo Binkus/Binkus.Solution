@@ -1,9 +1,11 @@
-namespace DDS.Controls;
+using Avalonia.Input;
+
+namespace DDS.Avalonia.Controls;
 
 public interface IReactiveViewFor<T> : IViewFor<T>, IProvideServices
     where T : class
 {
     TopLevel GetTopLevel();
 
-    Avalonia.Input.IInputRoot GetInputRoot();
+    IInputRoot GetInputRoot();
 }

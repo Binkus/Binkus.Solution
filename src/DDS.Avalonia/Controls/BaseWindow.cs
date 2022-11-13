@@ -1,7 +1,9 @@
 // ReSharper disable MemberCanBePrivate.Global
 
 using System.Reactive.Disposables;
-namespace DDS.Controls;
+using Avalonia.Input;
+
+namespace DDS.Avalonia.Controls;
 
 public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReactiveViewFor<TViewModel>
     where TViewModel : class
@@ -49,7 +51,7 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
     
     public TopLevel GetTopLevel() => this.VisualRoot as TopLevel ?? throw new NullReferenceException("Invalid Owner");
     
-    public Avalonia.Input.IInputRoot GetInputRoot() => this.VisualRoot as Avalonia.Input.IInputRoot 
+    public IInputRoot GetInputRoot() => this.VisualRoot as IInputRoot 
                                                        ?? throw new NullReferenceException("Invalid Owner");
 
     

@@ -1,18 +1,19 @@
 ﻿using Android.App;
 using Android.Content;
 using Android.OS;
+using Avalonia;
 using Avalonia.Android;
-using DDS.Android.Services;
-using DDS.Services;
+using DDS.Avalonia.Android.Services;
+using DDS.Avalonia.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Application = Android.App.Application;
 
-namespace DDS.Android
+namespace DDS.Avalonia.Android
 {
     [Activity(Theme = "@style/MyTheme.Splash", MainLauncher = true, NoHistory = true)]
     public class SplashActivity : AvaloniaSplashActivity<App>
     {
-        protected override Avalonia.AppBuilder CustomizeAppBuilder(Avalonia.AppBuilder builder)
+        protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
             => Globals.IsStartupDone ? base.CustomizeAppBuilder(builder) : base.CustomizeAppBuilder(builder) 
                 .ConfigureAppServices(services => services.AddSingleton<ICloseAppService,CloseAppService>())
                 // .ConfigureAppServicesAfterEverythingElse(services =>
@@ -20,7 +21,6 @@ namespace DDS.Android
                 // )
             ;
 
-        
         protected override void OnCreate(Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);

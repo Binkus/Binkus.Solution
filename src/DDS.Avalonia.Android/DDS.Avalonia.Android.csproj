@@ -15,7 +15,7 @@
 <!--        <UseMaui>true</UseMaui>-->
         <UseMauiEssentials>true</UseMauiEssentials>
         <TargetFrameworkVersion>v11.0</TargetFrameworkVersion>
-        <RootNamespace>DDS.Android</RootNamespace>
+        <RootNamespace>DDS.Avalonia.Android</RootNamespace>
 <!--        <AndroidUseAapt2>True</AndroidUseAapt2>-->
 <!--        <AndroidPackageFormats>aab;apk</AndroidPackageFormats>-->
 <!--        <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>-->

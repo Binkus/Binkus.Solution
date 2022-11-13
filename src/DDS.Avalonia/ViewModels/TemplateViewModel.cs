@@ -1,4 +1,4 @@
-namespace DDS.ViewModels;
+namespace DDS.Avalonia.ViewModels;
 
 [DataContract]
 public sealed partial class TemplateViewModel : ViewModelBase

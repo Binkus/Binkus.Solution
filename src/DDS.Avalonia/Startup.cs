@@ -4,7 +4,7 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.VisualTree;
 using Splat.Microsoft.Extensions.DependencyInjection;
 
-namespace DDS;
+namespace DDS.Avalonia;
 
 public static class Startup
 {

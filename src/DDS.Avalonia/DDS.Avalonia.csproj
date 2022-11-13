@@ -5,7 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>Nullable</WarningsAsErrors>
-        <RootNamespace>DDS</RootNamespace>
+        <RootNamespace>DDS.Avalonia</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
         <AvaloniaResource Include="Assets\**" />

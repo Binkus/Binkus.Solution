@@ -2,11 +2,11 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:viewModels="clr-namespace:DDS.ViewModels"
+             xmlns:viewModels="clr-namespace:DDS.Avalonia.ViewModels"
              xmlns:reactiveUi="http://reactiveui.net"
-             xmlns:controls="clr-namespace:DDS.Controls"
+             xmlns:controls="clr-namespace:DDS.Avalonia.Controls"
              mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="900"
-             x:Class="DDS.Views.MainView"
+             x:Class="DDS.Avalonia.Views.MainView"
              Foreground="White"
              Background="#171C2C">
     <Design.DataContext>

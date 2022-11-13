@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using DDS.Web;
+using DDS.Avalonia.Web;
 using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+
+namespace DDS.Avalonia.Web;
 
 public class Program
 {

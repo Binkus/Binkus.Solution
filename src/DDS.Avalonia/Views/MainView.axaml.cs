@@ -1,9 +1,9 @@
 using System.Reactive;
 using Avalonia.Controls;
-using DDS.Controls;
-using DDS.ViewModels;
+using DDS.Avalonia.Controls;
+using DDS.Avalonia.ViewModels;
 
-namespace DDS.Views;
+namespace DDS.Avalonia.Views;
 
 public sealed partial class MainView : BaseUserControl<MainViewModel>
 {

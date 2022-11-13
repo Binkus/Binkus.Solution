@@ -1,6 +1,6 @@
-using DDS.Services;
+using DDS.Avalonia.Services;
 
-namespace DDS.Desktop.Services;
+namespace DDS.Avalonia.Desktop.Services;
 
 public class CloseAppService : ICloseAppService
 {

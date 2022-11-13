@@ -1,6 +1,6 @@
 using Avalonia.Platform.Storage;
 
-namespace DDS.Models;
+namespace DDS.Avalonia.Models;
 
 public struct FilePickerResult
 {

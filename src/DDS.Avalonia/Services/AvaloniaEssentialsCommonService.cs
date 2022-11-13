@@ -7,18 +7,28 @@ namespace DDS.Avalonia.Services;
 
 public class AvaloniaEssentialsCommonService : IAvaloniaEssentials
 {
-    private readonly Lazy<TopLevel> _topLevel;
+    // private readonly Lazy<Task<TopLevel>> _topLevel;
+    //
+    // public AvaloniaEssentialsCommonService(Lazy<TopLevelService> tls)
+    // {
+    //     _topLevel = new Lazy<Task<TopLevel>>(() => tls.Value.CurrentTopLevel());
+    // }
+    
+    private readonly TopLevelService _topLevelService;
 
-    public AvaloniaEssentialsCommonService(Lazy<TopLevel> topLevel)
+    public AvaloniaEssentialsCommonService(TopLevelService topLevelService)
     {
-        _topLevel = topLevel;
+        _topLevelService = topLevelService;
     }
     
     public async Task<FilePickerResult> FilePickerAsync(bool allowMultiple = false)
     {
         if (Globals.IsDesignMode) return default;
 
-        var results = await _topLevel.Value.StorageProvider.OpenFilePickerAsync(
+        var topLevel = await _topLevelService.CurrentTopLevel();
+        
+        // var results = await (await _topLevel.Value).StorageProvider.OpenFilePickerAsync(
+        var results = await topLevel.StorageProvider.OpenFilePickerAsync(
             new FilePickerOpenOptions
             {
                 AllowMultiple = allowMultiple
@@ -33,14 +43,14 @@ public class AvaloniaEssentialsCommonService : IAvaloniaEssentials
             if (result.TryGetUri(out var uri))
             {
                 var fullPath = uri.AbsolutePath;
-                
+
                 return new FilePickerResult
                 {
                     ContentType = "",
                     FileName = fileName,
                     FullPath = fullPath,
                     StorageFiles = results
-                };  
+                };
             }
         }
 

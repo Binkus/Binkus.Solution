@@ -121,6 +121,7 @@ public static class Startup
     private static IServiceCollection AddViewAndViewModels(this IServiceCollection services)
     {
         services
+            .AddScoped<TopLevelService>()
             .AddSingleton<IViewLocator, ReactiveViewLocator>()
             .AddViewAndViewModels<MainView, MainViewModel>(ServiceLifetime.Singleton, setDataContext: true)
             .AddSingleton<NavigationViewModel>()
@@ -180,10 +181,8 @@ public static class Startup
         return services;
     }
 
-    private static IServiceCollection AddWindows(this IServiceCollection service)
+    private static IServiceCollection AddWindows(this IServiceCollection services)
         => !Globals.IsClassicDesktopStyleApplicationLifetime 
-            ? service.AddSingleton<TopLevel>(p => (TopLevel)p.GetRequiredService<MainView>().GetVisualRoot()!)
-            : service.AddSingleton<TopLevel>(p => p.GetRequiredService<MainWindow>())
-            .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Singleton, setDataContext: true)
-            ;
+            ? services : services
+                .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Singleton, setDataContext: true);
 }

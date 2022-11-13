@@ -14,5 +14,5 @@ public struct FilePickerResult
 
     public string FullPath { get; set; } = "";
     
-    public IReadOnlyList<object>? StorageFiles { get; init; } = null;
+    public IReadOnlyList<IDisposable>? StorageFiles { get; init; } = null;
 }

@@ -4,7 +4,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Avalonia.Android", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Avalonia.Desktop", "src\DDS.Avalonia.Desktop\DDS.Avalonia.Desktop.csproj", "{B2FF64A9-8D6F-48A1-843E-0E84AD444310}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.iOS", "src\DDS.iOS\DDS.iOS.csproj", "{745BE9A5-AFF0-4395-BA75-2BD8CCC53E9F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Avalonia.iOS", "src\DDS.Avalonia.iOS\DDS.Avalonia.iOS.csproj", "{745BE9A5-AFF0-4395-BA75-2BD8CCC53E9F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Avalonia.Web", "src\DDS.Avalonia.Web\DDS.Avalonia.Web.csproj", "{67685C4A-2044-4BB8-9183-479FA3DC7121}"
 EndProject

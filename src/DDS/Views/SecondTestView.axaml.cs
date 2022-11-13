@@ -4,7 +4,8 @@ using Avalonia.Markup.Xaml;
 
 namespace DDS.Views;
 
-public partial class SecondTestView : BaseUserControl<SecondTestViewModel>
+[UsedImplicitly]
+public sealed partial class SecondTestView : BaseUserControl<SecondTestViewModel>
 {
     public SecondTestView()
     {

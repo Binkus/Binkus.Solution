@@ -16,7 +16,7 @@ public class ReactiveViewLocator : IViewLocator
         // BTW ViewModel property of the returned IViewFor will be set automatically to the same ViewModel as parameter
         // "T? viewModel" by ViewModelViewHost and RoutedViewHost, which are the ones who can call this method
         // the latter RoutedViewHost calls this method
-        Globals.ServiceProvider.GetService(DictOfViews[viewModel!.GetType().UnderlyingSystemType.FullName!]) 
+        Globals.Services.GetService(DictOfViews[viewModel!.GetType().UnderlyingSystemType.FullName!]) 
             as IViewFor;
 
     // public IViewFor? ResolveByReflection<T>(T? viewModel, string? contract = null) // ResolveByReflection

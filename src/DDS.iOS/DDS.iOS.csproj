@@ -2,7 +2,7 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>$(DotnetVersionMobile)-ios</TargetFramework>
-        <LangVersion>latest</LangVersion>
+        <LangVersion>$(DotnetLangVersionMobile)</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>Nullable</WarningsAsErrors>
@@ -16,10 +16,10 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Avalonia.iOS" Version="11.0.0-preview2"/>
+        <PackageReference Include="Avalonia.iOS" Version="$(AvaloniaVersion)"/>
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DDS\DDS.csproj"/>
+        <ProjectReference Include="..\DDS.Mobile\DDS.Mobile.csproj"/>
     </ItemGroup>
 </Project>

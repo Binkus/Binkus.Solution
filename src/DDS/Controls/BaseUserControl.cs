@@ -6,7 +6,7 @@ using System.Reactive.Disposables;
 
 namespace DDS.Controls;
 
-public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewModel>, IReactiveViewFor<TViewModel>//, IDisposable, IAsyncDisposable
+public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewModel>, IReactiveViewFor<TViewModel>, IProvideServices //, IDisposable, IAsyncDisposable
     where TViewModel : class
 {
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
@@ -22,18 +22,42 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
 
             Debug.Write($"    |_ {(DataContext as ViewModelBase)?.ViewModelName} _ View Activated\n");
 
+            HandleActivation();
+            Disposable
+                .Create(DeactivateView)
+                .DisposeWith(disposables);
+            
             // Disposable
-                // .Create(() => DisposeAsync())
-                // .DisposeWith(disposables);
+            //     .Create(() => Dispose(true))
+            //     .DisposeWith(disposables);
         });//.DisposeWith(ViewDisposables!);
         
 
         Debug.WriteLine("cv:"+ this.GetType().UnderlyingSystemType.Name);
     }
+
+    protected virtual void HandleActivation() {}
+    protected virtual void HandleDeactivation() {}
+    private void DeactivateView()
+    {
+        Dispose(true);
+        HandleDeactivation();
+    }
     
     protected CompositeDisposable? ViewDisposables { get; private set; } = new();
 
-    public IServiceProvider Services { get; protected init; } = Globals.ServiceProvider;
+    private IServiceProvider? _services;
+    
+    [DebuggerBrowsable(DebuggerBrowsableState.Never)]
+    public IServiceProvider Services
+    {
+        get => _services ??= (_services = (base.DataContext as IProvideServices)?.Services) ?? Globals.Services;
+        protected init => _services = value;
+    }
+    
+    public TService GetService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
+    
+    public object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
     
     public Window GetWindow() => this.VisualRoot as Window ?? throw new NullReferenceException("Invalid Owner");
     public TopLevel GetTopLevel() => this.VisualRoot as TopLevel ?? throw new NullReferenceException("Invalid Owner");

@@ -1,4 +1,7 @@
 ﻿using Avalonia;
+using DDS.Desktop.Services;
+using DDS.Services;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace DDS.Desktop
 {
@@ -14,7 +17,9 @@ namespace DDS.Desktop
         // Avalonia configuration, don't remove; also used by visual designer.
         private static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
-                .ConfigureAppServices()
+                .ConfigureAppServices(services => services
+                        .AddSingleton<ICloseAppService,CloseAppService>()
+                    )
                 .UsePlatformDetect()
                 .LogToTrace();
     }

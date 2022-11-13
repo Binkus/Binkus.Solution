@@ -4,15 +4,24 @@ namespace DDS;
 
 public static class Globals
 {
-    private static bool _startupDone;
-    private static T D<T>(this T t) => 
-        _startupDone ? throw new InvalidOperationException("Startup is already done, Globals are immutable") : t;
+    private static readonly object Locke = new();
+
+    private static volatile bool _startupDone;
+
+    private static T D<T>(this T t)
+    {
+        lock (Locke) return _startupDone 
+                ? throw new InvalidOperationException("Startup is already done, Globals are immutable") 
+                : t;
+    }
+
+    [UsedImplicitly] public static bool IsStartupDone { get { lock (Locke) return _startupDone; } }
 
     internal interface ISetGlobalsOnlyOnceOnStartup
     {
         [UsedImplicitly] static App? InstanceNullable { internal get => _instanceNullable; set => _instanceNullable = D(value); }
         [UsedImplicitly] static bool IsDesignMode { private get => Globals.IsDesignMode; set => Globals.IsDesignMode = value.D(); }
-        [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Globals.ServiceProvider; set => Globals.ServiceProvider = value.D(); }
+        [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Globals.Services; set => Globals.Services = value.D(); }
         [UsedImplicitly] static object ApplicationLifetime { private get => Globals.ApplicationLifetime; set => Globals.ApplicationLifetime = value.D(); }
 
         [UsedImplicitly]
@@ -29,7 +38,7 @@ public static class Globals
             {
                 throw new NullReferenceException("Globals setup has not been done correctly");
             }
-            _startupDone = true.D();
+            lock (Locke) _startupDone = true.D();
         }
     }
     
@@ -44,7 +53,11 @@ public static class Globals
         => _instanceNullable ?? throw new NullReferenceException($"{nameof(_instanceNullable)} is null");
     
     [UsedImplicitly] public static bool IsDesignMode { get; private set; }
-    [UsedImplicitly] public static IServiceProvider ServiceProvider { get; private set; } = null!;
+    [UsedImplicitly] public static IServiceProvider Services { get; private set; } = null!;
+    [UsedImplicitly] public static TService GetService<TService>() where TService : notnull 
+        => Services.GetRequiredService<TService>();
+    [UsedImplicitly] public static object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
+
     [UsedImplicitly] public static object ApplicationLifetime { get; private set; } = null!;
     [UsedImplicitly] public static bool IsClassicDesktopStyleApplicationLifetime { get; private set; }
 

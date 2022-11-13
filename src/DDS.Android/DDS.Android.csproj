@@ -15,8 +15,10 @@
 <!--        <EmbedAssembliesIntoApk>false</EmbedAssembliesIntoApk>-->
 <!--        <AndroidFastDeploymentType>Dexes</AndroidFastDeploymentType>-->
 <!--        <AndroidUseAssemblyStore>false</AndroidUseAssemblyStore>-->
+<!--        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>-->
 <!--        <UseMaui>true</UseMaui>-->
-<!--        <UseMauiEssentials>true</UseMauiEssentials>-->
+        <UseMauiEssentials>true</UseMauiEssentials>
+        <TargetFrameworkVersion>v11.0</TargetFrameworkVersion>
 <!--        <AndroidUseAapt2>True</AndroidUseAapt2>-->
 <!--        <AndroidPackageFormats>aab;apk</AndroidPackageFormats>-->
 <!--        <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>-->

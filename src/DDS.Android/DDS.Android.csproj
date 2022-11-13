@@ -62,7 +62,7 @@
     </ItemGroup>
 
     <ItemGroup>
-<!--        <ProjectReference Include="..\DDS.Mobile\DDS.Mobile.csproj" PrivateAssets="None" />-->
-        <ProjectReference Include="..\DDS\DDS.csproj" PrivateAssets="None" />
+        <ProjectReference Include="..\DDS.Mobile\DDS.Mobile.csproj" PrivateAssets="None" />
+<!--        <ProjectReference Include="..\DDS\DDS.csproj" PrivateAssets="None" />-->
     </ItemGroup>
 </Project>

@@ -166,19 +166,22 @@ public static class Startup
             return view;
         }, viewLifetime));
         
+        services.Add(ServiceDescriptor.Describe(typeof(IReactiveViewFor<TViewModel>), 
+            p => p.GetRequiredService<TView>(), viewLifetime));
+
         services.Add(ServiceDescriptor.Describe(typeof(IViewFor<TViewModel>), 
             p => p.GetRequiredService<TView>(), viewLifetime));
         
-        if (typeof(TView).IsAssignableTo(typeof(BaseUserControl<TViewModel>)))
-        {
-            services.Add(ServiceDescriptor.Describe(typeof(BaseUserControl<TViewModel>), 
-                p => p.GetRequiredService<TView>(), viewLifetime));
-        }
-        else if (typeof(TView).IsAssignableTo(typeof(BaseWindow<TViewModel>)))
-        {
-            services.Add(ServiceDescriptor.Describe(typeof(BaseWindow<TViewModel>), 
-                p => p.GetRequiredService<TView>(), viewLifetime));
-        }
+        // if (typeof(TView).IsAssignableTo(typeof(BaseUserControl<TViewModel>)))
+        // {
+        //     services.Add(ServiceDescriptor.Describe(typeof(BaseUserControl<TViewModel>), 
+        //         p => p.GetRequiredService<TView>(), viewLifetime));
+        // }
+        // else if (typeof(TView).IsAssignableTo(typeof(BaseWindow<TViewModel>)))
+        // {
+        //     services.Add(ServiceDescriptor.Describe(typeof(BaseWindow<TViewModel>), 
+        //         p => p.GetRequiredService<TView>(), viewLifetime));
+        // }
         ReactiveViewLocator.DictOfViews[typeof(TViewModel).FullName ?? throw new NullReferenceException()] = typeof(TView);
         return services;
     }

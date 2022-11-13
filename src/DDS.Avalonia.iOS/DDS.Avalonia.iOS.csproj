@@ -9,7 +9,7 @@
         <SupportedOSPlatformVersion>10.0</SupportedOSPlatformVersion>
         <ProvisioningType>manual</ProvisioningType>
         <RuntimeIdentifier>iossimulator-x64</RuntimeIdentifier>
-        <RootNamespace>DDS.iOS</RootNamespace>
+        <RootNamespace>DDS.Avalonia.iOS</RootNamespace>
 
         <!-- These properties need to be set in order to run on a real iDevice -->
         <!--<RuntimeIdentifier>ios-arm64</RuntimeIdentifier>-->

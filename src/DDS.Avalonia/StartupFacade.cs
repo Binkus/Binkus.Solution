@@ -1,3 +1,5 @@
+using DDS.Core.ViewModels;
+
 namespace DDS.Avalonia;
 
 public static class StartupFacade

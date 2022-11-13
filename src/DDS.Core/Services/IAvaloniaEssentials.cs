@@ -1,6 +1,8 @@
-namespace DDS.Avalonia.Services;
+using DDS.Core.Models;
+
+namespace DDS.Core.Services;
 
 public interface IAvaloniaEssentials
 {
-    Task<Models.FilePickerResult> FilePickerAsync(bool allowMultiple = false);
+    Task<FilePickerResult> FilePickerAsync(bool allowMultiple = false);
 }

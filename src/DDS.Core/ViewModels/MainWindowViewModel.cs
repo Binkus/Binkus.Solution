@@ -1,6 +1,4 @@
-using DDS.Core.Controls;
-
-namespace DDS.Avalonia.ViewModels;
+namespace DDS.Core.ViewModels;
 
 public sealed partial class MainWindowViewModel : ViewModelBase
 {

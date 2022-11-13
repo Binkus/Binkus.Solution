@@ -1,4 +1,7 @@
 using Avalonia.Platform.Storage;
+using DDS.Core;
+using DDS.Core.Models;
+using DDS.Core.Services;
 
 namespace DDS.Avalonia.Services;
 
@@ -11,7 +14,7 @@ public class AvaloniaEssentialsCommonService : IAvaloniaEssentials
         _topLevel = topLevel;
     }
     
-    public async Task<Models.FilePickerResult> FilePickerAsync(bool allowMultiple = false)
+    public async Task<FilePickerResult> FilePickerAsync(bool allowMultiple = false)
     {
         if (Globals.IsDesignMode) return default;
 
@@ -31,7 +34,7 @@ public class AvaloniaEssentialsCommonService : IAvaloniaEssentials
             {
                 var fullPath = uri.AbsolutePath;
                 
-                return new Models.FilePickerResult
+                return new FilePickerResult
                 {
                     ContentType = "",
                     FileName = fileName,

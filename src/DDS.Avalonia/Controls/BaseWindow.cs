@@ -2,6 +2,8 @@
 
 using System.Reactive.Disposables;
 using Avalonia.Input;
+using DDS.Core;
+using DDS.Core.Services;
 
 namespace DDS.Avalonia.Controls;
 

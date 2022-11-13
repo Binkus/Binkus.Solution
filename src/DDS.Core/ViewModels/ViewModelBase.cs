@@ -1,6 +1,8 @@
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace DDS.Avalonia.ViewModels;
+using DDS.Core.Services;
+
+namespace DDS.Core.ViewModels;
 
 [DataContract]
 public abstract class ViewModelBase : ReactiveObservableObject,

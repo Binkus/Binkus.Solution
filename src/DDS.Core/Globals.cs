@@ -1,6 +1,4 @@
-using System.Diagnostics;
-
-namespace DDS.Avalonia;
+namespace DDS.Core;
 
 public static class Globals
 {

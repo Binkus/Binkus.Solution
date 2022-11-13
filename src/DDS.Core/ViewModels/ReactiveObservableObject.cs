@@ -1,4 +1,4 @@
-namespace DDS.Avalonia.ViewModels;
+namespace DDS.Core.ViewModels;
 
 [DataContract]
 public abstract class ReactiveObservableObject : ObservableObject,

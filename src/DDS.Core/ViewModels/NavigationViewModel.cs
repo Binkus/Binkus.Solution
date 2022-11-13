@@ -1,6 +1,6 @@
 using System.Windows.Input;
 
-namespace DDS.Avalonia.ViewModels;
+namespace DDS.Core.ViewModels;
 
 public class NavigationViewModel : ViewModelBase, IScreen
 {

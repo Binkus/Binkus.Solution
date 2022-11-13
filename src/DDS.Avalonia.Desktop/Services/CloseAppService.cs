@@ -1,4 +1,5 @@
 using DDS.Avalonia.Services;
+using DDS.Core.Services;
 
 namespace DDS.Avalonia.Desktop.Services;
 

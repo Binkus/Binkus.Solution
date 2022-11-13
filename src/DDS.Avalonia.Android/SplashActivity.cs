@@ -5,6 +5,8 @@ using Avalonia;
 using Avalonia.Android;
 using DDS.Avalonia.Android.Services;
 using DDS.Avalonia.Services;
+using DDS.Core;
+using DDS.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Application = Android.App.Application;
 

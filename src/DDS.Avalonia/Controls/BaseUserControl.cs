@@ -1,6 +1,8 @@
 using System.Diagnostics;
 using System.Reactive.Disposables;
 using Avalonia.Input;
+using DDS.Core;
+using DDS.Core.Services;
 
 // ReSharper disable MemberCanBePrivate.Global
 // ReSharper disable MemberCanBeProtected.Global

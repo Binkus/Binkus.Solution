@@ -1,7 +1,4 @@
-using System.Linq.Expressions;
-using System.Reflection;
-
-namespace DDS.Avalonia.Services;
+namespace DDS.Core.Services;
 
 public interface IProvideServices
 {

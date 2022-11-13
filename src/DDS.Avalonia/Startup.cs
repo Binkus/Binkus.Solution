@@ -2,6 +2,9 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.VisualTree;
+using DDS.Core;
+using DDS.Core.Services;
+using DDS.Core.ViewModels;
 using Splat.Microsoft.Extensions.DependencyInjection;
 
 namespace DDS.Avalonia;

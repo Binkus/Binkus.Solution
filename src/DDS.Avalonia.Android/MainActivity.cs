@@ -4,7 +4,10 @@ using Android.App;
 using Android.Content.PM;
 using Avalonia.Android;
 using DDS.Avalonia.Services;
-using DDS.Avalonia.ViewModels;
+using DDS.Core.ViewModels;
+using DDS.Core;
+using DDS.Core.Services;
+using DDS.Core.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DDS.Avalonia.Android

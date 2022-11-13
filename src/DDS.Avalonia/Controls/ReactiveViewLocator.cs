@@ -1,3 +1,5 @@
+using DDS.Core;
+
 namespace DDS.Avalonia.Controls;
 
 public class ReactiveViewLocator : IViewLocator

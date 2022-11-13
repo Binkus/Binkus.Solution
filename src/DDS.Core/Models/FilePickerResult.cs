@@ -1,4 +1,4 @@
-namespace DDS.Avalonia.Models;
+namespace DDS.Core.Models;
 
 public struct FilePickerResult
 {

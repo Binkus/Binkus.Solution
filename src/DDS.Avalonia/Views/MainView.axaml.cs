@@ -1,7 +1,8 @@
 using System.Reactive;
 using Avalonia.Controls;
 using DDS.Avalonia.Controls;
-using DDS.Avalonia.ViewModels;
+using DDS.Core;
+using DDS.Core.ViewModels;
 
 namespace DDS.Avalonia.Views;
 

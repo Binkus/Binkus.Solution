@@ -1,4 +1,4 @@
-namespace DDS.Avalonia.ViewModels;
+namespace DDS.Core.ViewModels;
 
 public class TestViewModel : ViewModelBase
 {

@@ -1,4 +1,4 @@
-namespace DDS.Avalonia.ViewModels;
+namespace DDS.Core.ViewModels;
 
 [DataContract]
 public sealed partial class TemplateExampleViewModel : ViewModelBase
@@ -62,7 +62,7 @@ public sealed partial class TemplateExampleViewModel : ViewModelBase
 
     private void CwGreetings()
     {
-        Console.WriteLine(Greeting);
+        Console.WriteLine((string?)Greeting);
         Console.WriteLine(ReactiveGreeting);
     }
 }

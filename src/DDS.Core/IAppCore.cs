@@ -1,4 +1,4 @@
-namespace DDS.Avalonia;
+namespace DDS.Core;
 
 public interface IAppCore
 {

@@ -14,8 +14,8 @@
     <DotnetVersionsShared Condition="$(DotnetVersionLowerShared) != $(DotnetVersionUpperShared)">
       $(DotnetVersionLowerShared);$(DotnetVersionUpperShared);$(DotnetVersionsShared)
     </DotnetVersionsShared>
-    <DotnetVersionDesktop>net6.0</DotnetVersionDesktop>
-    <DotnetVersionMobile>net6.0</DotnetVersionMobile>
+    <DotnetVersionDesktop>net7.0</DotnetVersionDesktop>
+    <DotnetVersionMobile>net7.0</DotnetVersionMobile>
     <DotnetVersionWeb>net7.0</DotnetVersionWeb>
   </PropertyGroup>
 </Project>

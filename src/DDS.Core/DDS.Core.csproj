@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(DotnetVersionsShared);</TargetFrameworks>
+        <LangVersion>$(DotnetLangVersionShared)</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <WarningsAsErrors>Nullable</WarningsAsErrors>
+        <RootNamespace>DDS.Core</RootNamespace>
+    </PropertyGroup>
+
+</Project>

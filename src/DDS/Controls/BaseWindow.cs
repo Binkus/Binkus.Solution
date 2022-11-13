@@ -3,7 +3,7 @@
 using System.Reactive.Disposables;
 namespace DDS.Controls;
 
-public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReactiveViewFor<TViewModel>, IProvideServices //, IDisposable, IAsyncDisposable
+public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReactiveViewFor<TViewModel>
     where TViewModel : class
 {
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
@@ -18,7 +18,6 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
                 throw new InvalidOperationException($"{nameof(base.DataContext)} of {GetType().Name} is null.");
             
             HandleActivation();
-            
             Disposable
                 .Create(DeactivateView)
                 .DisposeWith(disposables);
@@ -47,7 +46,15 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
     public TService GetService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
     
     public object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
+    
+    public TopLevel GetTopLevel() => this.VisualRoot as TopLevel ?? throw new NullReferenceException("Invalid Owner");
+    
+    public Avalonia.Input.IInputRoot GetInputRoot() => this.VisualRoot as Avalonia.Input.IInputRoot 
+                                                       ?? throw new NullReferenceException("Invalid Owner");
 
+    
+    //
+    
     protected virtual void Dispose(bool disposing)
     {
         if (disposing)
@@ -75,13 +82,4 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
     // {
     //     Dispose(false);
     // }
-}
-
-static class Whatever
-{
-    public static T Test<T>(this T t)
-    {
-        Console.WriteLine("LIZZ WAS HERE");
-        return t;
-    }
 }

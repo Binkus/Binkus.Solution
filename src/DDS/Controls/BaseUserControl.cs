@@ -6,7 +6,7 @@ using System.Reactive.Disposables;
 
 namespace DDS.Controls;
 
-public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewModel>, IReactiveViewFor<TViewModel>, IProvideServices //, IDisposable, IAsyncDisposable
+public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewModel>, IReactiveViewFor<TViewModel>
     where TViewModel : class
 {
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
@@ -26,11 +26,7 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
             Disposable
                 .Create(DeactivateView)
                 .DisposeWith(disposables);
-            
-            // Disposable
-            //     .Create(() => Dispose(true))
-            //     .DisposeWith(disposables);
-        });//.DisposeWith(ViewDisposables!);
+        });
         
 
         Debug.WriteLine("cv:"+ this.GetType().UnderlyingSystemType.Name);

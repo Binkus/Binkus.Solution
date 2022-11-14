@@ -32,6 +32,7 @@ public sealed partial class DialogViewModel : ViewModelBase
 
     private void DoAfter(Func<IDialogAlertMessageBox.DialogConfigBuilder, Action?> f, ICoreWindowFor<DialogViewModel> senderWindow)
     {
+        if (Globals.IsDesignMode) return;
         var action = f.Invoke(DialogConfig);
         action?.Invoke();
         senderWindow.Close();

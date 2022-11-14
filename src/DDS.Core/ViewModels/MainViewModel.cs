@@ -1,3 +1,4 @@
+using DDS.Core.Controls;
 using DDS.Core.Services;
 
 namespace DDS.Core.ViewModels;
@@ -38,7 +39,13 @@ public sealed partial class MainViewModel : ViewModelBase
     [RelayCommand]
     Task OpenDialog()
     {
-        return Task.CompletedTask;
-
+        var dialog = GetService<IDialogAlertMessageBox>();
+        return dialog.ShowAsync(x =>
+        {
+            x.Title = "Super important question about Navigation:";
+            x.Message = "Navigate to Test?";
+            x.Button2Text = "Cancel";
+            x.Button1Action = () => Navigation.Navigate<TestViewModel>();
+        });
     }
 }

@@ -3,9 +3,11 @@ using System.Windows.Input;
 using Android.App;
 using Android.Content.PM;
 using Avalonia.Android;
+using DDS.Avalonia.Android.Controls;
 using DDS.Avalonia.Services;
 using DDS.Core.ViewModels;
 using DDS.Core;
+using DDS.Core.Controls;
 using DDS.Core.Services;
 using DDS.Core.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -56,9 +58,14 @@ namespace DDS.Avalonia.Android
 
         private static void KillApp()
         {
-            // TODO - Dialog
-
-            Globals.Services.GetRequiredService<ICloseAppService>().CloseApp();
+            Globals.GetService<IDialogAlertMessageBox>().Show(c =>
+            {
+                c.Title = "Alert";
+                c.Message = "Close App?";
+                c.Button2Text = "Cancel";
+                c.Button1Action = () => Globals.GetService<ICloseAppService>().CloseApp();
+            });
+            
         }
     }
 }

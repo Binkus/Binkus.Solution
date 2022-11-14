@@ -3,9 +3,10 @@ using Android.Content;
 using Android.OS;
 using Avalonia;
 using Avalonia.Android;
+using DDS.Avalonia.Android.Controls;
 using DDS.Avalonia.Android.Services;
-using DDS.Avalonia.Services;
 using DDS.Core;
+using DDS.Core.Controls;
 using DDS.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 using Application = Android.App.Application;
@@ -17,11 +18,10 @@ namespace DDS.Avalonia.Android
     {
         protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
             => Globals.IsStartupDone ? base.CustomizeAppBuilder(builder) : base.CustomizeAppBuilder(builder) 
-                .ConfigureAppServices(services => services.AddSingleton<ICloseAppService,CloseAppService>())
-                // .ConfigureAppServicesAfterEverythingElse(services =>
-                //     services.AddSingleton<IAvaloniaEssentials, AvaloniaEssentialsDesktopService>()
-                // )
-            ;
+                .ConfigureAppServices(services => services
+                    .AddSingleton<ICloseAppService,CloseAppService>()
+                    .AddSingleton<IDialogAlertMessageBox,DialogAlertMessageBox>()
+                );
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {

@@ -7,7 +7,7 @@ using DDS.Core.Services;
 
 namespace DDS.Avalonia.Controls;
 
-public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReactiveViewFor<TViewModel>
+public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReactiveWindowFor<TViewModel>
     where TViewModel : class
 {
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }

@@ -1,6 +1,8 @@
 ﻿using Avalonia;
+using DDS.Avalonia.Desktop.Controls;
 using DDS.Avalonia.Desktop.Services;
 using DDS.Avalonia.Services;
+using DDS.Core.Controls;
 using DDS.Core.Services;
 using Microsoft.Extensions.DependencyInjection;
 
@@ -20,6 +22,7 @@ namespace DDS.Avalonia.Desktop
             => AppBuilder.Configure<App>()
                 .ConfigureAppServices(services => services
                         .AddSingleton<ICloseAppService,CloseAppService>()
+                        .AddSingleton<IDialogAlertMessageBox,DialogAlertMessageBox>()
                     )
                 .UsePlatformDetect()
                 .LogToTrace();

@@ -21,6 +21,7 @@ public sealed partial class MainView : BaseUserControl<MainViewModel>
         this.WhenActivated((CompositeDisposable disposable) =>
         {
             GetService<TopLevelService>().SetCurrentTopLevel = GetTopLevel();
+            GetService<TopLevelService>().SetCurrentWindow = VisualRoot as Window;
         });
     }
 }

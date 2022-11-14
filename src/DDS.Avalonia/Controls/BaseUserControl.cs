@@ -58,7 +58,7 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
     
     public object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
     
-    public Window GetWindow() => this.VisualRoot as Window ?? throw new NullReferenceException("Invalid Owner");
+    // public Window GetWindow() => this.VisualRoot as Window ?? throw new NullReferenceException("Invalid Owner");
     public TopLevel GetTopLevel() => this.VisualRoot as TopLevel ?? throw new NullReferenceException("Invalid Owner");
     public IInputRoot GetInputRoot() => this.VisualRoot as IInputRoot 
                                                 ?? throw new NullReferenceException("Invalid Owner");

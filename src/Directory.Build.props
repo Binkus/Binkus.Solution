@@ -5,12 +5,12 @@
     <DotnetLangVersionDesktop>latest</DotnetLangVersionDesktop>
     <DotnetLangVersionMobile>latest</DotnetLangVersionMobile>
     <DotnetLangVersionWeb>latest</DotnetLangVersionWeb>
-    <DotnetVersionLowerShared>net6.0</DotnetVersionLowerShared>    
+    <DotnetVersionLowerShared>net7.0</DotnetVersionLowerShared>    
     <DotnetVersionUpperShared>net7.0</DotnetVersionUpperShared>
     <DotnetVersionsShared Condition="$(DotnetVersionLowerShared) == $(DotnetVersionUpperShared)">
       $(DotnetVersionLowerShared)
     </DotnetVersionsShared>
-    <DotnetVersionsShared>;</DotnetVersionsShared> <!-- Optional in-between (Lower && Upper) DotnetVersion*Shared -->
+    <DotnetVersionsShared Condition="$(DotnetVersionLowerShared) != $(DotnetVersionUpperShared)">;</DotnetVersionsShared> <!-- Optional in-between (Lower && Upper) DotnetVersion*Shared -->
     <DotnetVersionsShared Condition="$(DotnetVersionLowerShared) != $(DotnetVersionUpperShared)">
       $(DotnetVersionLowerShared);$(DotnetVersionUpperShared);$(DotnetVersionsShared)
     </DotnetVersionsShared>

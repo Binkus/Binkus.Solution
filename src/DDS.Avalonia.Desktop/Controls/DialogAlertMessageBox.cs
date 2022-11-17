@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.Platform;
 using DDS.Avalonia.Services;
 using DDS.Avalonia.Views;
+using DDS.Core;
 using DDS.Core.Controls;
 using DDS.Core.ViewModels;
 
@@ -19,6 +20,8 @@ public class DialogAlertMessageBox : AbstractAsyncDialogAlertMessageBox, IDialog
     
     public override async Task ShowAsync(IDialogAlertMessageBox.DialogConfigBuilder dialogConfig)
     {
+        if (Globals.IsDesignMode) return;
+        
         var vm = new DialogViewModel(Services, dialogConfig);
         var topLevelWindow = await vm.GetService<TopLevelService>().CurrentWindow();
         // var dialogWindow = new DialogWindow(topLevelWindow) { DataContext = vm};

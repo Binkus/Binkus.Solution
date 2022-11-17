@@ -128,7 +128,7 @@ public static class Startup
         services
             .AddScoped<TopLevelService>()
             .AddSingleton<IViewLocator, ReactiveViewLocator>()
-            .AddViewAndViewModels<MainView, MainViewModel>(ServiceLifetime.Singleton, setDataContext: true)
+            .AddSingleton<ApplicationViewModel>()
             .AddSingleton<NavigationViewModel>()
             .AddSingleton<IScreen, NavigationViewModel>(p => p.GetRequiredService<NavigationViewModel>())
             // .AddViewAndViewModels<SecondTestView,SecondTestViewModel>(ServiceLifetime.Singleton)

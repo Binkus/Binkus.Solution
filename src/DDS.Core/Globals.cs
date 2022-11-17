@@ -1,3 +1,5 @@
+using DDS.Core.Controls;
+
 namespace DDS.Core;
 
 public static class Globals
@@ -21,6 +23,7 @@ public static class Globals
         [UsedImplicitly] static bool IsDesignMode { private get => Globals.IsDesignMode; set => Globals.IsDesignMode = value.D(); }
         [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Globals.Services; set => Globals.Services = value.D(); }
         [UsedImplicitly] static object ApplicationLifetime { private get => Globals.ApplicationLifetime; set => Globals.ApplicationLifetime = value.D(); }
+        [UsedImplicitly] static ICoreLifetime ApplicationLifetimeWrapped { private get => Globals.ApplicationLifetimeWrapped; set => Globals.ApplicationLifetimeWrapped = value.D(); }
 
         [UsedImplicitly]
         static bool IsClassicDesktopStyleApplicationLifetime
@@ -32,7 +35,7 @@ public static class Globals
 
         [UsedImplicitly] static void FinishGlobalsSetupByMakingGlobalsImmutable()
         {
-            if (ServiceProvider is null || (!IsDesignMode && ApplicationLifetime is null) || _instanceNullable is null || DbMigrationTask is null)
+            if (ServiceProvider is null || (!IsDesignMode && (ApplicationLifetime is null || ApplicationLifetimeWrapped is null)) || _instanceNullable is null || DbMigrationTask is null)
             {
                 throw new NullReferenceException("Globals setup has not been done correctly");
             }
@@ -57,6 +60,7 @@ public static class Globals
     [UsedImplicitly] public static object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
 
     [UsedImplicitly] public static object ApplicationLifetime { get; private set; } = null!;
+    [UsedImplicitly] public static ICoreLifetime ApplicationLifetimeWrapped { get; private set; } = null!;
     [UsedImplicitly] public static bool IsClassicDesktopStyleApplicationLifetime { get; private set; }
 
     #endregion

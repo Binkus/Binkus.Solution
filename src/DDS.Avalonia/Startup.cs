@@ -50,9 +50,14 @@ public static class Startup
             {
                 Globals.ISetGlobalsOnlyOnceOnStartup.ApplicationLifetime = appBuilderAfterSetup.Instance?.ApplicationLifetime
                                                           ?? throw new InvalidOperationException(
-                                                              "Instance of Application or ApplicationLifetime is null"); 
+                                                              "Instance of Application or ApplicationLifetime is null");
                 Globals.ISetGlobalsOnlyOnceOnStartup.IsClassicDesktopStyleApplicationLifetime =
                     appBuilderAfterSetup.Instance.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime;
+                Globals.ISetGlobalsOnlyOnceOnStartup.ApplicationLifetimeWrapped =
+                    Globals.IsClassicDesktopStyleApplicationLifetime
+                        ? new DesktopLifetimeWrapper(
+                            (IClassicDesktopStyleApplicationLifetime)Globals.ApplicationLifetime) 
+                        : new SingleViewLifetimeWrapper((ISingleViewApplicationLifetime)Globals.ApplicationLifetime);
             }
             _ = services.ConfigureAppServiceProvider();
             Globals.ISetGlobalsOnlyOnceOnStartup.FinishGlobalsSetupByMakingGlobalsImmutable();

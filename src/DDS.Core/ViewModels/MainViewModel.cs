@@ -28,7 +28,7 @@ public sealed partial class MainViewModel : ViewModelBase
     public ReactiveCommand<Unit, IRoutableViewModel> GoSecondTest { get; }
 
     [RelayCommand]
-    async Task OpenFilePicker()
+    private async Task OpenFilePicker()
     {
         if (Globals.IsDesignMode) return;
         var fileResult = await _avaloniaEssentials.FilePickerAsync();
@@ -37,7 +37,7 @@ public sealed partial class MainViewModel : ViewModelBase
     }
 
     [RelayCommand]
-    Task OpenDialog()
+    private Task OpenDialog()
     {
         var dialog = GetService<IDialogAlertMessageBox>();
         return dialog.ShowAsync(x =>

@@ -43,7 +43,9 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public IServiceProvider Services
     {
-        get => _services ??= (_services = (base.DataContext as IProvideServices)?.Services) ?? Globals.Services;
+        get => _services ??= (_services = (base.DataContext as IProvideServices)?.Services) 
+                             ?? throw new InvalidOperationException($"{nameof(base.DataContext)} "
+                                                                    + $"of {GetType().Name} is null.");
         protected init => _services = value;
     }
     

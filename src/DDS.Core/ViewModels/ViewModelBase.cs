@@ -37,12 +37,13 @@ public abstract class ViewModelBase : ReactiveObservableObject,
         set => this.RaiseAndSetIfChanged(ref _customViewName, value);
     }
 
-    protected ViewModelBase(IScreen hostScreen) : this() => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
-    protected ViewModelBase(Lazy<IScreen> lazyHostScreen) : this() => _lazyHostScreen = lazyHostScreen;
-    protected ViewModelBase(IServiceProvider services) : this() => Services = services;
+    protected ViewModelBase(IServiceProvider services, IScreen hostScreen) : this(services) => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
+    protected ViewModelBase(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : this(services) => _lazyHostScreen = lazyHostScreen;
+    // protected ViewModelBase(IServiceProvider services) : this() => Services = services;
     
-    protected ViewModelBase()
+    protected ViewModelBase(IServiceProvider services)
     {
+        Services = services;
         ViewModelName = GetType().UnderlyingSystemType.Name;
         UrlPathSegment = $"/{CustomViewName.ToLowerInvariant()}";
 
@@ -62,7 +63,7 @@ public abstract class ViewModelBase : ReactiveObservableObject,
     protected virtual void HandleActivation() { }
     protected virtual void HandleDeactivation() { }
     
-    [IgnoreDataMember] public IServiceProvider Services { get; protected init; } = Globals.Services;
+    [IgnoreDataMember] public IServiceProvider Services { get; protected init; } //= Globals.Services;
 
     public TService GetService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
     

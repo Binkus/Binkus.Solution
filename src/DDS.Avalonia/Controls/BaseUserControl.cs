@@ -15,6 +15,8 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
     public new TViewModel ViewModel { get => base.ViewModel!; /*protected init => base.ViewModel = value;*/ }
 
+    [UsedImplicitly] public bool DisposeOnDeactivation { get; set; }
+    
     protected BaseUserControl(TViewModel viewModel) : this() => base.DataContext = viewModel;
     protected BaseUserControl()
     {
@@ -27,7 +29,7 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
 
             HandleActivation();
             Disposable
-                .Create(DeactivateView)
+                .Create(DisposeOnDeactivation ? DisposeView : HandleDeactivation)
                 .DisposeWith(disposables);
         });
         
@@ -37,10 +39,10 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
 
     protected virtual void HandleActivation() {}
     protected virtual void HandleDeactivation() {}
-    private void DeactivateView()
+    private void DisposeView()
     {
-        Dispose(true);
         HandleDeactivation();
+        Dispose(true);
     }
     
     protected CompositeDisposable? ViewDisposables { get; private set; } = new();
@@ -50,7 +52,9 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public IServiceProvider Services
     {
-        get => _services ??= (_services = (base.DataContext as IProvideServices)?.Services) ?? Globals.Services;
+        get => _services ??= (_services = (base.DataContext as IProvideServices)?.Services)
+                             ?? throw new InvalidOperationException($"{nameof(base.DataContext)} "
+                                                                    + $"of {GetType().Name} is null.");
         protected init => _services = value;
     }
     

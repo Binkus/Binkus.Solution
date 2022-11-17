@@ -96,7 +96,7 @@ public static class Startup
         => services
             .AddTaskResolution()
             .AddLazyResolution()
-            .AddSingleton<IAvaloniaEssentials,AvaloniaEssentialsCommonService>()
+            .AddScoped<IAvaloniaEssentials,AvaloniaEssentialsCommonService>()
             .AddViewAndViewModels();
     
     private static IServiceCollection AddLazyResolution(this IServiceCollection services) 
@@ -129,8 +129,8 @@ public static class Startup
             .AddScoped<TopLevelService>()
             .AddSingleton<IViewLocator, ReactiveViewLocator>()
             .AddSingleton<ApplicationViewModel>()
-            .AddViewAndViewModels<MainView, MainViewModel>(ServiceLifetime.Singleton, setDataContext: true)
-            .AddSingleton<NavigationViewModel>()
+            .AddViewAndViewModels<MainView, MainViewModel>(ServiceLifetime.Scoped, setDataContext: true)
+            .AddScoped<NavigationViewModel>()
             .AddSingleton<IScreen, NavigationViewModel>(p => p.GetRequiredService<NavigationViewModel>())
             // .AddViewAndViewModels<SecondTestView,SecondTestViewModel>(ServiceLifetime.Singleton)
             // .AddViewAndViewModels<TestView,TestViewModel>(ServiceLifetime.Singleton)
@@ -151,26 +151,31 @@ public static class Startup
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
         Action<IServiceProvider, TView>? postViewCreationAction = default, 
         Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default,
-        bool setDataContext = false)
+        bool setDataContext = false,
+        ServiceLifetime viewLifetime = ServiceLifetime.Transient)
         where TView : ContentControl, IViewFor<TViewModel>
         where TViewModel : class
     {
         // Register ViewModel
         services.Add(ServiceDescriptor.Describe(typeof(TViewModel), p =>
         {
-            p = p.ToScopedWhenScoped(lifetime);
+            // p = p.ToScopedWhenScoped(lifetime);
             var viewModel = viewModelImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance<TViewModel>(p);
+            // if (viewModel is ViewModelBase viewModelBase) viewModelBase.Services = p;
             postViewModelCreationAction?.Invoke(p, viewModel);
             return viewModel;
-        }, lifetime is ServiceLifetime.Scoped ? ServiceLifetime.Transient : lifetime));
+        }, lifetime));
 
         // Register View
-        // Views should be Transient when not [SingleInstanceView], but Singleton or scoped can be buggy except for MainView.
-        var viewLifetime = ServiceLifetime.Transient;
+        // Views should be Transient when not [SingleInstanceView], cause Singleton or Scoped Views
+        // (when acting like Singleton on Global Main Scope) can be buggy except for MainView and MainWindow,
+        // ViewModels can have any ServiceLifetime; with buggy I mean the navigation of ReactiveUI can be partially
+        // broken, that it simply does not show the view on 2nd navigation to it, but shows again on 3rd navigation,...
         
         services.Add(ServiceDescriptor.Describe(typeof(TView), p =>
         {
             var view = viewImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance<TView>(p);
+            // if (view is BaseUserControl<TViewModel> baseUserControl) baseUserControl.DisposeOnDeactivation = true;
             if (setDataContext) view.DataContext = p.GetRequiredService<TViewModel>();
             postViewCreationAction?.Invoke(p, view);
             return view;
@@ -190,5 +195,5 @@ public static class Startup
     private static IServiceCollection AddWindows(this IServiceCollection services)
         => !Globals.IsClassicDesktopStyleApplicationLifetime 
             ? services : services
-                .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Singleton, setDataContext: true);
+                .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Scoped, setDataContext: true);
 }

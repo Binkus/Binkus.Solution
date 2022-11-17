@@ -22,7 +22,7 @@ namespace DDS.Avalonia.Desktop
             => AppBuilder.Configure<App>()
                 .ConfigureAppServices(services => services
                         .AddSingleton<ICloseAppService,CloseAppService>()
-                        .AddSingleton<IDialogAlertMessageBox,DialogAlertMessageBox>()
+                        .AddScoped<IDialogAlertMessageBox,DialogAlertMessageBox>()
                     )
                 .UsePlatformDetect()
                 .LogToTrace();

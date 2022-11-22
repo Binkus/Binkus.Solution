@@ -46,8 +46,6 @@ public abstract class NavigationViewModelBase<TForViewModel> : ViewModelBase<TFo
         BackCommand = ReactiveCommand.CreateFromObservable(
             () => Router.NavigateBack.Execute(Unit.Default),
             canGoBack);
-
-        Console.WriteLine("NavigationVM created!");
     }
     
     public void Reset() => Router.NavigationStack.Clear();

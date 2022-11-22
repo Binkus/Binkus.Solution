@@ -5,13 +5,13 @@
              xmlns:viewModels="clr-namespace:DDS.Core.ViewModels;assembly=DDS.Core"
              xmlns:reactiveUi="http://reactiveui.net"
              xmlns:controls="clr-namespace:DDS.Avalonia.Controls"
-             mc:Ignorable="d" d:DesignWidth="450" d:DesignHeight="900"
+             mc:Ignorable="d" d:DesignWidth="690" d:DesignHeight="960"
              x:Class="DDS.Avalonia.Views.MainView"
              Foreground="White"
              Background="#171C2C">
-    <Design.DataContext>
+  <Design.DataContext>
     <viewModels:MainViewModel />
-    </Design.DataContext>
+  </Design.DataContext>
     
 <Grid>
     <Grid.RowDefinitions>

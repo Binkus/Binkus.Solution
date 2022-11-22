@@ -19,14 +19,19 @@ public sealed class NavigationViewModel<TForViewModel> : NavigationViewModelBase
     public NavigationViewModel(IServiceProvider services) : base(services) { }
 }
 
-public abstract class NavigationViewModelBase<TForViewModel> : ViewModelBase<TForViewModel>, INavigationViewModel<TForViewModel>
+public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModelBase<TForViewModel>, INavigationViewModel<TForViewModel>
     where TForViewModel : class, IViewModel
 {
     [IgnoreDataMember]
     public sealed override RoutingState Router { get; } = new();
-    
-    [IgnoreDataMember]
-    public ReactiveCommand<Unit, IRoutableViewModel?> BackCommand { get; }
+
+    /// <inheritdoc cref="INavigationViewModel.BackCommand"/>
+    [ObservableProperty, IgnoreDataMember]
+    private ReactiveCommand<Unit, IRoutableViewModel?> _backCommand;
+
+    /// <inheritdoc cref="INavigationViewModel.CanGoBack"/>
+    [ObservableProperty, IgnoreDataMember]
+    private IObservable<bool> _canGoBack;
 
     /// <summary>
     /// <p>Returns this.</p>
@@ -40,12 +45,12 @@ public abstract class NavigationViewModelBase<TForViewModel> : ViewModelBase<TFo
     {
         HostScreen = this;
         
-        var canGoBack = this
+        _canGoBack = this
             .WhenAnyValue(x => x.Router.NavigationStack.Count)
             .Select(count => count > 0);
-        BackCommand = ReactiveCommand.CreateFromObservable(
+        _backCommand = ReactiveCommand.CreateFromObservable(
             () => Router.NavigateBack.Execute(Unit.Default),
-            canGoBack);
+            CanGoBack);
     }
     
     public void Reset() => Router.NavigationStack.Clear();

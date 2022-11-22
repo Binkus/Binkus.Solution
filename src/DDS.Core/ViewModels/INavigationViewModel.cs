@@ -20,7 +20,12 @@ public interface INavigationViewModel : IScreen, IViewModelBase
     /// <summary>
     /// Command for navigating back
     /// </summary>
-    ReactiveCommand<Unit, IRoutableViewModel?> BackCommand { get; }
+    ReactiveCommand<Unit, IRoutableViewModel?> BackCommand { get; set; }
+    
+    /// <summary>
+    /// Observable used by canExecute of BackCommand to determine if going back is allowed or not
+    /// </summary>
+    IObservable<bool> CanGoBack { get; set; }
     
     /// <summary>
     /// Navigates back by executing BackCommand when it can execute

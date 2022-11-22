@@ -94,7 +94,6 @@ public static class Startup
     
     private static IServiceCollection ConfigureAppServices(this IServiceCollection services)
         => services
-            .AddTaskResolution()
             .AddLazyResolution()
             .AddScoped<IAvaloniaEssentials,AvaloniaEssentialsCommonService>()
             .AddViewAndViewModels();
@@ -144,9 +143,26 @@ public static class Startup
     private static IServiceProvider ToScopedWhenScoped(this IServiceProvider p, ServiceLifetime lifetime = ServiceLifetime.Scoped) 
         => lifetime == ServiceLifetime.Scoped ? p.CreateScope().ServiceProvider : p;
     
-    
+    /// <summary>
+    /// Registers View and ViewModel and match them together for Navigation through ReactiveViewLocator.
+    /// <p>Default Scope of IServiceProvider is used for first instance of MainViewModel, so scoped for each Main instance.</p>
+    /// </summary>
+    /// <param name="services">IServiceCollection to register to, which is used to build the IServiceProvider.</param>
+    /// <param name="lifetime">ServiceLifetime of ViewModel, recommended are Scoped and Transient.</param>
+    /// <param name="viewImplFactory">Default is <code>ActivatorUtilities.CreateInstance&lt;TView&gt;</code>
+    /// Recommended to not change default until required.</param>
+    /// <param name="viewModelImplFactory">Default is <code>ActivatorUtilities.CreateInstance&lt;TView&gt;</code>
+    /// Recommended to not change default until required.</param>
+    /// <param name="postViewCreationAction">Default is do nothing</param>
+    /// <param name="postViewModelCreationAction">Default is do nothing</param>
+    /// <param name="setDataContext">When true sets the DataContext after View resolvation.</param>
+    /// <param name="viewLifetime">ServiceLifetime of View - highly recommended to stay default transient.</param>
+    /// <typeparam name="TView">View type, ContentControl and IViewFor&lt;TViewModel&gt;</typeparam>
+    /// <typeparam name="TViewModel">ViewModel type</typeparam>
+    /// <returns><see cref="services"/></returns>
+    /// <exception cref="NullReferenceException"></exception>
     public static IServiceCollection AddViewAndViewModels<TView,TViewModel>(this IServiceCollection services,
-        ServiceLifetime lifetime,
+        ServiceLifetime lifetime,// = ServiceLifetime.Scoped,
         Func<IServiceProvider, TView>? viewImplFactory = default,
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
         Action<IServiceProvider, TView>? postViewCreationAction = default, 

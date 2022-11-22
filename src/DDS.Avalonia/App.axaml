@@ -7,6 +7,7 @@
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
                 <ResourceInclude Source="/Controls/HamburgerMenu/HamburgerMenu.axaml" />
+                <ResourceInclude Source="/Controls/HamburgerMenu/ReactiveHamburgerMenu.axaml" />
             </ResourceDictionary.MergedDictionaries>
         </ResourceDictionary>
     </Application.Resources>

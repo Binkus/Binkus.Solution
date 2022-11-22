@@ -15,13 +15,5 @@ public partial class DialogWindow : BaseWindow<DialogViewModel>
     public DialogWindow()
     {
         InitializeComponent();
-#if DEBUG
-        this.AttachDevTools();
-#endif
-    }
-    
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
     }
 }

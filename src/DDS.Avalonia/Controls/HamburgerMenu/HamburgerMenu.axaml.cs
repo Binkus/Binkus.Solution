@@ -1,17 +1,3 @@
-/*
- * Base for this HamburgerMenu is from the ControlCatalog / SampleControls
- * from the main git repo of Avalonia project https://github.com/AvaloniaUI/Avalonia
- * 
- * https://github.com/AvaloniaUI/Avalonia/blob/master/samples/SampleControls/HamburgerMenu/HamburgerMenu.cs  -> this HamburgerMenu.axaml.cs
- * https://github.com/AvaloniaUI/Avalonia/blob/master/samples/SampleControls/HamburgerMenu/HamburgerMenu.xaml -> HamburgerMenu.axaml
- * (Exact commit used as base:)
- * https://github.com/AvaloniaUI/Avalonia/blob/f8706278a8506cefa0c34fefbb0caa27f9db6318/samples/SampleControls/HamburgerMenu/HamburgerMenu.xaml -> HamburgerMenu.axaml
- * https://github.com/AvaloniaUI/Avalonia/blob/f8706278a8506cefa0c34fefbb0caa27f9db6318/samples/SampleControls/HamburgerMenu/HamburgerMenu.cs -> this HamburgerMenu.axaml.cs
- *
- * Copy of MIT License of Avalonia available in $(REPOSITORY_ROOT)/.licenses/Avalonia/license.md
- */
-
-
 using Avalonia;
 using Avalonia.Controls.Primitives;
 using Avalonia.Media;

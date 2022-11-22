@@ -19,14 +19,14 @@ namespace DDS.Avalonia.Android
         ConfigurationChanges = ConfigChanges.Orientation | ConfigChanges.ScreenSize)]
     public class MainActivity : AvaloniaMainActivity
     {
-        private readonly Lazy<NavigationViewModel> _navigation;
+        private readonly Lazy<INavigationViewModel> _navigation;
 
         internal static MainActivity? CurrentMainActivity;
         
         public MainActivity()
         {
             CurrentMainActivity = this;
-            _navigation = Globals.Services.GetRequiredService<Lazy<NavigationViewModel>>();
+            _navigation = Globals.Services.GetRequiredService<Lazy<INavigationViewModel>>();
         }
 
         private int _backCounter;
@@ -35,10 +35,10 @@ namespace DDS.Avalonia.Android
         {
             // base.OnBackPressed(); // => OnResume or OnCreate => InvalidOperationException cause building again
 
-            if (((ICommand)_navigation.Value.GoBack).CanExecute(null))
+            if (((ICommand)_navigation.Value.BackCommand).CanExecute(null))
             {
                 _backCounter = 0;
-                _navigation.Value.GoBack.Execute(Unit.Default).Subscribe();
+                _navigation.Value.BackCommand.Execute(Unit.Default).Subscribe();
                 return;
             }
             if(++_backCounter == 2)

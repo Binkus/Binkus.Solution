@@ -47,7 +47,7 @@ public sealed partial class MainViewModel : ViewModelBase
             x.Title = "Super important question about Navigation:";
             x.Message = "Navigate to Test?";
             x.Button2Text = "Cancel";
-            x.Button1Action = () => Navigation.Navigate<TestViewModel>();
+            x.Button1Action = () => Navigation.To<TestViewModel>();
         });
     }
 }

@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.VisualTree;
 using DDS.Core;
+using DDS.Core.Helper;
 using DDS.Core.Services;
 using DDS.Core.ViewModels;
 using Splat.Microsoft.Extensions.DependencyInjection;
@@ -121,16 +122,30 @@ public static class Startup
         {
         }
     }
+    
+    //
 
     private static IServiceCollection AddViewAndViewModels(this IServiceCollection services)
     {
         services
             .AddScoped<TopLevelService>()
             .AddSingleton<IViewLocator, ReactiveViewLocator>()
-            .AddSingleton<ApplicationViewModel>()
-            .AddViewAndViewModels<MainView, MainViewModel>(ServiceLifetime.Scoped, setDataContext: true)
-            .AddScoped<NavigationViewModel>()
-            .AddSingleton<IScreen, NavigationViewModel>(p => p.GetRequiredService<NavigationViewModel>())
+            .AddSingleton<ApplicationViewModel>();
+        // services.Add(ServiceDescriptor.Describe(typeof(IReactiveWindowFor<>), 
+        //     typeof(BaseWindow<>), ServiceLifetime.Transient));
+        // services.Add(ServiceDescriptor.Describe(typeof(IReactiveViewFor<>), 
+        //     typeof(BaseUserControl<>), ServiceLifetime.Transient));
+        // services.Add(ServiceDescriptor.Describe(typeof(IViewFor<>),
+        //     typeof(BaseUserControl<>), ServiceLifetime.Transient));
+        // services.Add(ServiceDescriptor.Describe(typeof(IViewModelBase), 
+        //     typeof(ViewModelBase), ServiceLifetime.Transient));    
+        services.AddViewAndViewModels<MainView, MainViewModel>(ServiceLifetime.Scoped, setDataContext: true)
+            .AddScoped(typeof(INavigationViewModel<>), typeof(NavigationViewModel<>))
+            // .AddTransient<INavigationViewModel, INavigationViewModel<INavigationViewModel>>(p => 
+            //     p.GetRequiredService<INavigationViewModel<INavigationViewModel>>())
+            .AddScoped<INavigationViewModel, NavigationViewModel>()
+            .AddTransient<IScreen, INavigationViewModel>(p => 
+                p.GetRequiredService<INavigationViewModel>())
             // .AddViewAndViewModels<SecondTestView,SecondTestViewModel>(ServiceLifetime.Singleton)
             // .AddViewAndViewModels<TestView,TestViewModel>(ServiceLifetime.Singleton)
             ;

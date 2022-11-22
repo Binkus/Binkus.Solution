@@ -8,7 +8,7 @@ public class NavigationViewModel : ViewModelBase, IScreen
     public sealed override RoutingState Router { get; } = new();
     
     [IgnoreDataMember]
-    public ReactiveCommand<Unit, IRoutableViewModel?> GoBack { get; }
+    public ReactiveCommand<Unit, IRoutableViewModel?> BackCommand { get; }
 
     [IgnoreDataMember]
     public sealed override IScreen HostScreen { get => base.HostScreen; protected init => base.HostScreen = value; }
@@ -23,7 +23,7 @@ public class NavigationViewModel : ViewModelBase, IScreen
         var canGoBack = this
             .WhenAnyValue(x => x.Router.NavigationStack.Count)
             .Select(count => count > 0);
-        GoBack = ReactiveCommand.CreateFromObservable(
+        BackCommand = ReactiveCommand.CreateFromObservable(
             () => Router.NavigateBack.Execute(Unit.Default),
             canGoBack);
     }

@@ -22,10 +22,12 @@ public sealed partial class MainViewModel : ViewModelBase
 
         GoTest = NavigateReactiveCommand<TestViewModel>();
         GoSecondTest = NavigateReactiveCommand<SecondTestViewModel>();
+        GoThirdTest = NavigateReactiveCommand<ThirdTestViewModel>();
     }
     
     public ReactiveCommand<Unit, IRoutableViewModel> GoTest { get; }
     public ReactiveCommand<Unit, IRoutableViewModel> GoSecondTest { get; }
+    public ReactiveCommand<Unit, IRoutableViewModel> GoThirdTest { get; }
 
     [RelayCommand]
     private async Task OpenFilePicker()

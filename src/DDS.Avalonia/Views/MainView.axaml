@@ -45,11 +45,12 @@
         </Style>
       </StackPanel.Styles>
       <TextBlock Text="{Binding Router.NavigationStack.Count}" />
-      <Button Content="Go Back" Command="{Binding Navigation.GoBack}" />
+            <Button Content="Back" Command="{Binding Navigation.BackCommand}" />
       <!-- <Button Content="Go Settings" Command="{Binding GoSettings}" /> -->
       <!-- <Button Content="Go Login" Command="{Binding GoLogin}" /> -->
-      <Button Content="Go Test" Command="{Binding GoTest}" />
-      <Button Content="Go Second Test" Command="{Binding GoSecondTest}" />
+            <Button Content="Go 1st" Command="{Binding GoTest}" />
+            <Button Content="Go 2nd" Command="{Binding GoSecondTest}" />
+            <Button Content="Go 3rd" Command="{Binding GoThirdTest}" />
       <Button Content="Open File" Command="{Binding OpenFilePickerCommand}" />
       <Button Content="Dialog" Command="{Binding OpenDialogCommand}" />
       <!-- <Button Content="Go Settings" Command="{Binding GoSettings}" -->

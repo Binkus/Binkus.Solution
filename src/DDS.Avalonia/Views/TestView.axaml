@@ -11,10 +11,13 @@
         <viewModels:TestViewModel />
     </Design.DataContext>
     <StackPanel>
-        <TextBlock Text="TestView" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <TextBlock Text="TestView" HorizontalAlignment="Center" VerticalAlignment="Center" />
         
-        <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-   
+        <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        
+        <TextBox Text="{Binding TextBoxContent}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+
+
         <!-- <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->
         <!-- <TextBlock Text="{Binding Count}" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->
         <!-- <TextBox Text="{Binding Count}" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->

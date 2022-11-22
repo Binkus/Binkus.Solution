@@ -1,6 +1,6 @@
 namespace DDS.Core.ViewModels;
 
-public class SecondTestViewModel : ViewModelBase
+public partial class SecondTestViewModel : ViewModelBase
 {
     public SecondTestViewModel() : this(Globals.Services) { }
     
@@ -8,4 +8,7 @@ public class SecondTestViewModel : ViewModelBase
     public SecondTestViewModel(IServiceProvider services) : base(services) { }
     
     public string Greeting { get; set; } = $"Hello from 2ndT VM Id:{Guid.NewGuid().ToString()[..8]}";
+    
+    [ObservableProperty]
+    private string _textBoxContent = "";
 }

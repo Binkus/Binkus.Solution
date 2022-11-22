@@ -9,7 +9,8 @@
         <viewModels:SecondTestViewModel />
     </Design.DataContext>
     <StackPanel>
-        <TextBlock Text="SecondTestView" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        <TextBlock Text="SecondTestView" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <TextBox Text="{Binding TextBoxContent}" HorizontalAlignment="Center" VerticalAlignment="Center" />
     </StackPanel>
 </UserControl>

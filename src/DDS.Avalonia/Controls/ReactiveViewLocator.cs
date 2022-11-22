@@ -1,5 +1,7 @@
 using DDS.Core;
 
+// ReSharper disable HeapView.PossibleBoxingAllocation
+
 namespace DDS.Avalonia.Controls;
 
 public class ReactiveViewLocator : IViewLocator
@@ -11,10 +13,13 @@ public class ReactiveViewLocator : IViewLocator
     public static Dictionary<string, Type> DictOfViews { get; } = new(); 
 
     public IViewFor? ResolveView<T>(T? viewModel, string? contract = null) =>
-        // ReSharper disable once HeapView.PossibleBoxingAllocation
         // BTW ViewModel property of the returned IViewFor will be set automatically to the same ViewModel as parameter
         // "T? viewModel" by ViewModelViewHost and RoutedViewHost, which are the ones who can call this method
         // the latter RoutedViewHost calls this method
-        Globals.Services.GetService(DictOfViews[viewModel!.GetType().UnderlyingSystemType.FullName!]) 
-            as IViewFor;
+        (viewModel is IViewModel vm ? vm.Services : Globals.Services)
+        .GetService(DictOfViews[(viewModel as IViewModel)?.FullNameOfType 
+                                ?? (viewModel is null ? throw new NullReferenceException() 
+                                    : viewModel)
+                                .GetType().UnderlyingSystemType.FullName ?? throw new UnreachableException()
+                                ]) as IViewFor;
 }

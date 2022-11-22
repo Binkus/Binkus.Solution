@@ -13,6 +13,7 @@ public static class StartupFacade
     {
         services.AddViewAndViewModels<TestView, TestViewModel>(ServiceLifetime.Singleton);
         services.AddViewAndViewModels<SecondTestView, SecondTestViewModel>(ServiceLifetime.Transient);
+        services.AddViewAndViewModels<ThirdTestView, ThirdTestViewModel>(ServiceLifetime.Scoped);
     }
     
     internal static void ConfigureWindowViewModels(IServiceCollection services)

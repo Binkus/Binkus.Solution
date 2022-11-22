@@ -42,6 +42,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.5.1.1" />
         <PackageReference Include="Xamarin.AndroidX.Lifecycle.ViewModel" Version="2.5.1.1" />
         <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
@@ -51,7 +52,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\DDS.Avalonia.Mobile\DDS.Avalonia.Mobile.csproj" PrivateAssets="None" />
-<!--        <ProjectReference Include="..\DDS\DDS.csproj" PrivateAssets="None" />-->
+<!--        <ProjectReference Include="..\DDS.Avalonia.Mobile\DDS.Avalonia.Mobile.csproj" -->
+<!--                          PrivateAssets="None" SpecificVersion="False" Private="False" />-->
+        <ProjectReference Include="..\DDS.Avalonia\DDS.Avalonia.csproj" PrivateAssets="None" />
     </ItemGroup>
 </Project>

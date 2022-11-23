@@ -18,9 +18,9 @@ public abstract class ViewModelBase : ViewModelBase<IViewModel>
 
 
 [DataContract]
-public abstract class ViewModelBase<TViewModel> : ReactiveObservableObject,
-    IViewModelBase,  IViewModelBase<TViewModel>
-    where TViewModel : class, IViewModel
+public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
+    IViewModelBase,  IViewModelBase<TIViewModel>
+    where TIViewModel : class, IViewModel
 {
     [DataMember] public string? UrlPathSegment { get; }
 

@@ -4,10 +4,8 @@ namespace DDS.Avalonia.Services;
 
 public class TopLevelService
 {
-    // public TopLevelService()
-    // {
-    //     Console.WriteLine($"c:TopLevelService:{Guid.NewGuid().ToString()[..6]}");
-    // }
+    private readonly IServiceProvider _services;
+    public TopLevelService(IServiceProvider services) => _services = services;
 
     private const string ExceptionMessage = "is not registered, maybe change some Singletons to Scoped; " +
                                             "fallbacking to main scope";
@@ -24,9 +22,8 @@ public class TopLevelService
             
             if (++count == 42)
             {
-                var main = Globals.GetService<MainViewModel>();
-                var tls = main.GetService<TopLevelService>();
-                if (tls != main.GetService<TopLevelService>() || tls == this)
+                var tls = _services.GetRequiredService<TopLevelService>();
+                if (tls != _services.GetRequiredService<TopLevelService>() || tls == this)
                     throw new InvalidOperationException(TopLevelExceptionMessage + FailedMessage);
                 await Console.Error.WriteLineAsync(TopLevelExceptionMessage);
                 return await tls.CurrentTopLevel();
@@ -58,9 +55,8 @@ public class TopLevelService
             
             if (++count == 42)
             {
-                var main = Globals.GetService<MainWindowViewModel>();
-                var tls = main.GetService<TopLevelService>();
-                if (tls != main.GetService<TopLevelService>() || tls == this)
+                var tls = _services.GetRequiredService<TopLevelService>();
+                if (tls != _services.GetRequiredService<TopLevelService>() || tls == this)
                     throw new InvalidOperationException(TopLevelWindowExceptionMessage + FailedMessage);
                 await Console.Error.WriteLineAsync(TopLevelWindowExceptionMessage);
                 return await tls.CurrentWindow();

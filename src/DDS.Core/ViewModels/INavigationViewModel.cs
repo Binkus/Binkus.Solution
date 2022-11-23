@@ -6,9 +6,7 @@ public interface INavigationViewModel<TForViewModel> : INavigationViewModel, IVi
 
 public interface INavigationViewModel : IScreen, IViewModelBase
 {
-    /// <summary>
     /// <inheritdoc cref="Router"/>
-    /// </summary>
     RoutingState IViewModel.Router => Router;
     
     /// <summary>

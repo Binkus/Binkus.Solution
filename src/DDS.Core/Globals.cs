@@ -19,7 +19,7 @@ public static class Globals
 
     public interface ISetGlobalsOnlyOnceOnStartup
     {
-        [UsedImplicitly] static IAppCore? InstanceNullable { get => _instanceNullable; set => _instanceNullable = D(value); }
+        [UsedImplicitly] static IAppCore? InstanceNullable { get => _instanceNullable; set => _instanceNullable = value.D(); }
         [UsedImplicitly] static bool IsDesignMode { private get => Globals.IsDesignMode; set => Globals.IsDesignMode = value.D(); }
         [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Globals.Services; set => Globals.Services = value.D(); }
         [UsedImplicitly] static object ApplicationLifetime { private get => Globals.ApplicationLifetime; set => Globals.ApplicationLifetime = value.D(); }

@@ -5,6 +5,7 @@ using Avalonia.VisualTree;
 using DDS.Core;
 using DDS.Core.Helper;
 using DDS.Core.Services;
+using DDS.Core.Services.Installer;
 using DDS.Core.ViewModels;
 using Splat.Microsoft.Extensions.DependencyInjection;
 
@@ -98,30 +99,6 @@ public static class Startup
             .AddLazyResolution()
             .AddScoped<IAvaloniaEssentials,AvaloniaEssentialsCommonService>()
             .AddViewAndViewModels();
-    
-    private static IServiceCollection AddLazyResolution(this IServiceCollection services) 
-        => services.AddTransient(
-            typeof(Lazy<>),
-            typeof(LazilyResolved<>));
-
-    private sealed class LazilyResolved<T> : Lazy<T> where T : notnull
-    {
-        public LazilyResolved(IServiceProvider serviceProvider)
-            : base(serviceProvider.GetRequiredService<T>)
-        {
-        }
-    }
-
-    private static IServiceCollection AddTaskResolution(this IServiceCollection services)
-        => services.AddTransient(typeof(Task<>), typeof(TaskResolved<>));
-            
-    private sealed class TaskResolved<T> : Task<T> where T : notnull
-    {
-        public TaskResolved(IServiceProvider serviceProvider)
-            : base(serviceProvider.GetRequiredService<T>)
-        {
-        }
-    }
     
     //
 

@@ -194,8 +194,9 @@ public static class Startup
 
         services.Add(ServiceDescriptor.Describe(typeof(IViewFor<TViewModel>), 
             p => p.GetRequiredService<TView>(), viewLifetime));
-        
-        ReactiveViewLocator.DictOfViews[typeof(TViewModel).FullName ?? throw new NullReferenceException()] = typeof(TView);
+
+        var dict = Globals.ViewModelNameViewTypeDictionary;
+        dict[typeof(TViewModel).FullName ?? throw new NullReferenceException()] = typeof(TView);
         
         return services;
     }

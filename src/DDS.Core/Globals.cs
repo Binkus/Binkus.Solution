@@ -62,6 +62,8 @@ public static class Globals
     [UsedImplicitly] public static object ApplicationLifetime { get; private set; } = null!;
     [UsedImplicitly] public static ICoreLifetime ApplicationLifetimeWrapped { get; private set; } = null!;
     [UsedImplicitly] public static bool IsClassicDesktopStyleApplicationLifetime { get; private set; }
+    
+    [UsedImplicitly] public static Dictionary<string, Type> ViewModelNameViewTypeDictionary { get; } = new();
 
     #endregion
 }

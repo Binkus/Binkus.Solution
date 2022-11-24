@@ -10,7 +10,9 @@ public class ReactiveViewLocator : IViewLocator
     {
     }
     
-    public static Dictionary<string, Type> DictOfViews { get; } = new(); 
+    public ReactiveViewLocator(Dictionary<string, Type> dictOfViews) => DictOfViews = dictOfViews;
+    
+    private Dictionary<string, Type> DictOfViews { get; } = Globals.ViewModelNameViewTypeDictionary;
 
     public IViewFor? ResolveView<T>(T? viewModel, string? contract = null) =>
         // BTW ViewModel property of the returned IViewFor will be set automatically to the same ViewModel as parameter

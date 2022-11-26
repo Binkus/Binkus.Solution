@@ -61,7 +61,7 @@ public static class Startup
                             (IClassicDesktopStyleApplicationLifetime)Globals.ApplicationLifetime) 
                         : new SingleViewLifetimeWrapper((ISingleViewApplicationLifetime)Globals.ApplicationLifetime);
             }
-            services.AddSingleton(Globals.Instance);
+            services.AddSingleton<IAppCore>(Globals.Instance);
             _ = services.ConfigureAppServiceProvider();
             Globals.ISetGlobalsOnlyOnceOnStartup.FinishGlobalsSetupByMakingGlobalsImmutable();
         });
@@ -237,6 +237,9 @@ public static class Startup
 
         var dict = Globals.ViewModelNameViewTypeDictionary;
         dict[typeof(TViewModel).FullName ?? throw new NullReferenceException()] = typeof(TView);
+
+        // services.AddSingleton<LifetimeOf<TView>>(new LifetimeOf<TView>(viewLifetime));
+        services.AddSingleton<LifetimeOf<TViewModel>>(new LifetimeOf<TViewModel>(lifetime));
         
         return services;
     }

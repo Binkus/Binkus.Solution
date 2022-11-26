@@ -1,5 +1,7 @@
 // ReSharper disable MemberCanBePrivate.Global
 
+using DDS.Core.Services;
+
 namespace DDS.Core.ViewModels;
 
 file static class C
@@ -26,14 +28,23 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
 
     [IgnoreDataMember] private Lazy<IScreen>? _lazyHostScreen;
     
+    /// <summary>
+    /// Property to get the IScreen which contains the RoutingState / Router / Navigation
+    /// <p>NOT Supported for Singleton ViewModels, use Scoped ViewModel instead.</p>
+    /// </summary>
     [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public virtual IScreen HostScreen
     {
-        get => _lazyHostScreen?.Value ?? this.RaiseAndSetIfChanged(
+        get => ReturnOrWhenSingletonThrowNotSupported(_lazyHostScreen)?.Value ?? this.RaiseAndSetIfChanged(
             ref _lazyHostScreen, new Lazy<IScreen>(GetService<IScreen>()))!.Value;
         protected init => this.RaiseAndSetIfChanged(ref _lazyHostScreen, new Lazy<IScreen>(value));
     }
-    
+
+    /// <summary>
+    /// Used for Navigation / Routing
+    /// <p>NOT Supported for Singleton ViewModels, use Scoped ViewModel
+    /// if you want to use the Navigation from this ViewModel.</p>
+    /// </summary>
     [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public INavigationViewModel Navigation => HostScreen as INavigationViewModel ?? GetService<INavigationViewModel>();
 
@@ -55,6 +66,33 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     }
     [IgnoreDataMember] private string? _customViewName;
 
+    private bool _hasKnownLifetime = true;
+    private ServiceLifetime? _lifetime;
+    private ServiceLifetime? Lifetime
+    {
+        get
+        {
+            if (_lifetime is not null) return _lifetime;
+            if (_hasKnownLifetime is false) return null;
+            var lifetime = !Globals.IsDesignMode && ReferenceEquals(Services, Globals.Services) 
+                ? ServiceLifetime.Singleton 
+                : ((IKnowMyLifetime?)Services.GetService(typeof(LifetimeOf<>).MakeGenericType(GetType())))?.Lifetime;
+            if (lifetime.HasValue) return _lifetime = lifetime;
+            _hasKnownLifetime = false;
+            return null;
+        }
+    }
+    
+    private T ReturnOrWhenSingletonThrowNotSupported<T>(T value)
+    {
+        if (Lifetime is ServiceLifetime.Singleton)
+        {
+            throw new NotSupportedException($"Operation on Singleton not supported. {FullNameOfType}'s " +
+                                            "ServiceLifetime is Singleton; consider changing lifetime to Scoped.");
+        }
+        return value;
+    }
+    
     protected ViewModelBase(IServiceProvider services, IScreen hostScreen) : this(services) => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
     protected ViewModelBase(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : this(services) => _lazyHostScreen = lazyHostScreen;
     protected ViewModelBase(IServiceProvider services)

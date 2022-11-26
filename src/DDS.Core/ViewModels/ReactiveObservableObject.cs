@@ -8,6 +8,22 @@ public abstract class ReactiveObservableObject : ObservableObject,
     {
         if(reactiveObjectCompatibility) ReactiveObjectCompatibility();
     }
+    
+    //
+
+    #region Fix ObservableProperties partially not notifying ReactiveUI observables
+
+    protected override void OnPropertyChanged(PropertyChangedEventArgs e)
+    {
+        this.RaisePropertyChanged(e.PropertyName);
+    }
+
+    protected override void OnPropertyChanging(PropertyChangingEventArgs e)
+    {
+        this.RaisePropertyChanging(e.PropertyName);
+    }
+
+    #endregion
 
     //
 

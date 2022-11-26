@@ -10,7 +10,7 @@ public interface INavigationViewModel : IScreen, IViewModelBase
     /// <inheritdoc cref="IScreen.Router"/>
     /// <p>Contains the navigation stack.</p>
     /// </summary>
-    RoutingState IScreen.Router { get; }
+    new RoutingState Router { get; }
 
     /// <summary>
     /// Command for navigating back

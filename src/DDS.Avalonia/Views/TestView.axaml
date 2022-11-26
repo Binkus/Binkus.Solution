@@ -16,6 +16,8 @@
         <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center" />
         
         <TextBox Text="{Binding TextBoxContent}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        
+        <Button Content="Scope invalidate" Command="{Binding ScopeInvalidationCommand}" />
 
 
         <!-- <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->

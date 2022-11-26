@@ -4,6 +4,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using DDS.Core;
 using DDS.Core.Helper;
+using DDS.Core.Services;
 
 namespace DDS.Avalonia;
 
@@ -45,5 +46,10 @@ public sealed partial class App : Application, IAppCore
         }
 
         base.OnFrameworkInitializationCompleted();
+    }
+
+    public void Post(Action action)
+    {
+        Dispatcher.UIThread.Post(action);
     }
 }

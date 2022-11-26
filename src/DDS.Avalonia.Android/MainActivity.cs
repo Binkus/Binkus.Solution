@@ -8,6 +8,7 @@ using DDS.Avalonia.Services;
 using DDS.Core.ViewModels;
 using DDS.Core;
 using DDS.Core.Controls;
+using DDS.Core.Helper;
 using DDS.Core.Services;
 using DDS.Core.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
@@ -26,7 +27,7 @@ namespace DDS.Avalonia.Android
         public MainActivity()
         {
             CurrentMainActivity = this;
-            _navigation = Globals.Services.GetRequiredService<Lazy<INavigationViewModel>>();
+            _navigation = new Lazy<INavigationViewModel>(() => Globals.GetService<ServiceScopeManager>().GetMainScope().GetService<INavigationViewModel>());
         }
 
         private int _backCounter;
@@ -38,7 +39,7 @@ namespace DDS.Avalonia.Android
             if (((ICommand)_navigation.Value.BackCommand).CanExecute(null))
             {
                 _backCounter = 0;
-                _navigation.Value.BackCommand.Execute(Unit.Default).Subscribe();
+                _navigation.Value.BackCommand.Execute(Unit.Default).SubscribeAndDisposeOnNext();
                 return;
             }
             if(++_backCounter == 2)
@@ -63,7 +64,7 @@ namespace DDS.Avalonia.Android
                 c.Title = "Alert";
                 c.Message = "Close App?";
                 c.Button2Text = "Cancel";
-                c.Button1Action = () => Globals.GetService<ICloseAppService>().CloseApp();
+                c.Button1Action = () => Globals.GetService<ServiceScopeManager>().GetMainScope().GetService<ICloseAppService>().CloseApp();
             });
             
         }

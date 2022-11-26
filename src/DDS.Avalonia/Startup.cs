@@ -96,6 +96,7 @@ public static class Startup
     
     private static IServiceCollection ConfigureAppServices(this IServiceCollection services)
         => services
+            .AddSingleton<ServiceScopeManager>()
             .AddLazyResolution()
             .AddScoped<IAvaloniaEssentials,AvaloniaEssentialsCommonService>()
             .AddViewAndViewModels();

@@ -29,8 +29,9 @@ public sealed partial class App : Application, IAppCore
         // Global ServiceProvider available:
         
         DataContext = Globals.Services.GetRequiredService<ApplicationViewModel>();
+        var scopeManager = Globals.Services.GetRequiredService<ServiceScopeManager>();
         
-        var scope = Globals.Services.CreateScope();
+        var scope = scopeManager.CreateScope();
         var services = scope.ServiceProvider;
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -41,7 +42,7 @@ public sealed partial class App : Application, IAppCore
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
-            services = Globals.Services; // as long as no ScopeManagerService exists
+            // services = Globals.Services; // as long as no ScopeManagerService exists
             singleViewPlatform.MainView = services.GetRequiredService<MainView>();
         }
 

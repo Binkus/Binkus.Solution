@@ -18,7 +18,7 @@
       <RowDefinition Height="*" />
       <RowDefinition Height="Auto" />
     </Grid.RowDefinitions>
-    <reactiveUi:RoutedViewHost Grid.Row="0" Router="{Binding Router}" x:Name="RoutedViewHost">
+          <reactiveUi:RoutedViewHost Grid.Row="0" Router="{Binding Navigation.Router}" x:Name="RoutedViewHost">
       <reactiveUi:RoutedViewHost.DefaultContent>
         <StackPanel>
           <TextBlock Text="{Binding Greeting}"

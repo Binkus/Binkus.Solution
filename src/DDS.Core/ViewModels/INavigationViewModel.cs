@@ -22,6 +22,10 @@ public interface INavigationViewModel : IScreen, IViewModelBase
     /// </summary>
     IObservable<bool> CanGoBack { get; set; }
     
+    int BackCountOffset { get; set; }
+    
+    int StackCount { get; }
+    
     /// <summary>
     /// Navigates back by executing BackCommand when it can execute
     /// </summary>

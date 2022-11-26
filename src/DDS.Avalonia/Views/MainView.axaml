@@ -1,0 +1,82 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:DDS.Core.ViewModels;assembly=DDS.Core"
+             xmlns:reactiveUi="http://reactiveui.net"
+             xmlns:controls="clr-namespace:DDS.Avalonia.Controls"
+             mc:Ignorable="d" d:DesignWidth="690" d:DesignHeight="960"
+             x:Class="DDS.Avalonia.Views.MainView"
+             Foreground="White"
+             Background="#171C2C">
+  <Design.DataContext>
+    <viewModels:MainViewModel />
+  </Design.DataContext>
+    
+<Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*" />
+      <RowDefinition Height="Auto" />
+    </Grid.RowDefinitions>
+    <reactiveUi:RoutedViewHost Grid.Row="0" Router="{Binding Router}" x:Name="RoutedViewHost">
+      <reactiveUi:RoutedViewHost.DefaultContent>
+        <StackPanel>
+          <TextBlock Text="{Binding Greeting}"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center" />
+          <TextBlock Text="{Binding GotPath}"
+                     HorizontalAlignment="Center"
+                     VerticalAlignment="Center" />
+        </StackPanel>
+      </reactiveUi:RoutedViewHost.DefaultContent>
+      <!-- <reactiveUi:RoutedViewHost.ViewLocator /> -->
+      <!-- <reactiveUi:RoutedViewHost.ViewLocator> -->
+        <!-- See AppViewLocator.cs section below -->
+        <!-- <controls:ReactiveViewLocator /> -->
+      <!-- </reactiveUi:RoutedViewHost.ViewLocator> -->
+    </reactiveUi:RoutedViewHost>
+    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="15">
+      <StackPanel.Styles>
+        <Style Selector="StackPanel > :is(Control)">
+          <Setter Property="Margin" Value="2"/>
+        </Style>
+        <Style Selector="StackPanel > TextBlock">
+          <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+      </StackPanel.Styles>
+            <!-- <TextBlock Text="R:" /> -->
+            <!-- <TextBlock Text="{Binding Router.NavigationStack.Count}" /> -->
+            <!-- <TextBlock Text=" A:" /> -->
+            <TextBlock Text="{Binding Navigation.StackCount}" />
+            <Button Content="Back" Command="{Binding Navigation.BackCommand, Mode=TwoWay}" />
+            <!-- <Button Content="Go Settings" Command="{Binding GoSettings}" /> -->
+            <!-- <Button Content="Go Login" Command="{Binding GoLogin}" /> -->
+            <Button Content="L" Command="{Binding GoLogin}" />
+            <Button Content="1st" Command="{Binding GoTest}" />
+            <Button Content="2nd" Command="{Binding GoSecondTest}" />
+            <Button Content="3rd" Command="{Binding GoThirdTest}" />
+            <Button Content="Open File" Command="{Binding OpenFilePickerCommand}" />
+            <Button Content="Dialog" Command="{Binding OpenDialogCommand}" />
+      <!-- <Button Content="Go Settings" Command="{Binding GoSettings}" -->
+      <!--         IsVisible="True" -->
+      <!--         IsEnabled="True" -->
+      <!-- /> -->
+      <!-- <Button Content="Go Login" Command="{Binding GoLogin}" -->
+      <!--         IsVisible="True" -->
+      <!--         IsEnabled="{Binding GoLoginIsVisible}" -->
+      <!-- /> -->
+      <!-- <Button Content="Go Test" Command="{Binding GoTest}" -->
+      <!--         IsVisible="True" -->
+      <!--         IsEnabled="{Binding GoTestIsVisible}" -->
+      <!-- /> -->
+      <!-- <Button Content="Go Main2" Command="{Binding GoMain2}" /> -->
+      <!-- <Button Content="Go Main" Command="{Binding GoMain}" /> -->
+      <!-- <Button Content="Go next" Command="{Binding GoNext}" /> -->
+    </StackPanel>
+    <!-- <StackPanel> -->
+    <!--   <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->
+    <!--   <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->
+    <!--   <TextBlock Text="Hello" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->
+    <!-- </StackPanel> -->
+  </Grid>
+</UserControl>

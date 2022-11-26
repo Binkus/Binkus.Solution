@@ -1,0 +1,32 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:DDS.Core.ViewModels;assembly=DDS.Core"
+             xmlns:reactiveUi="http://reactiveui.net"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="DDS.Avalonia.Views.SecondTestView">
+    <Design.DataContext>
+        <viewModels:SecondTestViewModel />
+    </Design.DataContext>
+    <StackPanel>
+        <TextBlock Text="SecondTestView" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <TextBox Text="{Binding TextBoxContent}" HorizontalAlignment="Center" VerticalAlignment="Center" />
+        <Button Command="{Binding NavigateToTestViewModelCommand}">Go SomeWhere from cached command :)</Button>
+        <Button Command="{Binding GoSomewhereCommand}">Go SomeWhere through RelayCommand :)</Button>
+        
+        <reactiveUi:RoutedViewHost Grid.Row="0" Router="{Binding SecondNavigation.Router}" x:Name="RoutedViewHost">
+            <reactiveUi:RoutedViewHost.DefaultContent>
+                <StackPanel>
+                    <TextBlock Text="{Binding Greeting}"
+                               HorizontalAlignment="Center"
+                               VerticalAlignment="Center" />
+                </StackPanel>
+            </reactiveUi:RoutedViewHost.DefaultContent>
+        </reactiveUi:RoutedViewHost>
+        
+        
+        
+    </StackPanel>
+</UserControl>

@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <OutputType>Library</OutputType>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('linux')) Or $([MSBuild]::IsOSPlatform('windows')) Or $([MSBuild]::IsOSPlatform('OSX'))">$(DotnetVersionMobile)-android;</TargetFrameworks>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows')) Or $([MSBuild]::IsOSPlatform('OSX'))">$(TargetFrameworks)$(DotnetVersionMobile)-ios;$(DotnetVersionMobile)-maccatalyst</TargetFrameworks>
+        <TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);$(DotnetVersionMobile)-windows10.0.19041.0</TargetFrameworks>
+        <LangVersion>$(DotnetLangVersionMobile)</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <WarningsAsErrors>Nullable</WarningsAsErrors>
+        <UseMauiEssentials>true</UseMauiEssentials>
+        <RootNamespace>DDS.Avalonia.Mobile</RootNamespace>
+        <AssemblyName>DDS.Avalonia.Mobile</AssemblyName>
+        <SingleProject>true</SingleProject>
+    </PropertyGroup>
+
+    <ItemGroup>        
+        <ProjectReference Include="..\DDS.Avalonia\DDS.Avalonia.csproj" PrivateAssets="None" />
+    </ItemGroup>
+
+    <ItemGroup>    
+      <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.5.1.1" /> <!-- to bump the version, implicitly lower by UseMauiEssentials -->
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Services" />
+    </ItemGroup>
+
+</Project>

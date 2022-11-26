@@ -1,0 +1,40 @@
+<Application xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:local="using:DDS.Avalonia"
+             x:Class="DDS.Avalonia.App">
+
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceInclude Source="/Controls/HamburgerMenu/HamburgerMenu.axaml" />
+                <ResourceInclude Source="/Controls/HamburgerMenu/ReactiveHamburgerMenu.axaml" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+    <Application.Styles>
+        <FluentTheme Mode="Dark"/>
+        <Style Selector="TextBlock.h1, TextBlock.h2, TextBlock.h3">
+            <Setter Property="TextWrapping" Value="Wrap" />
+        </Style>
+        <Style Selector="TextBlock.h1">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+        <Style Selector="TextBlock.h2">
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+        <Style Selector="TextBlock.h3">
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+        <Style Selector="Label.h1">
+            <Setter Property="FontSize" Value="16" />
+            <Setter Property="FontWeight" Value="Medium" />
+        </Style>
+        <Style Selector="Label.h2">
+            <Setter Property="FontSize" Value="14" />
+        </Style>
+        <Style Selector="Label.h3">
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+    </Application.Styles>
+</Application>

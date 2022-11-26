@@ -1,0 +1,71 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <OutputType>Exe</OutputType>
+        <TargetFramework>$(DotnetVersionMobile)-android</TargetFramework>
+        <LangVersion>$(DotnetLangVersionMobile)</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <WarningsAsErrors>Nullable</WarningsAsErrors>
+        <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+        <ApplicationId>com.CompanyName.DDS</ApplicationId>
+        <ApplicationVersion>1</ApplicationVersion>
+        <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+        <AndroidPackageFormat>apk</AndroidPackageFormat>
+        <MSBuildEnableWorkloadResolver>true</MSBuildEnableWorkloadResolver>
+<!--        <EmbedAssembliesIntoApk>false</EmbedAssembliesIntoApk>-->
+<!--        <AndroidFastDeploymentType>Dexes</AndroidFastDeploymentType>-->
+<!--        <AndroidUseAssemblyStore>false</AndroidUseAssemblyStore>-->
+<!--        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>-->
+<!--        <UseMaui>true</UseMaui>-->
+        <UseMauiEssentials>true</UseMauiEssentials>
+        <TargetFrameworkVersion>v11.0</TargetFrameworkVersion>
+        <RootNamespace>DDS.Avalonia.Android</RootNamespace>
+<!--        <AndroidUseAapt2>True</AndroidUseAapt2>-->
+<!--        <AndroidPackageFormats>aab;apk</AndroidPackageFormats>-->
+<!--        <AndroidGenerateJniMarshalMethods>True</AndroidGenerateJniMarshalMethods>-->
+<!--        <AndroidDexTool>r8</AndroidDexTool>-->
+<!--        <AndroidLinkTool>r8</AndroidLinkTool>-->
+    </PropertyGroup>
+    <ItemGroup>
+        <AndroidResource Include="Icon.png">
+            <Link>Resources/drawable/Icon.png</Link>
+        </AndroidResource>
+    </ItemGroup>
+
+    <PropertyGroup Condition="'$(Configuration)'=='Debug'">
+        <!--        <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>-->
+        <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
+
+        <!--        <RunAOTCompilation>True</RunAOTCompilation>-->
+<!--        <EnableLLVM>True</EnableLLVM>-->
+<!--        <AndroidEnableProfiledAot>True</AndroidEnableProfiledAot>-->
+    
+<!--      <AndroidSupportedAbis>armeabi-v7a;x86;arm64-v8a;x86_64</AndroidSupportedAbis>-->
+<!--      <AndroidEnableMultiDex>true</AndroidEnableMultiDex>-->
+<!--      <AndroidDexTool>d8</AndroidDexTool>-->
+<!--      <AndroidLinkMode>SdkOnly</AndroidLinkMode>-->
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)'=='Release'">
+        <RunAOTCompilation>True</RunAOTCompilation>
+        <EnableLLVM>True</EnableLLVM>
+        <AndroidEnableProfiledAot>True</AndroidEnableProfiledAot>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="Avalonia" Version="$(AvaloniaVersion)" />
+        <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.5.1.1" />
+        <PackageReference Include="Xamarin.AndroidX.Lifecycle.ViewModel" Version="2.5.1.1" />
+        <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
+        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.0.0" />
+        <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
+<!--        <PackageReference Include="ReactiveUI.Fody" Version="18.3.1" PrivateAssets="all" />-->
+<!--        <PackageReference Include="Xamarin.Essentials" Version="1.7.3" />-->
+    </ItemGroup>
+
+    <ItemGroup>
+<!--        <ProjectReference Include="..\DDS.Avalonia.Mobile\DDS.Avalonia.Mobile.csproj" -->
+<!--                          PrivateAssets="None" SpecificVersion="False" Private="False" />-->
+        <ProjectReference Include="..\DDS.Avalonia\DDS.Avalonia.csproj" PrivateAssets="None" />
+    </ItemGroup>
+</Project>

@@ -1,0 +1,51 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:viewModels="clr-namespace:DDS.Core.ViewModels;assembly=DDS.Core"
+        xmlns:controls="clr-namespace:DDS.Avalonia.Controls"
+        mc:Ignorable="d" d:DesignWidth="400" d:DesignHeight="150"
+        x:Class="DDS.Avalonia.Views.DialogWindow"
+        x:Name="This"
+        Title="{Binding DialogConfig.Title}"
+        WindowStartupLocation="CenterOwner"
+        Foreground="White"
+        Background="#171C2C">
+    <Design.DataContext>
+        <viewModels:DialogViewModel />
+    </Design.DataContext>
+    <StackPanel Orientation="Vertical">
+        <!-- <StackPanel.Styles> -->
+        <!--     <Style Selector="StackPanel > TextBlock"> -->
+        <!--         <Setter Property="VerticalAlignment" Value="Center"/> -->
+        <!--     </Style> -->
+        <!-- </StackPanel.Styles> -->
+        <TextBlock Text=""></TextBlock>
+        
+        <TextBlock Text="{Binding DialogConfig.Message}"
+                   HorizontalAlignment="Center"/>
+        
+        <TextBlock Text=" "></TextBlock>
+        <TextBlock Text=" "></TextBlock>
+        <TextBlock Text=" "></TextBlock>
+        <TextBlock Text=" "></TextBlock>
+        
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+            <Button Command="{Binding Button1Command}"
+                    CommandParameter="{Binding ElementName=This}"
+                    Content="{Binding DialogConfig.Button1Text}"
+                    IsVisible="{Binding DialogConfig.Button1Text, Converter={x:Static ObjectConverters.IsNotNull}}"
+            />
+            <Button Command="{Binding Button2Command}" 
+                    CommandParameter="{Binding ElementName=This}"
+                    Content="{Binding DialogConfig.Button2Text}"
+                    IsVisible="{Binding DialogConfig.Button2Text, Converter={x:Static ObjectConverters.IsNotNull}}"
+            />
+            <Button Command="{Binding Button3Command}"
+                    CommandParameter="{Binding ElementName=This}"
+                    Content="{Binding DialogConfig.Button3Text}"
+                    IsVisible="{Binding DialogConfig.Button3Text, Converter={x:Static ObjectConverters.IsNotNull}}"
+            />
+        </StackPanel>
+    </StackPanel>
+</Window>

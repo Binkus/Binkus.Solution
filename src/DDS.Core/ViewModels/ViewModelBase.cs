@@ -51,8 +51,9 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     [DataMember]
     public string CustomViewName
     {
-        // removes "ViewModel" at the end if possible, "MainViewModel" => "Main"
-        get => _customViewName ??= ViewModelName.EndsWith("ViewModel") ? ViewModelName[..^9] : ViewModelName;
+        // removes "ViewModel" or e.g. "ViewModel'1" at the end if possible, "MainViewModel" => "Main"
+        get => _customViewName ??= ViewModelName.EndsWith("ViewModel") ? ViewModelName[..^9]
+            : ViewModelName[^11..^2] == "ViewModel" ? ViewModelName[..^11] : ViewModelName;
         set => this.RaiseAndSetIfChanged(ref _customViewName, value);
     }
     [IgnoreDataMember] private string? _customViewName;

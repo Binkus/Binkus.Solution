@@ -18,10 +18,13 @@ public class ReactiveViewLocator : IViewLocator
         // BTW ViewModel property of the returned IViewFor will be set automatically to the same ViewModel as parameter
         // "T? viewModel" by ViewModelViewHost and RoutedViewHost, which are the ones who can call this method
         // the latter RoutedViewHost calls this method
-        (viewModel is IViewModel vm ? vm.Services : Globals.Services)
-        .GetService(DictOfViews[(viewModel as IViewModel)?.FullNameOfType 
-                                ?? (viewModel is null ? throw new NullReferenceException() 
-                                    : viewModel)
-                                .GetType().UnderlyingSystemType.FullName ?? throw new UnreachableException()
-                                ]) as IViewFor;
+        viewModel is null 
+            ? throw new NullReferenceException($"{nameof(ReactiveViewLocator)}::{nameof(ResolveView)}:" +
+                                               $"{nameof(viewModel)} -> null")
+            : (viewModel is IViewModel vm ? vm.Services : Globals.Services)
+            .GetService(DictOfViews.TryGetValue((viewModel as IViewModel)?.FullNameOfType 
+                                                ?? viewModel.GetType().UnderlyingSystemType.FullName 
+                                                ?? throw new UnreachableException(), out var type) 
+                ? type : typeof(IViewFor<>).MakeGenericType(viewModel.GetType())
+                ) as IViewFor;
 }

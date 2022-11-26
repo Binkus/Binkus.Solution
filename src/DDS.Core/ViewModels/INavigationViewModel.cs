@@ -43,16 +43,16 @@ public interface INavigationViewModel : IScreen, IViewModelBase
     /// <summary>
     /// Navigates to TViewModel
     /// </summary>
-    /// <typeparam name="TViewModel">IRoutableViewModel to navigate to</typeparam>
     /// <param name="canExecute">Override default behaviour of canExecute parameter</param>
+    /// <typeparam name="TViewModel">IRoutableViewModel to navigate to</typeparam>
     /// <returns>true when navigation successful, otherwise false</returns>
     bool To<TViewModel>(IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel;
     
     /// <summary>
     /// Navigates to TViewModel and resets navigation stack
     /// </summary>
-    /// <typeparam name="TViewModel">IRoutableViewModel to navigate to</typeparam>
     /// <param name="canExecute">Override default behaviour of canExecute parameter</param>
+    /// <typeparam name="TViewModel">IRoutableViewModel to navigate to</typeparam>
     /// <returns>true when navigation successful, otherwise false</returns>
     bool ResetTo<TViewModel>(IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel;
     

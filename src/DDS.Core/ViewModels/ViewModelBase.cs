@@ -24,7 +24,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     IViewModelBase,  IViewModelBase<TIViewModel>
     where TIViewModel : class, IViewModel
 {
-    [DataMember] public string? UrlPathSegment { get; }
+    [DataMember] public string UrlPathSegment { get; }
 
     [IgnoreDataMember] private Lazy<IScreen>? _lazyHostScreen;
     

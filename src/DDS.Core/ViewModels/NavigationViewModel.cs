@@ -59,7 +59,7 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     public bool Back()
     {
         if (((ICommand)BackCommand).CanExecute(null) is false) return false;
-        BackCommand.Execute(Unit.Default).Subscribe();
+        BackCommand.Execute(Unit.Default).SubscribeAndDisposeOnNext();
         return true;
     }
     
@@ -68,8 +68,9 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     public bool To<TViewModel>(IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel
     {
         using var cmd = NavigateReactiveCommand<TViewModel>(canExecute);
+        // if (cmd.CanExecute() is false) return false;
         if (((ICommand)cmd).CanExecute(null) is false) return false;
-        cmd.Execute(Unit.Default).Subscribe();
+        cmd.Execute(Unit.Default).SubscribeAndDisposeOnNext();
         return true;
     }
     
@@ -77,7 +78,7 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     {
         using var cmd = NavigateAndResetReactiveCommand<TViewModel>(canExecute);
         if (((ICommand)cmd).CanExecute(null) is false) return false;
-        cmd.Execute(Unit.Default).Subscribe();
+        cmd.Execute(Unit.Default).SubscribeAndDisposeOnNext();
         return true;
     }
     
@@ -87,7 +88,7 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     {
         using var cmd = NavigateAndResetReactiveCommand(viewModelType, canExecute);
         if (((ICommand)cmd).CanExecute(null) is false) return false;
-        cmd.Execute(Unit.Default).Subscribe();
+        cmd.Execute(Unit.Default).SubscribeAndDisposeOnNext();
         return true;
     }
     
@@ -95,7 +96,7 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     {
         using var cmd = NavigateReactiveCommand(viewModelType, canExecute);
         if (((ICommand)cmd).CanExecute(null) is false) return false;
-        cmd.Execute(Unit.Default).Subscribe();
+        cmd.Execute(Unit.Default).SubscribeAndDisposeOnNext();
         return true;
     }
 }

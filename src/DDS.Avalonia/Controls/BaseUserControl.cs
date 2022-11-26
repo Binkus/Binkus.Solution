@@ -15,12 +15,16 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
     public new TViewModel ViewModel { get => base.ViewModel!; /*protected init => base.ViewModel = value;*/ }
 
+    
+    public bool DisposeWhenActivatedSubscription { get; set; }
+
     [UsedImplicitly] public bool DisposeOnDeactivation { get; set; }
     
     protected BaseUserControl(TViewModel viewModel) : this() => base.DataContext = viewModel;
     protected BaseUserControl()
     {
-        this.WhenActivated(disposables =>
+        IDisposable? subscription = null;
+        subscription = this.WhenActivated(disposables =>
         {
             if (base.DataContext is null or not TViewModel) 
                 throw new InvalidOperationException($"{nameof(base.DataContext)} of {GetType().Name} is null.");
@@ -31,6 +35,12 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
             Disposable
                 .Create(DisposeOnDeactivation ? DisposeView : HandleDeactivation)
                 .DisposeWith(disposables);
+
+            if (DisposeWhenActivatedSubscription)
+            {
+                // ReSharper disable once AccessToModifiedClosure
+                subscription?.DisposeWith(disposables);                
+            }
         });
         
 

@@ -13,10 +13,13 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
     public new TViewModel ViewModel { get => base.ViewModel!; /*protected init => base.ViewModel = value;*/ }
     
+    public bool DisposeWhenActivatedSubscription { get; set; }
+    
     protected BaseWindow(TViewModel viewModel) : this() => base.DataContext = viewModel;
     protected BaseWindow()
     {
-        this.WhenActivated(disposables =>
+        IDisposable? subscription = null;
+        subscription = this.WhenActivated(disposables =>
         {
             if (base.DataContext is null or not TViewModel) 
                 throw new InvalidOperationException($"{nameof(base.DataContext)} of {GetType().Name} is null.");
@@ -25,6 +28,12 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
             Disposable
                 .Create(DeactivateView)
                 .DisposeWith(disposables);
+
+            if (DisposeWhenActivatedSubscription)
+            {
+                // ReSharper disable once AccessToModifiedClosure
+                subscription?.DisposeWith(disposables);
+            }
         });
     }
     
@@ -32,8 +41,8 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
     protected virtual void HandleDeactivation() {}
     private void DeactivateView()
     {
-        Dispose(true);
         HandleDeactivation();
+        Dispose(true);
     }
 
     protected CompositeDisposable? ViewDisposables { get; private set; } = new();

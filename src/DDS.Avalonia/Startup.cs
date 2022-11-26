@@ -3,6 +3,7 @@ using System.Runtime.InteropServices;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.VisualTree;
 using DDS.Core;
+using DDS.Core.Controls;
 using DDS.Core.Helper;
 using DDS.Core.Services;
 using DDS.Core.Services.Installer;
@@ -230,12 +231,14 @@ public static class Startup
             var view = viewImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance<TView>(p);
             // if (view is BaseUserControl<TViewModel> baseUserControl) baseUserControl.DisposeOnDeactivation = true;
             if (setDataContext) view.DataContext = p.GetRequiredService<TViewModel>();
+            if (viewLifetime is ServiceLifetime.Transient && view is ICoreView cw)
+                cw.DisposeWhenActivatedSubscription = true;
             postViewCreationAction?.Invoke(p, view);
             return view;
         }, viewLifetime));
         
-        services.Add(ServiceDescriptor.Describe(typeof(IReactiveViewFor<TViewModel>), 
-            p => p.GetRequiredService<TView>(), ServiceLifetime.Transient));
+        // services.Add(ServiceDescriptor.Describe(typeof(IReactiveViewFor<TViewModel>), 
+        //     p => p.GetRequiredService<TView>(), ServiceLifetime.Transient));
 
         services.Add(ServiceDescriptor.Describe(typeof(IViewFor<TViewModel>), 
             p => p.GetRequiredService<TView>(), ServiceLifetime.Transient));
@@ -303,12 +306,14 @@ public static class Startup
             var view = viewImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance(p, viewType);
             // if (view is BaseUserControl<TViewModel> baseUserControl) baseUserControl.DisposeOnDeactivation = true;
             if (setDataContext && view is Control control) control.DataContext = p.GetRequiredService(viewModelType);
+            if (viewLifetime is ServiceLifetime.Transient && view is ICoreView cw)
+                cw.DisposeWhenActivatedSubscription = true;
             postViewCreationAction?.Invoke(p, view);
             return view;
         }, viewLifetime));
         
-        services.Add(ServiceDescriptor.Describe(typeof(IReactiveViewFor<>).MakeGenericType(viewModelType), 
-            p => p.GetRequiredService(viewType), ServiceLifetime.Transient));
+        // services.Add(ServiceDescriptor.Describe(typeof(IReactiveViewFor<>).MakeGenericType(viewModelType), 
+        //     p => p.GetRequiredService(viewType), ServiceLifetime.Transient));
 
         services.Add(ServiceDescriptor.Describe(typeof(IViewFor<>).MakeGenericType(viewModelType), 
             p => p.GetRequiredService(viewType), ServiceLifetime.Transient));

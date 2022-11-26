@@ -139,9 +139,42 @@ public static class Startup
         return services;
     }
 
-    private static IServiceProvider ToScopedWhenScoped(this IServiceProvider p, ServiceLifetime lifetime = ServiceLifetime.Scoped) 
-        => lifetime == ServiceLifetime.Scoped ? p.CreateScope().ServiceProvider : p;
+    public static IServiceCollection AddSingletonViewViewModel<TView, TViewModel>(this IServiceCollection services,
+        Func<IServiceProvider, TView>? viewImplFactory = default,
+        Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
+        Action<IServiceProvider, TView>? postViewCreationAction = default,
+        Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default,
+        bool setDataContext = false,
+        ServiceLifetime viewLifetime = ServiceLifetime.Transient)
+        where TView : ContentControl, IViewFor<TViewModel>
+        where TViewModel : class =>
+        services.AddViewAndViewModels(ServiceLifetime.Singleton, viewImplFactory, viewModelImplFactory,
+            postViewCreationAction, postViewModelCreationAction, setDataContext, viewLifetime);
     
+    public static IServiceCollection AddScopedViewViewModel<TView, TViewModel>(this IServiceCollection services,
+        Func<IServiceProvider, TView>? viewImplFactory = default,
+        Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
+        Action<IServiceProvider, TView>? postViewCreationAction = default,
+        Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default,
+        bool setDataContext = false,
+        ServiceLifetime viewLifetime = ServiceLifetime.Transient)
+        where TView : ContentControl, IViewFor<TViewModel>
+        where TViewModel : class =>
+        services.AddViewAndViewModels(ServiceLifetime.Scoped, viewImplFactory, viewModelImplFactory,
+            postViewCreationAction, postViewModelCreationAction, setDataContext, viewLifetime);
+    
+    public static IServiceCollection AddTransientViewViewModel<TView, TViewModel>(this IServiceCollection services,
+        Func<IServiceProvider, TView>? viewImplFactory = default,
+        Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
+        Action<IServiceProvider, TView>? postViewCreationAction = default,
+        Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default,
+        bool setDataContext = false,
+        ServiceLifetime viewLifetime = ServiceLifetime.Transient)
+        where TView : ContentControl, IViewFor<TViewModel>
+        where TViewModel : class =>
+        services.AddViewAndViewModels(ServiceLifetime.Transient, viewImplFactory, viewModelImplFactory,
+            postViewCreationAction, postViewModelCreationAction, setDataContext, viewLifetime);
+
     /// <summary>
     /// Registers View and ViewModel and match them together for Navigation through ReactiveViewLocator.
     /// <p>Default Scope of IServiceProvider is used for first instance of MainViewModel, so scoped for each Main instance.</p>

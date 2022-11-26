@@ -44,15 +44,19 @@
           <Setter Property="VerticalAlignment" Value="Center"/>
         </Style>
       </StackPanel.Styles>
-      <TextBlock Text="{Binding Router.NavigationStack.Count}" />
-            <Button Content="Back" Command="{Binding Navigation.BackCommand}" />
-      <!-- <Button Content="Go Settings" Command="{Binding GoSettings}" /> -->
-      <!-- <Button Content="Go Login" Command="{Binding GoLogin}" /> -->
-            <Button Content="Go 1st" Command="{Binding GoTest}" />
-            <Button Content="Go 2nd" Command="{Binding GoSecondTest}" />
-            <Button Content="Go 3rd" Command="{Binding GoThirdTest}" />
-      <Button Content="Open File" Command="{Binding OpenFilePickerCommand}" />
-      <Button Content="Dialog" Command="{Binding OpenDialogCommand}" />
+            <!-- <TextBlock Text="R:" /> -->
+            <!-- <TextBlock Text="{Binding Router.NavigationStack.Count}" /> -->
+            <!-- <TextBlock Text=" A:" /> -->
+            <TextBlock Text="{Binding Navigation.StackCount}" />
+            <Button Content="Back" Command="{Binding Navigation.BackCommand, Mode=TwoWay}" />
+            <!-- <Button Content="Go Settings" Command="{Binding GoSettings}" /> -->
+            <!-- <Button Content="Go Login" Command="{Binding GoLogin}" /> -->
+            <Button Content="L" Command="{Binding GoLogin}" />
+            <Button Content="1st" Command="{Binding GoTest}" />
+            <Button Content="2nd" Command="{Binding GoSecondTest}" />
+            <Button Content="3rd" Command="{Binding GoThirdTest}" />
+            <Button Content="Open File" Command="{Binding OpenFilePickerCommand}" />
+            <Button Content="Dialog" Command="{Binding OpenDialogCommand}" />
       <!-- <Button Content="Go Settings" Command="{Binding GoSettings}" -->
       <!--         IsVisible="True" -->
       <!--         IsEnabled="True" -->

@@ -1,4 +1,5 @@
 using DDS.Core.Controls;
+using DDS.Core.Helper;
 using DDS.Core.Services;
 
 namespace DDS.Core.ViewModels;
@@ -20,11 +21,13 @@ public sealed partial class MainViewModel : ViewModelBase
     {
         _avaloniaEssentials = GetService<IAvaloniaEssentials>();
 
+        GoLogin = NavigateReactiveCommand<LoginViewModel>();
         GoTest = NavigateReactiveCommand<TestViewModel>();
         GoSecondTest = NavigateReactiveCommand<SecondTestViewModel>();
         GoThirdTest = NavigateReactiveCommand<ThirdTestViewModel>();
     }
     
+    public ReactiveCommand<Unit, IRoutableViewModel> GoLogin { get; }
     public ReactiveCommand<Unit, IRoutableViewModel> GoTest { get; }
     public ReactiveCommand<Unit, IRoutableViewModel> GoSecondTest { get; }
     public ReactiveCommand<Unit, IRoutableViewModel> GoThirdTest { get; }

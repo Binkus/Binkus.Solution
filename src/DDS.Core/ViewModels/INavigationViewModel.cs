@@ -6,14 +6,11 @@ public interface INavigationViewModel<TForViewModel> : INavigationViewModel, IVi
 
 public interface INavigationViewModel : IScreen, IViewModelBase
 {
-    /// <inheritdoc cref="Router"/>
-    RoutingState IViewModel.Router => Router;
-    
     /// <summary>
     /// <inheritdoc cref="IScreen.Router"/>
     /// <p>Contains the navigation stack.</p>
     /// </summary>
-    new RoutingState Router { get; }
+    RoutingState IScreen.Router { get; }
 
     /// <summary>
     /// Command for navigating back

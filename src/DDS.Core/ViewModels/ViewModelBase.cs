@@ -37,9 +37,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public INavigationViewModel Navigation => HostScreen as INavigationViewModel ?? GetService<INavigationViewModel>();
 
-    [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    public virtual RoutingState Router => HostScreen.Router;
-
     [IgnoreDataMember] public ViewModelActivator Activator { get; } = new();
 
     [DataMember] public Guid InstanceId { get; } = Guid.NewGuid();

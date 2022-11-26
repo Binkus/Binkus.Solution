@@ -7,7 +7,6 @@ public interface IViewModel
 {
     Guid InstanceId { get; }
     INavigationViewModel Navigation { get; }
-    RoutingState Router { get; }
     string AssemblyQualifiedName { get; }
     string FullNameOfType { get; }
     string ViewModelName { get; }

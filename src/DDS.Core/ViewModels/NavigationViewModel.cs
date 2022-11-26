@@ -23,7 +23,7 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     where TForViewModel : class, IViewModel
 {
     [IgnoreDataMember]
-    public sealed override RoutingState Router { get; } = new();
+    public RoutingState Router { get; } = new();
 
     /// <inheritdoc cref="INavigationViewModel.BackCommand"/>
     [ObservableProperty, IgnoreDataMember]

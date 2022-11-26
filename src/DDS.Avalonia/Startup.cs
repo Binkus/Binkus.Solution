@@ -154,7 +154,7 @@ public static class Startup
     /// <returns><see cref="services"/></returns>
     /// <exception cref="NullReferenceException"></exception>
     public static IServiceCollection AddViewAndViewModels<TView,TViewModel>(this IServiceCollection services,
-        ServiceLifetime lifetime,// = ServiceLifetime.Scoped,
+        ServiceLifetime lifetime = ServiceLifetime.Scoped,
         Func<IServiceProvider, TView>? viewImplFactory = default,
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
         Action<IServiceProvider, TView>? postViewCreationAction = default, 

@@ -14,6 +14,8 @@ public sealed partial class TemplateViewModel : ViewModelBase
     public TemplateViewModel(IServiceProvider services) : base(services)
     {
         // _someService = GetService<ISomeService>(); // or through ctor injection
+
+        Greeting = "Property is available because of [ObservableProperty] Attribute and Mvvm Toolkit Source Generator";
     }
 
     protected override void HandleActivation()

@@ -11,4 +11,10 @@ public partial class TestViewModel : ViewModelBase
 
     [ObservableProperty]
     private string _textBoxContent = "";
+
+    [RelayCommand]
+    private void ScopeInvalidation()
+    {
+        Navigation.To<SecondTestViewModel>();
+    }
 }

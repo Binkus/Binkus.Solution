@@ -1,6 +1,8 @@
 <ResourceDictionary xmlns="https://github.com/avaloniaui"
                     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-                    xmlns:catalog="using:DDS.Avalonia.Controls">
+                    xmlns:catalog="using:DDS.Avalonia.Controls"
+                    >
+  <!-- x:Class="DDS.Avalonia.Controls.HamburgerMenu" -->
   <Design.PreviewWith>
     <Border Width="800"
             Height="650">

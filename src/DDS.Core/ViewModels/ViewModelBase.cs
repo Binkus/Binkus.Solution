@@ -46,7 +46,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     /// if you want to use the Navigation from this ViewModel.</p>
     /// </summary>
     [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    public INavigationViewModel Navigation => HostScreen as INavigationViewModel ?? GetService<INavigationViewModel>();
+    public virtual INavigationViewModel Navigation => HostScreen as INavigationViewModel ?? GetService<INavigationViewModel>();
 
     [IgnoreDataMember] public ViewModelActivator Activator { get; } = new();
 

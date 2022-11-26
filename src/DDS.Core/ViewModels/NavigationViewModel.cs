@@ -53,13 +53,20 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     /// <inheritdoc />
     /// </summary>
     [IgnoreDataMember]
-    public sealed override IScreen HostScreen { get => base.HostScreen; protected init => base.HostScreen = value; }
+    public sealed override IScreen HostScreen => this;
+
+    /// <summary>
+    /// <p>Returns this.</p>
+    /// <inheritdoc />
+    /// </summary>
+    [IgnoreDataMember]
+    public sealed override INavigationViewModel Navigation => this;
 
     [ActivatorUtilitiesConstructor]
     protected NavigationViewModelBase(IServiceProvider services) : base(services)
     {
-        HostScreen = this;
-
+        base.HostScreen = this;
+        
         this.WhenAnyValue(x => x.Router.NavigationStack.Count)
             .Subscribe(count =>
             {

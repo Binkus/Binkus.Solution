@@ -80,36 +80,24 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
         _backCommand = ReactiveCommand.CreateFromObservable(
             () => Router.NavigateBack.Execute(Unit.Default),
             CanGoBack);
-
-        // Console.WriteLine($"{UrlPathSegment}");
     }
     
     public void Reset() => Router.NavigationStack.Clear();
     
-    public bool Back()
-    {
-        if (((ICommand)BackCommand).CanExecute(null) is false) return false;
-        BackCommand.Execute(Unit.Default).SubscribeAndDisposeOnNext();
-        return true;
-    }
-    
+    public bool Back() => BackCommand.ExecuteIfExecutable();
+
     // Safe generic navigation
 
     public bool To<TViewModel>(IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel
     {
         using var cmd = NavigateReactiveCommand<TViewModel>(canExecute);
-        // if (cmd.CanExecute() is false) return false;
-        if (((ICommand)cmd).CanExecute(null) is false) return false;
-        cmd.Execute(Unit.Default).SubscribeAndDisposeOnNext();
-        return true;
+        return cmd.ExecuteIfExecutable();
     }
     
     public bool ResetTo<TViewModel>(IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel
     {
         using var cmd = NavigateAndResetReactiveCommand<TViewModel>(canExecute);
-        if (((ICommand)cmd).CanExecute(null) is false) return false;
-        cmd.Execute(Unit.Default).SubscribeAndDisposeOnNext();
-        return true;
+        return cmd.ExecuteIfExecutable();
     }
     
     // Navigation to runtime types
@@ -117,16 +105,12 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     public bool ResetTo(Type viewModelType, IObservable<bool>? canExecute = default)
     {
         using var cmd = NavigateAndResetReactiveCommand(viewModelType, canExecute);
-        if (((ICommand)cmd).CanExecute(null) is false) return false;
-        cmd.Execute(Unit.Default).SubscribeAndDisposeOnNext();
-        return true;
+        return cmd.ExecuteIfExecutable();
     }
     
     public bool To(Type viewModelType, IObservable<bool>? canExecute = default)
     {
         using var cmd = NavigateReactiveCommand(viewModelType, canExecute);
-        if (((ICommand)cmd).CanExecute(null) is false) return false;
-        cmd.Execute(Unit.Default).SubscribeAndDisposeOnNext();
-        return true;
+        return cmd.ExecuteIfExecutable();
     }
 }

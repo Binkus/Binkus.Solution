@@ -4,7 +4,25 @@ namespace DDS.Core.Helper;
 
 public static class CustomAwaiterExtensions
 {
-    
+    private static ICustomAwaiter<int> GetAwaiter(this int i) => new CustomDelegateTaskAwaiter<int>(Task.FromResult(i));
+
+    private static async ValueTask Test()
+    {
+        var a = await 5;
+    }
+
+    private class SomeT : ICustomAwaitable<CustomDelegateTaskAwaiter<int>>
+    {
+        private async ValueTask Test()
+        {
+            var a = await this;
+        }
+        
+        public CustomDelegateTaskAwaiter<int> GetAwaiter()
+        {
+            return new CustomDelegateTaskAwaiter<int>();
+        }
+    }
 }
 
 public interface IAwaitable<out TAwaiter> where TAwaiter : ICriticalNotifyCompletion, INotifyCompletion

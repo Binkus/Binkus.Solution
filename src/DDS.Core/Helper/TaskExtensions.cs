@@ -112,3 +112,26 @@ public static class TaskExtensions
         catch (Exception) { return default; }
     }
 }
+
+// internal static class TaskExtTesttatai
+// {
+    // public static async Task<Some<T>> Try<T>(this Task<T> task)
+    // {
+    //     try
+    //     {
+    //         await Task.Yield();
+    //         var value = await task;
+    //         return new Some<T>{ Value = value };
+    //     }
+    //     catch (Exception e)
+    //     {
+    //         return new Some<T>{ Ex = e };
+    //     }
+    // }
+    //
+    // public readonly struct Some<T>
+    // {
+    //     [UsedImplicitly] public T Value { get; init; }
+    //     [UsedImplicitly] public Exception Ex { get; init; }
+    // }
+// }

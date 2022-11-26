@@ -10,15 +10,16 @@
         x:Class="DDS.Avalonia.Views.MainWindow"
         Icon="/Assets/avalonia-logo.ico"
         Title="DDS"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        Content="{Binding MainView}">
     <Design.DataContext>
         <viewModels:MainWindowViewModel />
     </Design.DataContext>
     <!-- <views:MainView /> -->
         
-        <reactiveUi:ReactiveUserControl x:TypeArguments="views:MainView"
-                                  Content="{Binding MainView}"
-        >
+        <!-- <reactiveUi:ReactiveUserControl x:TypeArguments="views:MainView" -->
+        <!--                           Content="{Binding MainView}" -->
+        <!-- /> -->
     
                 <!-- <Application.DataTemplates> -->
                 <!--   <local:ViewLocator/> -->
@@ -30,5 +31,5 @@
                 <!--     ~1~            VerticalAlignment="Center" /> @1@ -->
                 <!--   </rxui:RoutedViewHost.DefaultContent> -->
                 <!-- </rxui:RoutedViewHost>   -->
-        </reactiveUi:ReactiveUserControl>
+        <!-- </reactiveUi:ReactiveUserControl> -->
 </Window>

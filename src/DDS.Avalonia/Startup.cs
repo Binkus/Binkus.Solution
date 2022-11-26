@@ -61,6 +61,7 @@ public static class Startup
                             (IClassicDesktopStyleApplicationLifetime)Globals.ApplicationLifetime) 
                         : new SingleViewLifetimeWrapper((ISingleViewApplicationLifetime)Globals.ApplicationLifetime);
             }
+            services.AddSingleton(Globals.Instance);
             _ = services.ConfigureAppServiceProvider();
             Globals.ISetGlobalsOnlyOnceOnStartup.FinishGlobalsSetupByMakingGlobalsImmutable();
         });
@@ -69,7 +70,12 @@ public static class Startup
     {
         StartupFacade.ConfigureServices(services);
         _ = services.ConfigureAppServices(); // => kick-starting all our registrations
+#if DEBUG
+        Globals.ISetGlobalsOnlyOnceOnStartup.ServiceProvider = services.BuildServiceProvider(
+            new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true } );
+#else
         Globals.ISetGlobalsOnlyOnceOnStartup.ServiceProvider = services.BuildServiceProvider();
+#endif
         Globals.Services.UseMicrosoftDependencyResolver();
 
         if (Globals.IsDesignMode)

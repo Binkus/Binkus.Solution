@@ -123,7 +123,7 @@ public static class Startup
         //     typeof(BaseUserControl<>), ServiceLifetime.Transient));
         // services.Add(ServiceDescriptor.Describe(typeof(IViewModelBase), 
         //     typeof(ViewModelBase), ServiceLifetime.Transient));    
-        services.AddViewAndViewModels<MainView, MainViewModel>(ServiceLifetime.Scoped, setDataContext: true)
+        services.AddViewAndViewModels<MainView, MainViewModel>(setDataContext: true)
             .AddScoped(typeof(INavigationViewModel<>), typeof(NavigationViewModel<>))
             // .AddTransient<INavigationViewModel, INavigationViewModel<INavigationViewModel>>(p => 
             //     p.GetRequiredService<INavigationViewModel<INavigationViewModel>>())
@@ -197,10 +197,10 @@ public static class Startup
         }, viewLifetime));
         
         services.Add(ServiceDescriptor.Describe(typeof(IReactiveViewFor<TViewModel>), 
-            p => p.GetRequiredService<TView>(), viewLifetime));
+            p => p.GetRequiredService<TView>(), ServiceLifetime.Transient));
 
         services.Add(ServiceDescriptor.Describe(typeof(IViewFor<TViewModel>), 
-            p => p.GetRequiredService<TView>(), viewLifetime));
+            p => p.GetRequiredService<TView>(), ServiceLifetime.Transient));
 
         var dict = Globals.ViewModelNameViewTypeDictionary;
         dict[typeof(TViewModel).FullName ?? throw new NullReferenceException()] = typeof(TView);
@@ -211,5 +211,5 @@ public static class Startup
     private static IServiceCollection AddWindows(this IServiceCollection services)
         => !Globals.IsClassicDesktopStyleApplicationLifetime 
             ? services : services
-                .AddViewAndViewModels<MainWindow, MainWindowViewModel>(ServiceLifetime.Scoped, setDataContext: true);
+                .AddViewAndViewModels<MainWindow, MainWindowViewModel>(setDataContext: true);
 }

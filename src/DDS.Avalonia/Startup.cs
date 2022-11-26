@@ -105,11 +105,11 @@ public static class Startup
             .AddSingleton<ServiceScopeManager>()
             .AddLazyResolution()
             .AddScoped<IAvaloniaEssentials,AvaloniaEssentialsCommonService>()
-            .AddViewAndViewModels();
+            .AddViewsAndViewModels();
     
     //
 
-    private static IServiceCollection AddViewAndViewModels(this IServiceCollection services)
+    private static IServiceCollection AddViewsAndViewModels(this IServiceCollection services)
     {
         services
             .AddScoped<TopLevelService>()
@@ -123,7 +123,7 @@ public static class Startup
         //     typeof(BaseUserControl<>), ServiceLifetime.Transient));
         // services.Add(ServiceDescriptor.Describe(typeof(IViewModelBase), 
         //     typeof(ViewModelBase), ServiceLifetime.Transient));    
-        services.AddViewAndViewModels<MainView, MainViewModel>(setDataContext: true)
+        services.AddViewViewModel<MainView, MainViewModel>(setDataContext: true)
             .AddScoped(typeof(INavigationViewModel<>), typeof(NavigationViewModel<>))
             // .AddTransient<INavigationViewModel, INavigationViewModel<INavigationViewModel>>(p => 
             //     p.GetRequiredService<INavigationViewModel<INavigationViewModel>>())
@@ -148,7 +148,7 @@ public static class Startup
         ServiceLifetime viewLifetime = ServiceLifetime.Transient)
         where TView : ContentControl, IViewFor<TViewModel>
         where TViewModel : class =>
-        services.AddViewAndViewModels(ServiceLifetime.Singleton, viewImplFactory, viewModelImplFactory,
+        services.AddViewViewModel(ServiceLifetime.Singleton, viewImplFactory, viewModelImplFactory,
             postViewCreationAction, postViewModelCreationAction, setDataContext, viewLifetime);
     
     public static IServiceCollection AddScopedViewViewModel<TView, TViewModel>(this IServiceCollection services,
@@ -160,7 +160,7 @@ public static class Startup
         ServiceLifetime viewLifetime = ServiceLifetime.Transient)
         where TView : ContentControl, IViewFor<TViewModel>
         where TViewModel : class =>
-        services.AddViewAndViewModels(ServiceLifetime.Scoped, viewImplFactory, viewModelImplFactory,
+        services.AddViewViewModel(ServiceLifetime.Scoped, viewImplFactory, viewModelImplFactory,
             postViewCreationAction, postViewModelCreationAction, setDataContext, viewLifetime);
     
     public static IServiceCollection AddTransientViewViewModel<TView, TViewModel>(this IServiceCollection services,
@@ -172,7 +172,7 @@ public static class Startup
         ServiceLifetime viewLifetime = ServiceLifetime.Transient)
         where TView : ContentControl, IViewFor<TViewModel>
         where TViewModel : class =>
-        services.AddViewAndViewModels(ServiceLifetime.Transient, viewImplFactory, viewModelImplFactory,
+        services.AddViewViewModel(ServiceLifetime.Transient, viewImplFactory, viewModelImplFactory,
             postViewCreationAction, postViewModelCreationAction, setDataContext, viewLifetime);
 
     /// <summary>
@@ -193,7 +193,7 @@ public static class Startup
     /// <typeparam name="TViewModel">ViewModel type</typeparam>
     /// <returns><see cref="services"/></returns>
     /// <exception cref="NullReferenceException"></exception>
-    public static IServiceCollection AddViewAndViewModels<TView,TViewModel>(this IServiceCollection services,
+    public static IServiceCollection AddViewViewModel<TView,TViewModel>(this IServiceCollection services,
         ServiceLifetime lifetime = ServiceLifetime.Scoped,
         Func<IServiceProvider, TView>? viewImplFactory = default,
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
@@ -247,5 +247,5 @@ public static class Startup
     private static IServiceCollection AddWindows(this IServiceCollection services)
         => !Globals.IsClassicDesktopStyleApplicationLifetime 
             ? services : services
-                .AddViewAndViewModels<MainWindow, MainWindowViewModel>(setDataContext: true);
+                .AddViewViewModel<MainWindow, MainWindowViewModel>(setDataContext: true);
 }

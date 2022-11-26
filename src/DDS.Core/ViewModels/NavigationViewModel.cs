@@ -42,11 +42,11 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     //     set => this.RaiseAndSetIfChanged(ref _backCountOffset, value);
     // }
 
-    [ObservableProperty] private int _backCountOffset;
+    [ObservableProperty, IgnoreDataMember] private int _backCountOffset;
 
-    [ObservableProperty] private int _stackCount;
+    [ObservableProperty, IgnoreDataMember] private int _stackCount;
 
-    [ObservableProperty] private bool _canGoBackBool;
+    [ObservableProperty, IgnoreDataMember] private bool _canGoBackBool;
 
     /// <summary>
     /// <p>Returns this.</p>
@@ -62,7 +62,6 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     [IgnoreDataMember]
     public sealed override INavigationViewModel Navigation => this;
 
-    [ActivatorUtilitiesConstructor]
     protected NavigationViewModelBase(IServiceProvider services) : base(services)
     {
         base.HostScreen = this;

@@ -1,0 +1,58 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+             xmlns:viewModels="clr-namespace:DDS.Core.ViewModels;assembly=DDS.Core"
+             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             x:Class="DDS.Avalonia.Views.LoginView"
+             >
+             <!-- Foreground="White" -->
+             <!-- Background="#171C2C" -->
+             <!-- > -->
+  <Design.DataContext>
+    <viewModels:LoginViewModel />
+  </Design.DataContext>
+  
+  <Grid>
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top">
+      <TextBlock Text="{Binding CustomViewName}" />
+      <TextBlock Text="Login name"></TextBlock>
+      <TextBox Text="{Binding LoginName}" />
+      <TextBlock Text=" "></TextBlock>
+      <TextBlock Text=" "></TextBlock>
+      <TextBlock Text="Password"></TextBlock>
+      <TextBox Text="{Binding Password}"
+               PasswordChar="*"
+      />
+      <TextBlock Text=" "></TextBlock>
+      <TextBlock Text=" "></TextBlock>
+      <Button Command="{Binding TryLoginCommand}" Content="Login" />
+      <TextBlock Text=" "></TextBlock>
+      <Button Command="{Binding TryRegisterCommand}" Content="Register" />
+      <Button Command="{Binding NavCommand}">NavAway</Button>
+      <!-- <Button Command="{Binding EnableBackCommand}">EnableBack</Button> -->
+      <!-- <Button Command="{Binding DisableBackCommand}">DisableBack</Button> -->
+      <!-- <Button Command="{Binding ToggleBackCommand}">ToggleBack</Button> -->
+      
+      <ProgressBar x:Name="LoginProgressBar"></ProgressBar>
+    </StackPanel>
+    
+    
+    
+    
+    
+    
+    
+    <!-- TestReactive&CommunityToolkit.Mvvm -->
+    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" IsVisible="False">
+      <TextBlock Text="ReactiveText"></TextBlock>
+      <TextBox Text="{Binding ReactiveText}"></TextBox>
+      <TextBlock Text="{Binding ReactiveText}"></TextBlock>
+      <TextBlock Text=" "></TextBlock>
+      <TextBlock Text=" "></TextBlock>
+      <TextBlock Text="CommunityToolkitText"></TextBlock>
+      <TextBox Text="{Binding CommunityToolkitText}"></TextBox>
+      <TextBlock Text="{Binding CommunityToolkitText}"></TextBlock>
+    </StackPanel>
+  </Grid>
+</UserControl>

@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using DDS.Core.Helper;
 
 namespace DDS.Core.ViewModels;
 
@@ -64,17 +65,17 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     
     // Safe generic navigation
 
-    public bool To<TViewModel>() where TViewModel : class, IRoutableViewModel
+    public bool To<TViewModel>(IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel
     {
-        using var cmd = NavigateReactiveCommand<TViewModel>();
+        using var cmd = NavigateReactiveCommand<TViewModel>(canExecute);
         if (((ICommand)cmd).CanExecute(null) is false) return false;
         cmd.Execute(Unit.Default).Subscribe();
         return true;
     }
     
-    public bool ResetTo<TViewModel>() where TViewModel : class, IRoutableViewModel
+    public bool ResetTo<TViewModel>(IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel
     {
-        using var cmd = NavigateAndResetReactiveCommand<TViewModel>();
+        using var cmd = NavigateAndResetReactiveCommand<TViewModel>(canExecute);
         if (((ICommand)cmd).CanExecute(null) is false) return false;
         cmd.Execute(Unit.Default).Subscribe();
         return true;
@@ -82,17 +83,17 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     
     // Navigation to runtime types
     
-    public bool ResetTo(Type viewModelType)
+    public bool ResetTo(Type viewModelType, IObservable<bool>? canExecute = default)
     {
-        using var cmd = NavigateAndResetReactiveCommand(viewModelType);
+        using var cmd = NavigateAndResetReactiveCommand(viewModelType, canExecute);
         if (((ICommand)cmd).CanExecute(null) is false) return false;
         cmd.Execute(Unit.Default).Subscribe();
         return true;
     }
     
-    public bool To(Type viewModelType)
+    public bool To(Type viewModelType, IObservable<bool>? canExecute = default)
     {
-        using var cmd = NavigateReactiveCommand(viewModelType);
+        using var cmd = NavigateReactiveCommand(viewModelType, canExecute);
         if (((ICommand)cmd).CanExecute(null) is false) return false;
         cmd.Execute(Unit.Default).Subscribe();
         return true;

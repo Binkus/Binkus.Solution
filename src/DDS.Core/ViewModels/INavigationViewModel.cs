@@ -32,29 +32,33 @@ public interface INavigationViewModel : IScreen, IViewModelBase
     /// Navigates to viewModelType when IRoutableViewModel
     /// </summary>
     /// <param name="viewModelType">IRoutableViewModel to navigate to</param>
+    /// <param name="canExecute">Override default behaviour of canExecute parameter</param>
     /// <returns>true when navigation successful, otherwise false</returns>
-    bool To(Type viewModelType);
+    bool To(Type viewModelType, IObservable<bool>? canExecute = default);
     
     /// <summary>
     /// Navigates to TViewModel
     /// </summary>
     /// <typeparam name="TViewModel">IRoutableViewModel to navigate to</typeparam>
+    /// <param name="canExecute">Override default behaviour of canExecute parameter</param>
     /// <returns>true when navigation successful, otherwise false</returns>
-    bool To<TViewModel>() where TViewModel : class, IRoutableViewModel;
+    bool To<TViewModel>(IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel;
     
     /// <summary>
     /// Navigates to TViewModel and resets navigation stack
     /// </summary>
     /// <typeparam name="TViewModel">IRoutableViewModel to navigate to</typeparam>
+    /// <param name="canExecute">Override default behaviour of canExecute parameter</param>
     /// <returns>true when navigation successful, otherwise false</returns>
-    bool ResetTo<TViewModel>() where TViewModel : class, IRoutableViewModel;
+    bool ResetTo<TViewModel>(IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel;
     
     /// <summary>
     /// Navigates to viewModelType when IRoutableViewModel and resets navigation stack
     /// </summary>
     /// <param name="viewModelType">IRoutableViewModel to navigate to</param>
+    /// <param name="canExecute">Override default behaviour of canExecute parameter</param>
     /// <returns>true when navigation successful, otherwise false</returns>
-    bool ResetTo(Type viewModelType);
+    bool ResetTo(Type viewModelType, IObservable<bool>? canExecute = default);
     
     /// <summary>
     /// Resets navigation stack of RoutingState Router

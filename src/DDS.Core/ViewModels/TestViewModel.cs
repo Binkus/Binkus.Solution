@@ -1,3 +1,5 @@
+using DDS.Core.Services;
+
 namespace DDS.Core.ViewModels;
 
 public partial class TestViewModel : ViewModelBase
@@ -5,7 +7,8 @@ public partial class TestViewModel : ViewModelBase
     public TestViewModel() : this(Globals.Services) { }
     
     [ActivatorUtilitiesConstructor, UsedImplicitly]
-    public TestViewModel(IServiceProvider services) : base(services) { }
+    public TestViewModel(IServiceProvider services) : base(services, 
+        Globals.GetService<ServiceScopeManager>().GetMainScope().Services.GetRequiredService<IScreen>()) { }
     
     public string Greeting { get; set; } = $"Hello from Test VM Id:{Guid.NewGuid().ToString()[..8]}";
 

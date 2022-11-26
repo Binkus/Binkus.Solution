@@ -35,7 +35,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public virtual IScreen HostScreen
     {
-        get => ReturnOrWhenSingletonThrowNotSupported(_lazyHostScreen)?.Value ?? this.RaiseAndSetIfChanged(
+        get => ReturnOrWhenNullAndSingletonThrowNotSupported(_lazyHostScreen)?.Value ?? this.RaiseAndSetIfChanged(
             ref _lazyHostScreen, new Lazy<IScreen>(GetService<IScreen>()))!.Value;
         protected init => this.RaiseAndSetIfChanged(ref _lazyHostScreen, new Lazy<IScreen>(value));
     }
@@ -83,8 +83,9 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         }
     }
     
-    private T ReturnOrWhenSingletonThrowNotSupported<T>(T value)
+    private T ReturnOrWhenNullAndSingletonThrowNotSupported<T>(T value)
     {
+        if (value is not null) return value;
         if (Lifetime is ServiceLifetime.Singleton)
         {
             throw new NotSupportedException($"Operation on Singleton not supported. {FullNameOfType}'s " +

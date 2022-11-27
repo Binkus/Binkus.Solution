@@ -55,17 +55,8 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     [IgnoreDataMember]
     public sealed override IScreen HostScreen => this;
 
-    /// <summary>
-    /// <p>Returns this.</p>
-    /// <inheritdoc />
-    /// </summary>
-    [IgnoreDataMember]
-    public sealed override INavigationViewModel Navigation => this;
-
     protected NavigationViewModelBase(IServiceProvider services) : base(services)
     {
-        base.HostScreen = this;
-        
         this.WhenAnyValue(x => x.Router.NavigationStack.Count)
             .Subscribe(count =>
             {

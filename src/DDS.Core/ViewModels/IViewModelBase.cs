@@ -7,8 +7,6 @@ public interface IViewModel
 {
     Guid InstanceId { get; }
     INavigationViewModel Navigation { get; }
-    string AssemblyQualifiedName { get; }
-    string FullNameOfType { get; }
     string ViewModelName { get; }
     string RawViewName { get; }
     string CustomViewName { get; set; }

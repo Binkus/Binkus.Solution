@@ -4,12 +4,6 @@ using DDS.Core.Services;
 
 namespace DDS.Core.ViewModels;
 
-file static class C
-{
-    public const string InstanceNull = " instance's type's FullName is null";
-    public const string Vmb = nameof(ViewModelBase);
-}
-
 [DataContract]
 public abstract class ViewModelBase : ViewModelBase<IViewModel>
 {
@@ -52,8 +46,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     [IgnoreDataMember] public ViewModelActivator Activator { get; } = new();
 
     [DataMember] public Guid InstanceId { get; } = Guid.NewGuid();
-    [DataMember] public string AssemblyQualifiedName { get; }
-    [DataMember] public string FullNameOfType { get; }
     [DataMember] public string ViewModelName { get; }
     [DataMember] public string RawViewName { get; }
     
@@ -89,7 +81,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         if (value is not null) return value;
         if (Lifetime is ServiceLifetime.Singleton)
         {
-            throw new NotSupportedException($"Operation on Singleton not supported. {FullNameOfType}'s " +
+            throw new NotSupportedException($"Operation on Singleton not supported. {GetType().FullName}'s " +
                                             "ServiceLifetime is Singleton; consider changing lifetime to Scoped.");
         }
         return value;
@@ -101,12 +93,9 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     {
         Services = services;
         var type = GetType().UnderlyingSystemType;
-        AssemblyQualifiedName = type.AssemblyQualifiedName
-                                ?? throw new UnreachableException($"{C.Vmb} {type.Name}{C.InstanceNull}");
-        FullNameOfType = type.FullName ?? throw new UnreachableException($"{C.Vmb} {type.Name}{C.InstanceNull}");
         ViewModelName = type.Name;
         RawViewName = CustomViewName;
-        UrlPathSegment = $"/{RawViewName.ToLowerInvariant()}?id={InstanceId}"; // InstanceId.ToString()[..8]
+        UrlPathSegment = $"/{RawViewName.ToLowerInvariant()}?id={InstanceId}";
 
         this.WhenActivated(disposables => 
         {

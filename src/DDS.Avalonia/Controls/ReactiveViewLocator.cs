@@ -22,9 +22,8 @@ public class ReactiveViewLocator : IViewLocator
             ? throw new NullReferenceException($"{nameof(ReactiveViewLocator)}::{nameof(ResolveView)}:" +
                                                $"{nameof(viewModel)} -> null")
             : (viewModel is IViewModel vm ? vm.Services : Globals.Services)
-            .GetService(DictOfViews.TryGetValue((viewModel as IViewModel)?.FullNameOfType 
-                                                ?? viewModel.GetType().UnderlyingSystemType.FullName 
-                                                ?? throw new UnreachableException(), out var type) 
+            .GetService(DictOfViews.TryGetValue(viewModel.GetType().UnderlyingSystemType.FullName
+                                                ?? throw new UnreachableException(), out var type)
                 ? type : typeof(IViewFor<>).MakeGenericType(viewModel.GetType())
                 ) as IViewFor;
 }

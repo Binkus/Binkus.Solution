@@ -114,14 +114,14 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     protected virtual void HandleActivation() { }
     protected virtual void HandleDeactivation() { }
     
-    [IgnoreDataMember] public IServiceProvider Services { get; protected init; } //= Globals.Services;
+    [IgnoreDataMember] public IServiceProvider Services { get; protected init; }
 
     public TService GetService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
     
     public object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
 
-    
-    //
+
+    #region Simplified Command Creation
 
     public ReactiveCommand<Unit, IRoutableViewModel> NavigateReactiveCommand<TViewModel>(IObservable<bool>? canExecute = default)
         where TViewModel : class, IRoutableViewModel 
@@ -134,10 +134,10 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
             new Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>>(() => Navigation.Router.NavigateAndReset), canExecute);
 
     public ReactiveCommand<Unit, IRoutableViewModel> CreateNavigationReactiveCommandFromObservable<TViewModel>(
-        Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>> navi, IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel 
+        Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>> navi, IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel
         => ReactiveCommand.CreateFromObservable(
             () => navi.Value.Execute(GetService<TViewModel>()),
-            // todo make more lazy, can execute will load values
+            // todo make more lazy, can execute can load values, when returned cmd is e.g. used as bound cmd to view
             canExecute: canExecute ?? this.WhenAnyObservable(x => x.Navigation.Router.CurrentViewModel).Select(x => x is not TViewModel)
         );
     
@@ -157,11 +157,13 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         if (viewModelType.IsAssignableTo(typeof(IRoutableViewModel)) is false) throw new InvalidOperationException();
         return ReactiveCommand.CreateFromObservable(
             () => navi.Value.Execute((IRoutableViewModel)GetService(viewModelType)),
-            // todo make more lazy, can execute will load values
+            // todo make more lazy, can execute can load values, when returned cmd is e.g. used as bound cmd to view
             canExecute: canExecute ?? this.WhenAnyObservable(x => x.Navigation.Router.CurrentViewModel)
                 .Select(x => !x?.GetType().IsAssignableTo(viewModelType) ?? true)
         );
     }
+    
+    #endregion
 
     #region Called from View
 

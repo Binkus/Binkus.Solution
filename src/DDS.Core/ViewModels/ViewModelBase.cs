@@ -15,7 +15,7 @@ public abstract class ViewModelBase : ViewModelBase<IViewModel>
 
 [DataContract]
 public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
-    IViewModelBase,  IViewModelBase<TIViewModel>
+    IViewModelBase,  IViewModelBase<TIViewModel>, IEquatable<ViewModelBase<TIViewModel>>
     where TIViewModel : class, IViewModel
 {
     [DataMember] public string UrlPathSegment { get; }
@@ -40,7 +40,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     /// if you want to use the Navigation from this ViewModel.</p>
     /// </summary>
     [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)]
-    public INavigationViewModel Navigation => HostScreen as INavigationViewModel 
+    public INavigationViewModel Navigation => HostScreen as INavigationViewModel
                                               ?? this as INavigationViewModel ?? GetService<INavigationViewModel>();
 
     [IgnoreDataMember] public ViewModelActivator Activator { get; } = new();
@@ -61,6 +61,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
 
     private bool _hasKnownLifetime = true;
     private ServiceLifetime? _lifetime;
+
     private ServiceLifetime? Lifetime
     {
         get
@@ -161,4 +162,38 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
                 .Select(x => !x?.GetType().IsAssignableTo(viewModelType) ?? true)
         );
     }
+
+    #region Equality
+    
+    public bool Equals(ViewModelBase<TIViewModel>? other)
+    {
+        if (ReferenceEquals(null, other)) return false;
+        if (ReferenceEquals(this, other)) return true;
+        return InstanceId.Equals(other.InstanceId);
+    }
+
+    public override bool Equals(object? obj)
+    {
+        if (ReferenceEquals(null, obj)) return false;
+        if (ReferenceEquals(this, obj)) return true;
+        if (obj.GetType() != this.GetType()) return false;
+        return Equals((ViewModelBase<TIViewModel>)obj);
+    }
+
+    public override int GetHashCode()
+    {
+        return InstanceId.GetHashCode();
+    }
+
+    public static bool operator ==(ViewModelBase<TIViewModel>? left, ViewModelBase<TIViewModel>? right)
+    {
+        return Equals(left, right);
+    }
+
+    public static bool operator !=(ViewModelBase<TIViewModel>? left, ViewModelBase<TIViewModel>? right)
+    {
+        return !Equals(left, right);
+    }
+    
+    #endregion
 }

@@ -163,6 +163,14 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         );
     }
 
+    #region Called from View
+
+    public virtual void OnViewActivation(CompositeDisposable disposedOnViewDeactivationDisposables) { }
+    public virtual void OnViewDeactivation() { }
+    public virtual void OnViewDisposal() { }
+
+    #endregion
+
     #region Equality
     
     public bool Equals(ViewModelBase<TIViewModel>? other)

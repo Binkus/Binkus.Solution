@@ -1,7 +1,117 @@
+using Microsoft.VisualStudio.Threading;
+
 namespace DDS.Core.Helper;
 
 public static class TaskExtensions
 {
+    public static async Task IgnoreExceptionAsync<TException>(this Task task) where TException : Exception
+    {
+        try
+        {
+            await task;
+        }
+        catch (TException e)
+        {
+            Debug.WriteLine(e);
+        }
+    }
+    
+    public static async Task IgnoreExceptionAsync<TException>(this JoinableTask task) where TException : Exception
+    {
+        try
+        {
+            await task;
+        }
+        catch (TException e)
+        {
+            Debug.WriteLine(e);
+        }
+    }
+    
+    public static async Task IgnoreExceptionAsync<TException1, TException2>(this Task task) 
+        where TException1 : Exception where TException2 : Exception
+    {
+        try
+        {
+            await task;
+        }
+        catch (TException1 e)
+        {
+            Debug.WriteLine(e);
+        }
+        catch (TException2 e)
+        {
+            Debug.WriteLine(e);
+        }
+    }
+    
+    public static async Task IgnoreExceptionAsync<TException1, TException2>(this JoinableTask task) 
+        where TException1 : Exception where TException2 : Exception
+    {
+        try
+        {
+            await task;
+        }
+        catch (TException1 e)
+        {
+            Debug.WriteLine(e);
+        }
+        catch (TException2 e)
+        {
+            Debug.WriteLine(e);
+        }
+    }
+    
+    public static async Task IgnoreExceptionAsync<TException1, TException2, TException3>(this Task task) 
+        where TException1 : Exception where TException2 : Exception where TException3 : Exception
+    {
+        try
+        {
+            await task;
+        }
+        catch (TException1 e)
+        {
+            Debug.WriteLine(e);
+        }
+        catch (TException2 e)
+        {
+            Debug.WriteLine(e);
+        }
+        catch (TException3 e)
+        {
+            Debug.WriteLine(e);
+        }
+    }
+    
+    public static async Task IgnoreExceptionAsync<TException1, TException2, TException3>(this JoinableTask task) 
+        where TException1 : Exception where TException2 : Exception where TException3 : Exception
+    {
+        try
+        {
+            await task;
+        }
+        catch (TException1 e)
+        {
+            Debug.WriteLine(e);
+        }
+        catch (TException2 e)
+        {
+            Debug.WriteLine(e);
+        }
+        catch (TException3 e)
+        {
+            Debug.WriteLine(e);
+        }
+    }
+    
+    //
+    
+    public static async Task AwaitBeforeExecution(this Task task, params Task[] tasks)
+    {
+        foreach (var t in tasks) await t;
+        await task;
+    }
+    
     public static async ValueTask YieldAndContinue(this ValueTask task)
     {
         await Task.Yield();
@@ -110,5 +220,78 @@ public static class TaskExtensions
     {
         try { return task.GetAwaiter().GetResult(); }
         catch (Exception) { return default; }
+    }
+    
+    //
+
+    private static bool ContinueWithWhenTrue(this bool b, Action? continueWith)
+    {
+        if (b) continueWith?.Invoke();
+        return b;
+    }
+    
+    public static bool TrySetResultsToSource(this Task task, TaskCompletionSource s, CancellationToken? cancellationToken = default, bool sourceTaskToCompletionState = true, Action? continueWith = default)
+    {
+        if (task.IsInAnyRunningState()) return false;
+        
+        if (task.Exception is not null)
+        {
+            return s.TrySetException(task.Exception.InnerException ?? task.Exception).ContinueWithWhenTrue(continueWith);
+        }
+        if (cancellationToken is { IsCancellationRequested: true })
+        {
+            return s.TrySetCanceled(cancellationToken.Value).ContinueWithWhenTrue(continueWith);
+        }
+        if (task.IsCanceled)
+        {
+            return s.TrySetCanceled().ContinueWithWhenTrue(continueWith);
+        }
+        return sourceTaskToCompletionState && s.TrySetResult().ContinueWithWhenTrue(continueWith);
+    }
+    
+    public static bool TrySetResultsToSource<T>(this Task<T> task, TaskCompletionSource<T> s, CancellationToken? cancellationToken = default, bool sourceTaskToCompletionState = true, Action? continueWith = default)
+    {
+        if (task.IsInAnyRunningState()) return false;
+        
+        if (task.Exception is not null)
+        {
+            return s.TrySetException(task.Exception.InnerException ?? task.Exception).ContinueWithWhenTrue(continueWith);
+        }
+        if (cancellationToken is { IsCancellationRequested: true })
+        {
+            return s.TrySetCanceled(cancellationToken.Value).ContinueWithWhenTrue(continueWith);
+        }
+        if (task.IsCanceled)
+        {
+            return s.TrySetCanceled().ContinueWithWhenTrue(continueWith);
+        }
+
+        // JoinableTaskFactory.MainThreadAwaiter
+        // JoinableTaskFactory.Run
+        // Synchronously waiting on tasks or awaiters may cause deadlocks. Use await or JoinableTaskFactory.Run instead.
+        return sourceTaskToCompletionState && s.TrySetResult(task.Result).ContinueWithWhenTrue(continueWith);
+    }
+    
+    //
+    
+    public static bool IsInFinalState(this Task task) => !task.IsInAnyRunningState();
+    public static bool IsInAnyRunningState(this Task task)
+    {
+        // return task.Status.Equals(TaskStatus.WaitingForActivation) || task.Status.Equals(TaskStatus.Running);
+        switch (task.Status)
+        {
+            case TaskStatus.Canceled:
+            case TaskStatus.Faulted:
+            case TaskStatus.RanToCompletion:
+                return false;
+            case TaskStatus.Created:
+            case TaskStatus.Running:
+            case TaskStatus.WaitingForActivation:
+            case TaskStatus.WaitingForChildrenToComplete:
+            case TaskStatus.WaitingToRun:
+                return true;
+            default:
+                throw new UnreachableException($"Impossible invalid TaskStatus of {task.Status}.");
+        }
     }
 }

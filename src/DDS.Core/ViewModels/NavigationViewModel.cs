@@ -26,6 +26,12 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
 {
     [IgnoreDataMember]
     public RoutingState Router { get; } = new();
+    
+    // [ObservableProperty, IgnoreDataMember]
+    // private IObservable<bool> _canCurrentViewBeEnabled;
+
+    [ObservableProperty, IgnoreDataMember]
+    private bool _isCurrentViewEnabled = true;
 
     /// <inheritdoc cref="INavigationViewModel.BackCommand"/>
     [ObservableProperty, IgnoreDataMember]
@@ -77,6 +83,19 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
         _backCommand = ReactiveCommand.CreateFromObservable(
             () => Router.NavigateBack.Execute(Unit.Default),
             CanGoBack);
+        
+        // this.WhenAnyObservable(x => x.Router.CurrentViewModel)
+        //     .Do(_ => IsCurrentViewEnabled = true)
+        //     .Where(x => x is ViewModelBase).Select(x => (ViewModelBase)x!)
+        //     .Select(x => x.WhenAnyValue(vm => vm.IsActivated)
+        //         .SubscribeAndDisposeOnNext(b => IsCurrentViewEnabled = b))
+        //     .Subscribe();
+
+        this.WhenAnyObservable(x => x.Router.CurrentViewModel)
+            .Do(_ => IsCurrentViewEnabled = true)
+            .Where(x => x is ViewModelBase).Select(x => (ViewModelBase)x!)
+            .Select(x => x.WhenAnyValue(vm => vm.IsActivated))
+            .Switch().Subscribe(b => IsCurrentViewEnabled = b);
     }
     
     public void Reset() => Router.NavigationStack.Clear();

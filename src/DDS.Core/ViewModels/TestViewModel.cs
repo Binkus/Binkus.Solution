@@ -1,3 +1,4 @@
+using DDS.Core.Helper;
 using DDS.Core.Services;
 
 namespace DDS.Core.ViewModels;
@@ -19,5 +20,10 @@ public partial class TestViewModel : ViewModelBase
     private void ScopeInvalidation()
     {
         Navigation.To<SecondTestViewModel>();
+    }
+
+    protected override async Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        await 3.s();
     }
 }

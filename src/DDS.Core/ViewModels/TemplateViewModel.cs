@@ -18,12 +18,12 @@ public sealed partial class TemplateViewModel : ViewModelBase
         Greeting = "Property is available because of [ObservableProperty] Attribute and Mvvm Toolkit Source Generator";
     }
 
-    protected override void HandleActivation()
+    protected override Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        
+        return Task.CompletedTask;
     }
     
-    protected override void HandleDeactivation()
+    protected override void OnDeactivation()
     {
         
     }

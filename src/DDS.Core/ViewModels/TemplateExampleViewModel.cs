@@ -47,14 +47,21 @@ public sealed partial class TemplateExampleViewModel : ViewModelBase
 
         // _someService = GetService<ISomeService>(); // or through ctor injection
     }
+    
+    protected override Task InitializeAsync(CancellationToken cancellationToken)
+    {
+        Console.WriteLine("After ViewModel construction, Initialize gets called exactly once, before HandleActivation");
+        return base.InitializeAsync(cancellationToken);
+    }
 
-    protected override void HandleActivation()
+    protected override Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
         ReactiveGreeting = ":)";
         ExamplePropWithBackingFieldSemiManualRaisePropertyChange2 = "I change on activation (when view is shown)";
+        return Task.CompletedTask;
     }
     
-    protected override void HandleDeactivation()
+    protected override void OnDeactivation()
     {
         Console.WriteLine("When View disappears from view");
         CwGreetings();

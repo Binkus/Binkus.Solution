@@ -30,29 +30,14 @@
       <TextBlock Text=" "></TextBlock>
       <Button Command="{Binding TryRegisterCommand}" Content="Register" />
       <Button Command="{Binding NavCommand}">NavAway</Button>
+      <Button Command="{Binding TestCommand}">Test</Button>
+      <Button Command="{Binding Test2Command}">Test2</Button>
+      <Button Command="{Binding Test3Command}">Test3</Button>
       <!-- <Button Command="{Binding EnableBackCommand}">EnableBack</Button> -->
       <!-- <Button Command="{Binding DisableBackCommand}">DisableBack</Button> -->
       <!-- <Button Command="{Binding ToggleBackCommand}">ToggleBack</Button> -->
       
       <ProgressBar x:Name="LoginProgressBar"></ProgressBar>
-    </StackPanel>
-    
-    
-    
-    
-    
-    
-    
-    <!-- TestReactive&CommunityToolkit.Mvvm -->
-    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Top" IsVisible="False">
-      <TextBlock Text="ReactiveText"></TextBlock>
-      <TextBox Text="{Binding ReactiveText}"></TextBox>
-      <TextBlock Text="{Binding ReactiveText}"></TextBlock>
-      <TextBlock Text=" "></TextBlock>
-      <TextBlock Text=" "></TextBlock>
-      <TextBlock Text="CommunityToolkitText"></TextBlock>
-      <TextBox Text="{Binding CommunityToolkitText}"></TextBox>
-      <TextBlock Text="{Binding CommunityToolkitText}"></TextBlock>
     </StackPanel>
   </Grid>
 </UserControl>

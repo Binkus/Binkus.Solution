@@ -1,3 +1,4 @@
+using System.Reactive.Concurrency;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -217,6 +218,8 @@ public static class Startup
             var viewModel = viewModelImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance<TViewModel>(p);
             // if (viewModel is ViewModelBase viewModelBase) viewModelBase.Services = p;
             postViewModelCreationAction?.Invoke(p, viewModel);
+            if (viewModel is IInitializable initializable)
+                initializable.InitializeOnceAfterCreation(default);
             return viewModel;
         }, lifetime));
 
@@ -250,6 +253,69 @@ public static class Startup
         services.AddSingleton<LifetimeOf<TViewModel>>(new LifetimeOf<TViewModel>(lifetime));
         
         return services;
+    }
+
+    // private static IDisposable InitInitializable(IInitializable initializable)
+    // {
+    //     initializable.InitializeOnceAfterCreation(default);
+    //     
+    //     // initializable.Init =
+    //     //     initializable.JoinUiTaskFactory.RunAsync(() => 
+    //     //         initializable.InitializeOnceAfterCreationAsync(default));
+    //     
+    //     return Disposable.Empty;
+    //
+    //     // var taskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
+    //     // initializable.Init = taskCompletionSource.Task;
+    //     // return RxApp.TaskpoolScheduler.ScheduleAsync((initializable, taskCompletionSource),
+    //     //     static (scheduler, x, token) =>
+    //     //     {
+    //     //         Task? t = null;
+    //     //         Observable.StartAsync(() => t = x.initializable.InitializeOnceAfterCreationAsync(token), 
+    //     //             RxApp.MainThreadScheduler)
+    //     //             .ObserveOn(RxApp.TaskpoolScheduler)
+    //     //             // .SubscribeOn(RxApp.TaskpoolScheduler)
+    //     //             .SubscribeOn(RxApp.MainThreadScheduler)
+    //     //             .Subscribe(_ => t?.TrySetResultsToSource(x.taskCompletionSource, token))
+    //     //             ;
+    //     //         return Task.CompletedTask;
+    //     //
+    //     //         // var t = x.initializable.InitializeOnceAfterCreationAsync(token);
+    //     //         // await t.ConfigureAwait(false);
+    //     //         // t.TrySetResultsToSource(x.taskCompletionSource, token);
+    //     //
+    //     //         // return x.initializable.InitializeOnceAfterCreationAsync(token).ContinueWith(init =>
+    //     //         // {
+    //     //         //     // init.SetResults(x.s, token);
+    //     //         //     init.TrySetResultsToSource(x.s, token);
+    //     //         // }, token, TaskContinuationOptions.RunContinuationsAsynchronously, TaskScheduler.Current);
+    //     //     });
+    //
+    //
+    //     // return RxApp.MainThreadScheduler.ScheduleAsync(
+    //     //         (CancellationToken t) => initializable.InitializeAsync(t),
+    //     //         static (_, state, token) => state.Invoke(token))
+    //     //     ;
+    //     // .Dispose();
+    //
+    //     // RxApp.MainThreadScheduler.ScheduleAsync(
+    //     //     (CancellationToken t) => initializable.InitializeAsync(t),
+    //     //     static (_, state, token) => state.Invoke(token)).Dispose();
+    // }
+    
+    private static void SetResults(this Task task, TaskCompletionSource s, CancellationToken cancellationToken)
+    {
+        if (task.Exception is not null)
+        {
+            s.TrySetException(task.Exception.InnerException ?? task.Exception);
+            return;
+        }
+        if (cancellationToken.IsCancellationRequested)
+        {
+            s.TrySetCanceled(cancellationToken);
+            return;
+        }
+        s.TrySetResult();
     }
     
     /// <summary>
@@ -292,6 +358,8 @@ public static class Startup
             var viewModel = viewModelImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance(p, viewModelType);
             // if (viewModel is ViewModelBase viewModelBase) viewModelBase.Services = p;
             postViewModelCreationAction?.Invoke(p, viewModel);
+            if (viewModel is IInitializable initializable)
+                initializable.InitializeOnceAfterCreation(default);
             return viewModel;
         }, lifetime));
 

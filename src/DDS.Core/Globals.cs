@@ -1,4 +1,5 @@
 using DDS.Core.Controls;
+using Microsoft.VisualStudio.Threading;
 
 namespace DDS.Core;
 
@@ -24,6 +25,7 @@ public static class Globals
         [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Globals.Services; set => Globals.Services = value.D(); }
         [UsedImplicitly] static object ApplicationLifetime { private get => Globals.ApplicationLifetime; set => Globals.ApplicationLifetime = value.D(); }
         [UsedImplicitly] static ICoreLifetime ApplicationLifetimeWrapped { private get => Globals.ApplicationLifetimeWrapped; set => Globals.ApplicationLifetimeWrapped = value.D(); }
+        [UsedImplicitly] static JoinableTaskFactory JoinUiTaskFactory { private get => Globals.JoinUiTaskFactory; set => Globals.JoinUiTaskFactory = value.D(); }
 
         [UsedImplicitly]
         static bool IsClassicDesktopStyleApplicationLifetime
@@ -35,7 +37,7 @@ public static class Globals
 
         [UsedImplicitly] static void FinishGlobalsSetupByMakingGlobalsImmutable()
         {
-            if (ServiceProvider is null || (!IsDesignMode && (ApplicationLifetime is null || ApplicationLifetimeWrapped is null)) || _instanceNullable is null || DbMigrationTask is null)
+            if (ServiceProvider is null || (!IsDesignMode && (ApplicationLifetime is null || ApplicationLifetimeWrapped is null)) || _instanceNullable is null || DbMigrationTask is null)//todo || JoinUiTaskFactory is null)
             {
                 throw new NullReferenceException("Globals setup has not been done correctly");
             }
@@ -64,6 +66,8 @@ public static class Globals
     [UsedImplicitly] public static bool IsClassicDesktopStyleApplicationLifetime { get; private set; }
     
     [UsedImplicitly] public static Dictionary<string, Type> ViewModelNameViewTypeDictionary { get; } = new();
+
+    [UsedImplicitly] public static JoinableTaskFactory JoinUiTaskFactory { get; private set; } = null!;
 
     #endregion
 }

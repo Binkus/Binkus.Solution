@@ -158,6 +158,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
             }
 
             JoinAsyncInitPrepareActivation(disposables, token);
+            // OnActivation(disposables, token);
             Disposable
                 .Create(OnDeactivationBase)
                 .DisposeWith(disposables);
@@ -217,7 +218,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         if (Init is { } init) await init.IgnoreExceptionAsync<OperationCanceledException>();
         if (Prepare is { } prepare) await prepare.IgnoreExceptionAsync<OperationCanceledException>();
         await OnActivationAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
-
+        OnActivationFinishing(disposables, cancellationToken);
         TrySetActivated(disposables, cancellationToken);
     }
     
@@ -281,28 +282,31 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
             }
         }
 
-        OnActivationFinished(disposables, cancellationToken);
+        OnActivation(disposables, cancellationToken);
     }
-    protected virtual void OnActivationFinished(CompositeDisposable disposables, CancellationToken cancellationToken){}
+    
+    protected virtual void OnActivation(CompositeDisposable disposables, CancellationToken cancellationToken){}
+    protected virtual void OnActivationFinishing(CompositeDisposable disposables, CancellationToken cancellationToken){}
 
     private void OnDeactivationBase()
     {
-        SetDeactivated();
-        
         ActivationCancellationTokenSource.Cancel();
         ActivationCancellationTokenSource.Dispose();
-        // todo put recreation of ActivationCancellationTokenSource in here
+        SetDeactivated();
         OnDeactivation();
     }
     protected virtual void OnDeactivation() { }
+    
+    //
     
     [IgnoreDataMember] public IServiceProvider Services { get; protected init; }
 
     public TService GetService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
     
     public object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
-
-
+    
+    //
+    
     #region Simplified Command Creation
 
     public ReactiveCommand<Unit, IRoutableViewModel> NavigateReactiveCommand<TViewModel>(IObservable<bool>? canExecute = default)

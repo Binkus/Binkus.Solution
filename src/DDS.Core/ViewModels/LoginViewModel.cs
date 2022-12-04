@@ -63,7 +63,7 @@ public sealed partial class LoginViewModel : ViewModelBase
         // return Task.CompletedTask;
     }
     
-    protected override void OnActivationFinished(CompositeDisposable disposables, CancellationToken cancellationToken)
+    protected override void OnActivationFinishing(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
         Console.WriteLine("void HandleActivation");
     }

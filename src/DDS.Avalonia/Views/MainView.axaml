@@ -13,39 +13,58 @@
     <viewModels:MainViewModel />
   </Design.DataContext>
     
-<Grid>
-    <Grid.RowDefinitions>
-      <RowDefinition Height="*" />
-      <RowDefinition Height="Auto" />
-    </Grid.RowDefinitions>
+  <Grid>
+    <Grid.Styles>
+      <Style Selector="TextBlock.h2">
+        <Setter Property="TextWrapping" Value="Wrap" />
+        <Setter Property="MaxWidth" Value="400" />
+        <Setter Property="HorizontalAlignment" Value="Left" />
+      </Style>
+    </Grid.Styles>
+    <!-- <Grid.RowDefinitions> -->
+    <!--   <RowDefinition Height="*" /> -->
+    <!--   <RowDefinition Height="Auto" /> -->
+    <!-- </Grid.RowDefinitions> -->
+    <controls:ReactiveHamburgerMenu Name="Sidebar">
+      <TabItem Header="MainView's RoutedViewHost + Nav buttons">
+        <!-- <pages:CompositionPage/> -->
+        <!-- <TextBlock Text="{Binding Greeting}" -->
+        <!--            HorizontalAlignment="Center" -->
+        <!--            VerticalAlignment="Center" /> -->
+        
+        <Grid>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="*" />
+            <RowDefinition Height="Auto" />
+          </Grid.RowDefinitions>
           <reactiveUi:RoutedViewHost Grid.Row="0" Router="{Binding Navigation.Router}" 
                                      x:Name="RoutedViewHost"
                                      IsEnabled="{Binding Navigation.IsCurrentViewEnabled}">
-      <reactiveUi:RoutedViewHost.DefaultContent>
-        <StackPanel>
-          <TextBlock Text="{Binding Greeting}"
-                     HorizontalAlignment="Center"
-                     VerticalAlignment="Center" />
-          <TextBlock Text="{Binding GotPath}"
-                     HorizontalAlignment="Center"
-                     VerticalAlignment="Center" />
-        </StackPanel>
-      </reactiveUi:RoutedViewHost.DefaultContent>
-      <!-- <reactiveUi:RoutedViewHost.ViewLocator /> -->
-      <!-- <reactiveUi:RoutedViewHost.ViewLocator> -->
-        <!-- See AppViewLocator.cs section below -->
-        <!-- <controls:ReactiveViewLocator /> -->
-      <!-- </reactiveUi:RoutedViewHost.ViewLocator> -->
-    </reactiveUi:RoutedViewHost>
-    <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="15">
-      <StackPanel.Styles>
-        <Style Selector="StackPanel > :is(Control)">
-          <Setter Property="Margin" Value="2"/>
-        </Style>
-        <Style Selector="StackPanel > TextBlock">
-          <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
-      </StackPanel.Styles>
+            <reactiveUi:RoutedViewHost.DefaultContent>
+              <StackPanel>
+                <TextBlock Text="{Binding Greeting}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+                <TextBlock Text="{Binding GotPath}"
+                           HorizontalAlignment="Center"
+                           VerticalAlignment="Center" />
+              </StackPanel>
+            </reactiveUi:RoutedViewHost.DefaultContent>
+            <!-- <reactiveUi:RoutedViewHost.ViewLocator /> -->
+            <!-- <reactiveUi:RoutedViewHost.ViewLocator> -->
+              <!-- See AppViewLocator.cs section below -->
+              <!-- <controls:ReactiveViewLocator /> -->
+            <!-- </reactiveUi:RoutedViewHost.ViewLocator> -->
+          </reactiveUi:RoutedViewHost>
+          <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="15">
+            <StackPanel.Styles>
+              <Style Selector="StackPanel > :is(Control)">
+                <Setter Property="Margin" Value="2"/>
+              </Style>
+              <Style Selector="StackPanel > TextBlock">
+                <Setter Property="VerticalAlignment" Value="Center"/>
+              </Style>
+            </StackPanel.Styles>
             <!-- <TextBlock Text="R:" /> -->
             <!-- <TextBlock Text="{Binding Router.NavigationStack.Count}" /> -->
             <!-- <TextBlock Text=" A:" /> -->
@@ -59,26 +78,81 @@
             <Button Content="3rd" Command="{Binding GoThirdTest}" />
             <Button Content="Open File" Command="{Binding OpenFilePickerCommand}" />
             <Button Content="Dialog" Command="{Binding OpenDialogCommand}" />
-      <!-- <Button Content="Go Settings" Command="{Binding GoSettings}" -->
-      <!--         IsVisible="True" -->
-      <!--         IsEnabled="True" -->
-      <!-- /> -->
-      <!-- <Button Content="Go Login" Command="{Binding GoLogin}" -->
-      <!--         IsVisible="True" -->
-      <!--         IsEnabled="{Binding GoLoginIsVisible}" -->
-      <!-- /> -->
-      <!-- <Button Content="Go Test" Command="{Binding GoTest}" -->
-      <!--         IsVisible="True" -->
-      <!--         IsEnabled="{Binding GoTestIsVisible}" -->
-      <!-- /> -->
-      <!-- <Button Content="Go Main2" Command="{Binding GoMain2}" /> -->
-      <!-- <Button Content="Go Main" Command="{Binding GoMain}" /> -->
-      <!-- <Button Content="Go next" Command="{Binding GoNext}" /> -->
-    </StackPanel>
-    <!-- <StackPanel> -->
-    <!--   <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->
-    <!--   <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->
-    <!--   <TextBlock Text="Hello" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->
-    <!-- </StackPanel> -->
+            <!-- <Button Content="Go Settings" Command="{Binding GoSettings}" -->
+            <!--         IsVisible="True" -->
+            <!--         IsEnabled="True" -->
+            <!-- /> -->
+            <!-- <Button Content="Go Login" Command="{Binding GoLogin}" -->
+            <!--         IsVisible="True" -->
+            <!--         IsEnabled="{Binding GoLoginIsVisible}" -->
+            <!-- /> -->
+            <!-- <Button Content="Go Test" Command="{Binding GoTest}" -->
+            <!--         IsVisible="True" -->
+            <!--         IsEnabled="{Binding GoTestIsVisible}" -->
+            <!-- /> -->
+            <!-- <Button Content="Go Main2" Command="{Binding GoMain2}" /> -->
+            <!-- <Button Content="Go Main" Command="{Binding GoMain}" /> -->
+            <!-- <Button Content="Go next" Command="{Binding GoNext}" /> -->
+          </StackPanel>
+          <!-- <StackPanel> -->
+          <!--   <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->
+          <!--   <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->
+          <!--   <TextBlock Text="Hello" HorizontalAlignment="Center" VerticalAlignment="Center"/> -->
+          <!-- </StackPanel> -->
+        </Grid>
+      </TabItem>
+      <Button Content="Hello" Name="MyBtnName" Command="{Binding OpenDialogCommand}"></Button>
+      <TabItem Header="Hi"
+               
+      ></TabItem>
+    
+      <FlyoutBase.AttachedFlyout>
+        <Flyout>
+          <StackPanel Width="152" Spacing="8">
+            <ComboBox x:Name="Decorations"
+                      HorizontalAlignment="Stretch"
+                      SelectedIndex="0">
+              <ComboBox.Items>
+                <SystemDecorations>None</SystemDecorations>
+                <SystemDecorations>BorderOnly</SystemDecorations>
+                <SystemDecorations>Full</SystemDecorations>
+              </ComboBox.Items>
+            </ComboBox>
+            <!-- <ComboBox x:Name="Themes" -->
+            <!--           HorizontalAlignment="Stretch" -->
+            <!--           SelectedIndex="0"> -->
+            <!--   <ComboBox.Items> -->
+            <!--     <models:CatalogTheme>FluentLight</models:CatalogTheme> -->
+            <!--     <models:CatalogTheme>FluentDark</models:CatalogTheme> -->
+            <!--     <models:CatalogTheme>SimpleLight</models:CatalogTheme> -->
+            <!--     <models:CatalogTheme>SimpleDark</models:CatalogTheme> -->
+            <!--   </ComboBox.Items> -->
+            <!-- </ComboBox> -->
+            <!-- <ComboBox x:Name="TransparencyLevels" -->
+            <!--           HorizontalAlignment="Stretch" -->
+            <!--           SelectedIndex="{Binding TransparencyLevel}"> -->
+            <!--   <ComboBox.Items> -->
+            <!--     <WindowTransparencyLevel>None</WindowTransparencyLevel> -->
+            <!--     <WindowTransparencyLevel>Transparent</WindowTransparencyLevel> -->
+            <!--     <WindowTransparencyLevel>Blur</WindowTransparencyLevel> -->
+            <!--     <WindowTransparencyLevel>AcrylicBlur</WindowTransparencyLevel> -->
+            <!--     <WindowTransparencyLevel>Mica</WindowTransparencyLevel> -->
+            <!--   </ComboBox.Items> -->
+            <!-- </ComboBox> -->
+            <ComboBox x:Name="FlowDirection"
+                      HorizontalAlignment="Stretch"
+                      SelectedIndex="0">
+              <ComboBox.Items>
+                <FlowDirection>LeftToRight</FlowDirection>
+                <FlowDirection>RightToLeft</FlowDirection>
+              </ComboBox.Items>
+            </ComboBox>
+            <!-- <ComboBox HorizontalAlignment="Stretch" -->
+            <!--           Items="{Binding WindowStates}" -->
+            <!--           SelectedItem="{Binding WindowState}" /> -->
+          </StackPanel>
+        </Flyout>
+      </FlyoutBase.AttachedFlyout>
+    </controls:ReactiveHamburgerMenu>
   </Grid>
 </UserControl>

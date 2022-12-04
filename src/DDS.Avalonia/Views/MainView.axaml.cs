@@ -1,5 +1,12 @@
+using System.Collections;
 using System.Reactive;
+using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Data;
+using Avalonia.Media;
+using Avalonia.Media.Immutable;
+using Avalonia.Themes.Fluent;
 using DDS.Avalonia.Controls;
 using DDS.Core;
 using DDS.Core.ViewModels;
@@ -23,6 +30,108 @@ public sealed partial class MainView : BaseUserControl<MainViewModel>
     {
         GetService<TopLevelService>().SetCurrentTopLevel = GetTopLevel();
         GetService<TopLevelService>().SetCurrentWindow = VisualRoot as Window;
-        
+        LoadSidebarAndHamburgerMenu();
+    }
+
+    private void LoadSidebarAndHamburgerMenu()
+    {
+        var sideBar = this.Get<TabControl>("Sidebar");
+
+            // if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime)
+            // {
+            //     var tabItems = (sideBar.Items as IList);
+            //     tabItems?.Add(new TabItem()
+            //     {
+            //         Header = "Screens",
+            //         // Content = new ScreenPage()
+            //         Content = new SecondTestView { DataContext = new SecondTestViewModel() }
+            //     });
+            // }
+
+            // var themes = this.Get<ComboBox>("Themes");
+            // themes.SelectionChanged += (sender, e) =>
+            // {
+                // if (themes.SelectedItem is CatalogTheme theme)
+                // {
+                //     var themeStyle = Application.Current!.Styles[0];
+                //     if (theme == CatalogTheme.FluentLight)
+                //     {
+                //         if (App.Fluent.Mode != FluentThemeMode.Light)
+                //         {
+                //             App.Fluent.Mode = FluentThemeMode.Light;
+                //         }
+                //         Application.Current.Styles[0] = App.Fluent;
+                //         Application.Current.Styles[1] = App.ColorPickerFluent;
+                //         Application.Current.Styles[2] = App.DataGridFluent;
+                //     }
+                //     else if (theme == CatalogTheme.FluentDark)
+                //     {
+                //
+                //         if (App.Fluent.Mode != FluentThemeMode.Dark)
+                //         {
+                //             App.Fluent.Mode = FluentThemeMode.Dark;
+                //         }
+                //         Application.Current.Styles[0] = App.Fluent;
+                //         Application.Current.Styles[1] = App.ColorPickerFluent;
+                //         Application.Current.Styles[2] = App.DataGridFluent;
+                //     }
+                //     else if (theme == CatalogTheme.SimpleLight)
+                //     {
+                //         App.Simple.Mode = Avalonia.Themes.Simple.SimpleThemeMode.Light;
+                //         Application.Current.Styles[0] = App.SimpleLight;
+                //         Application.Current.Styles[1] = App.ColorPickerSimple;
+                //         Application.Current.Styles[2] = App.DataGridSimple;
+                //     }
+                //     else if (theme == CatalogTheme.SimpleDark)
+                //     {
+                //         App.Simple.Mode = Avalonia.Themes.Simple.SimpleThemeMode.Dark;
+                //         Application.Current.Styles[0] = App.SimpleDark;
+                //         Application.Current.Styles[1] = App.ColorPickerSimple;
+                //         Application.Current.Styles[2] = App.DataGridSimple;
+                //     }
+                // }
+            // };
+
+            var flowDirections = this.Get<ComboBox>("FlowDirection");
+            flowDirections.SelectionChanged += (sender, e) =>
+            {
+                if (flowDirections.SelectedItem is FlowDirection flowDirection)
+                {
+                    base.FlowDirection = flowDirection;
+                }
+            };
+
+            var decorations = this.Get<ComboBox>("Decorations");
+            decorations.SelectionChanged += (sender, e) =>
+            {
+                if (VisualRoot is Window window
+                    && decorations.SelectedItem is SystemDecorations systemDecorations)
+                {
+                    window.SystemDecorations = systemDecorations;
+                }
+            };
+
+            // var transparencyLevels = this.Get<ComboBox>("TransparencyLevels");
+            // IDisposable? backgroundSetter = null, paneBackgroundSetter = null;
+            // transparencyLevels.SelectionChanged += (sender, e) =>
+            // {
+            //     backgroundSetter?.Dispose();
+            //     paneBackgroundSetter?.Dispose();
+            //     if (transparencyLevels.SelectedItem is WindowTransparencyLevel selected
+            //         && selected != WindowTransparencyLevel.None)
+            //     {
+            //         var semiTransparentBrush = new ImmutableSolidColorBrush(Colors.Gray, 0.5);
+            //         // backgroundSetter = sideBar.SetValue(BackgroundProperty, semiTransparentBrush, BindingPriority.Style);
+            //         // paneBackgroundSetter = sideBar.SetValue(SplitView.PaneBackgroundProperty, semiTransparentBrush, BindingPriority.Style);
+            //     }
+            // };
+    }
+    
+    protected override void OnAttachedToVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        base.OnAttachedToVisualTree(e);
+        var decorations = this.Get<ComboBox>("Decorations");
+        if (VisualRoot is Window window)
+            decorations.SelectedIndex = (int)window.SystemDecorations;
     }
 }

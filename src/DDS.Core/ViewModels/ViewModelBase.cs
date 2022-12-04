@@ -158,7 +158,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
             }
 
             JoinAsyncInitPrepareActivation(disposables, token);
-            // OnActivation(disposables, token);
+            OnActivation(disposables, token);
             Disposable
                 .Create(OnDeactivationBase)
                 .DisposeWith(disposables);
@@ -270,19 +270,16 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
             await tasks;
         });
 
-        if (join)
+        if (!join) return;
+        
+        try
         {
-            try
-            {
-                joinTask?.Join(token);
-            }
-            catch (OperationCanceledException e)
-            {
-                Debug.WriteLine(e);
-            }
+            joinTask?.Join(token);
         }
-
-        OnActivation(disposables, cancellationToken);
+        catch (OperationCanceledException e)
+        {
+            Debug.WriteLine(e);
+        }
     }
     
     protected virtual void OnActivation(CompositeDisposable disposables, CancellationToken cancellationToken){}

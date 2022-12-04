@@ -37,8 +37,7 @@ public interface IViewModel
 public interface IViewModelBase<T> : IViewModel
     where T : class, IViewModel
 {
-    // INavigationViewModel IViewModel.Navigation => Navigation;
-    // new T Navigation { get; }
+    
 }
 
 public interface IViewModelBase : IViewModel { }
@@ -48,9 +47,4 @@ public interface IInitializable
 {
     protected void Initialize(CancellationToken cancellationToken);
     public sealed void InitializeOnceAfterCreation(CancellationToken cancellationToken) => Initialize(cancellationToken);
-
-    // public JoinableTask Init { set; }
-    // protected Task InitializeAsync(CancellationToken cancellationToken);
-    // public sealed Task InitializeOnceAfterCreationAsync(CancellationToken cancellationToken) => InitializeAsync(cancellationToken);
-    // public JoinableTaskFactory JoinUiTaskFactory { get; }
 }

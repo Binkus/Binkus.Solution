@@ -12,8 +12,6 @@ public interface INavigationViewModel : IScreen, IViewModelBase
     /// </summary>
     new RoutingState Router { get; }
     
-    // IObservable<bool> CanCurrentViewBeEnabled { get; }
-    
     bool IsCurrentViewEnabled { get; }
 
     /// <summary>

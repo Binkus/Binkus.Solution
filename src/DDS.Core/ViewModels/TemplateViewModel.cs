@@ -13,7 +13,7 @@ public sealed partial class TemplateViewModel : ViewModelBase
     [ActivatorUtilitiesConstructor, UsedImplicitly]
     public TemplateViewModel(IServiceProvider services) : base(services)
     {
-        // _someService = GetService<ISomeService>(); // or through ctor injection
+        // _someService = someServiceFromCtor ?? GetService<ISomeService>();
 
         Greeting = "Property is available because of [ObservableProperty] Attribute and Mvvm Toolkit Source Generator";
     }

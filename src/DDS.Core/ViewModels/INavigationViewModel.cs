@@ -11,6 +11,8 @@ public interface INavigationViewModel : IScreen, IViewModelBase
     /// <p>Contains the navigation stack.</p>
     /// </summary>
     new RoutingState Router { get; }
+    
+    bool IsCurrentViewEnabled { get; }
 
     /// <summary>
     /// Command for navigating back

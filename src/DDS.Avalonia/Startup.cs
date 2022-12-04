@@ -1,3 +1,4 @@
+using System.Reactive.Concurrency;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Avalonia.Controls.ApplicationLifetimes;
@@ -217,6 +218,8 @@ public static class Startup
             var viewModel = viewModelImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance<TViewModel>(p);
             // if (viewModel is ViewModelBase viewModelBase) viewModelBase.Services = p;
             postViewModelCreationAction?.Invoke(p, viewModel);
+            if (viewModel is IInitializable initializable)
+                initializable.InitializeOnceAfterCreation(default);
             return viewModel;
         }, lifetime));
 
@@ -292,6 +295,8 @@ public static class Startup
             var viewModel = viewModelImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance(p, viewModelType);
             // if (viewModel is ViewModelBase viewModelBase) viewModelBase.Services = p;
             postViewModelCreationAction?.Invoke(p, viewModel);
+            if (viewModel is IInitializable initializable)
+                initializable.InitializeOnceAfterCreation(default);
             return viewModel;
         }, lifetime));
 

@@ -1,6 +1,8 @@
+using System.Reactive.Concurrency;
 using DDS.Core.Controls;
 using DDS.Core.Helper;
 using DDS.Core.Services;
+using DynamicData.Binding;
 
 namespace DDS.Core.ViewModels;
 
@@ -10,7 +12,7 @@ public sealed partial class MainViewModel : ViewModelBase
 
     public string Greeting => "Greetings from MainView";
 
-    [ObservableProperty] 
+    [ObservableProperty]
     private string _gotPath = "fullPath is empty";
 
     // Necessary for Designer:
@@ -25,6 +27,9 @@ public sealed partial class MainViewModel : ViewModelBase
         GoTest = NavigateReactiveCommand<TestViewModel>();
         GoSecondTest = NavigateReactiveCommand<SecondTestViewModel>();
         GoThirdTest = NavigateReactiveCommand<ThirdTestViewModel>();
+
+        Navigation.BackCountOffset++;
+        Navigation.ResetTo<LoginViewModel>();
     }
     
     public ReactiveCommand<Unit, IRoutableViewModel> GoLogin { get; }

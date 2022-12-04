@@ -1,9 +1,11 @@
 using DDS.Core.Services;
+using Microsoft.VisualStudio.Threading;
 
 namespace DDS.Core.ViewModels;
 
 public interface IViewModel 
-    : IRoutableViewModel, IActivatableViewModel, IProvideServices, IReactiveNotifyPropertyChanged<IReactiveObject>
+    : IRoutableViewModel, IActivatableViewModel, IProvideServices, IReactiveNotifyPropertyChanged<IReactiveObject>,
+        IInitializable
 {
     Guid InstanceId { get; }
     INavigationViewModel Navigation { get; }
@@ -40,3 +42,15 @@ public interface IViewModelBase<T> : IViewModel
 }
 
 public interface IViewModelBase : IViewModel { }
+
+
+public interface IInitializable
+{
+    protected void Initialize(CancellationToken cancellationToken);
+    public sealed void InitializeOnceAfterCreation(CancellationToken cancellationToken) => Initialize(cancellationToken);
+
+    // public JoinableTask Init { set; }
+    // protected Task InitializeAsync(CancellationToken cancellationToken);
+    // public sealed Task InitializeOnceAfterCreationAsync(CancellationToken cancellationToken) => InitializeAsync(cancellationToken);
+    // public JoinableTaskFactory JoinUiTaskFactory { get; }
+}

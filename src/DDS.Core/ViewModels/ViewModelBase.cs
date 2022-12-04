@@ -1,6 +1,11 @@
 // ReSharper disable MemberCanBePrivate.Global
 
+using System.Reactive.Concurrency;
+using System.Reactive.Threading.Tasks;
+using DDS.Core.Helper;
 using DDS.Core.Services;
+using DynamicData.Binding;
+using Microsoft.VisualStudio.Threading;
 
 namespace DDS.Core.ViewModels;
 
@@ -8,19 +13,20 @@ namespace DDS.Core.ViewModels;
 public abstract class ViewModelBase : ViewModelBase<IViewModel>
 {
     protected ViewModelBase(IServiceProvider services, IScreen hostScreen) : base(services, hostScreen) { }
-    protected ViewModelBase(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : base(services, lazyHostScreen) { }
+    protected ViewModelBase(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : base(services, lazyHostScreen){}
     protected ViewModelBase(IServiceProvider services) : base(services) { }
 }
 
 
 [DataContract]
+[SuppressMessage("ReSharper", "StringLiteralTypo")]
 public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     IViewModelBase,  IViewModelBase<TIViewModel>, IEquatable<ViewModelBase<TIViewModel>>
     where TIViewModel : class, IViewModel
 {
     [DataMember] public string UrlPathSegment { get; }
 
-    [IgnoreDataMember] private Lazy<IScreen>? _lazyHostScreen;
+    private Lazy<IScreen>? _lazyHostScreen;
     
     /// <summary>
     /// Property to get the IScreen which contains the RoutingState / Router / Navigation
@@ -57,7 +63,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
             : ViewModelName[^11..^2] == "ViewModel" ? ViewModelName[..^11] : ViewModelName;
         set => this.RaiseAndSetIfChanged(ref _customViewName, value);
     }
-    [IgnoreDataMember] private string? _customViewName;
+    private string? _customViewName;
 
     private bool _hasKnownLifetime = true;
     private ServiceLifetime? _lifetime;
@@ -87,7 +93,24 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         }
         return value;
     }
-    
+
+    private bool _joinInit, _joinPrepare, _joinActivation; 
+    [DataMember] public bool JoinInitBeforeOnActivationFinished { get => _joinInit;
+        set => _joinInit = IsInitInitiated ? throw new InvalidOperationException() : value; }
+    [DataMember] public bool JoinPrepareBeforeOnActivationFinished { get => _joinPrepare; 
+        set => _joinInit = _joinPrepare = IsInitInitiated ? throw new InvalidOperationException() : value; }
+    [DataMember] public bool JoinActivationBeforeOnActivationFinished { get => _joinActivation;
+        set => _joinInit = _joinPrepare = _joinActivation = IsInitInitiated
+            ? throw new InvalidOperationException() : value; }
+
+    [IgnoreDataMember]
+    private JoinableTaskFactory JoinUiTaskFactory { get; } =
+        new(new JoinableTaskContext(Thread.CurrentThread, SynchronizationContext.Current));
+    [IgnoreDataMember] private CompositeDisposable PrepDisposables { get; set; } = new();
+    [IgnoreDataMember] private CancellationTokenSource ActivationCancellationTokenSource { get; set; } = new();
+
+    // [IgnoreDataMember] public CompositeDisposable Disposables { get; } = new();
+
     protected ViewModelBase(IServiceProvider services, IScreen hostScreen) : this(services) => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
     protected ViewModelBase(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : this(services) => _lazyHostScreen = lazyHostScreen;
     protected ViewModelBase(IServiceProvider services)
@@ -98,21 +121,195 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         RawViewName = CustomViewName;
         UrlPathSegment = $"/{RawViewName.ToLowerInvariant()}?id={InstanceId}";
 
-        this.WhenActivated(disposables => 
+        this.WhenActivated(disposables =>
         {
             Debug.WriteLine(UrlPathSegment + ":");
+            
+            bool isDisposed = PrepDisposables.IsDisposed;
+            if (isDisposed)
+                ActivationCancellationTokenSource = new CancellationTokenSource();
+            
+            var token = ActivationCancellationTokenSource.Token;
+            
+            if (isDisposed)
+            {
+                PrepDisposables = new CompositeDisposable();
+                Prepare = JoinUiTaskFactory.RunAsync(() => OnPrepareAsync(PrepDisposables, token));
+                
+                if (!JoinPrepareBeforeOnActivationFinished)
+                {
+                    // This ensures Exceptions get thrown
+                    RxApp.TaskpoolScheduler.Schedule(Prepare, (joinTask,_) => joinTask?.Join());
+                }
+            }
+            PrepDisposables.DisposeWith(disposables);
 
-            HandleActivation();
+            // todo FirstActivation with Initialization CancellationToken (not canceled through Deactivation)
+            // FirstActivation ??=
+            //     JoinUiTaskFactory.RunAsync(() => OnFirstActivationBaseAsync(disposables, CancellationToken.None));
+            
+            Activation = JoinUiTaskFactory.RunAsync(() => OnActivationBaseAsync(disposables, token));
+            
+            if (!JoinActivationBeforeOnActivationFinished)
+            {
+                // This ensures Exceptions get thrown
+                RxApp.TaskpoolScheduler.Schedule(Activation, (joinTask,_) => joinTask?.Join());
+            }
+
+            JoinAsyncInitPrepareActivation(disposables, token);
             Disposable
-                .Create(HandleDeactivation)
+                .Create(OnDeactivationBase)
                 .DisposeWith(disposables);
         });
         
         Debug.WriteLine("c:"+ViewModelName);
     }
+
+    [IgnoreDataMember] protected JoinableTask? Init { get; private set; }
     
-    protected virtual void HandleActivation() { }
-    protected virtual void HandleDeactivation() { }
+    [IgnoreDataMember] protected JoinableTask? Prepare { get; private set; }
+
+    // [IgnoreDataMember] protected JoinableTask? FirstActivation { get; private set; }
+    
+    [IgnoreDataMember] protected JoinableTask? Activation { get; private set; }
+
+    [IgnoreDataMember] public bool IsInitInitiated { get; private set; }
+    
+    void IInitializable.Initialize(CancellationToken cancellationToken)
+    {
+        IsInitInitiated = true;
+        
+        Init = JoinUiTaskFactory.RunAsync(() => InitializeAsync(cancellationToken));
+        
+        if (!JoinInitBeforeOnActivationFinished)
+        {
+            // This ensures Exceptions get thrown
+            RxApp.TaskpoolScheduler.Schedule(Init, (joinTask,_) => joinTask?.Join());
+        }
+        
+        // var handle = cancellationToken.WaitHandle;
+        // todo ActivationCancellationTokenSource.Cancel() when cancellationToken gets canceled
+        
+        Prepare = JoinUiTaskFactory.RunAsync(() =>
+            OnPrepareBaseAsync(PrepDisposables, ActivationCancellationTokenSource.Token));
+        
+        if (!JoinPrepareBeforeOnActivationFinished)
+        {
+            // This ensures Exceptions get thrown
+            RxApp.TaskpoolScheduler.Schedule(Prepare, (joinTask,_) => joinTask?.Join());
+        }
+    }
+
+    protected virtual Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
+    
+    private async Task OnPrepareBaseAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        // await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
+        if (Init is { } init) await init.IgnoreExceptionAsync<OperationCanceledException>();
+        await OnPrepareAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
+    }
+
+    protected virtual Task OnPrepareAsync(CompositeDisposable disposables, CancellationToken cancellationToken) =>
+        Task.CompletedTask;
+    
+    private async Task OnActivationBaseAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        // await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
+        
+        // per default generally ignoring OperationCanceledExceptions, cause GUI App would crash unnecessarily
+        // explicitly in this method additionally cause HandleActivationAsync would not be executed at all when
+        // Prepare is throwing OperationCanceledException, which would violate the implemented idea of
+        // Creation => Init => Prepare; VM-Active => Prep (skip first prepare done by Init) => HandleActivationAsync
+        // HandleActivation awaits Async variant which awaits Preparation which awaits Init, executing one after another
+        if (Init is { } init) await init.IgnoreExceptionAsync<OperationCanceledException>();
+        if (Prepare is { } prepare) await prepare.IgnoreExceptionAsync<OperationCanceledException>();
+        await OnActivationAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
+
+        TrySetActivated(disposables, cancellationToken);
+    }
+    
+    private readonly object _activationMutex = new();
+    private void TrySetActivated(ICancelable cancelable, CancellationToken token = default)
+    {
+        if (token.IsCancellationRequested || cancelable.IsDisposed || PrepDisposables.IsDisposed) return;
+        lock (_activationMutex)
+        {
+            if (token.IsCancellationRequested || cancelable.IsDisposed || PrepDisposables.IsDisposed) return;
+            IsActivated = true;
+        }
+    }
+    private void SetDeactivated() => IsActivated = false;
+
+    private bool _isActivated;
+    [IgnoreDataMember] public bool IsActivated { get => _isActivated;
+        private set => this.RaiseAndSetIfChanged(ref _isActivated, value); }
+
+    protected virtual Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
+        => Task.CompletedTask;
+    
+    [SuppressMessage("Usage", "VSTHRD102:Implement internal logic asynchronously")]
+    // ReSharper disable once CognitiveComplexity
+    private void JoinAsyncInitPrepareActivation(CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        // per default not canceling joinTask, cause it would partially mess up the execution order, and
+        // per default generally ignoring OperationCanceledExceptions, cause GUI App would crash unnecessarily
+        CancellationToken token = default; // could be a token triggered when App closing
+        
+        bool join = IsInitInitiated
+                    && (JoinInitBeforeOnActivationFinished 
+                    || JoinPrepareBeforeOnActivationFinished 
+                    || JoinActivationBeforeOnActivationFinished);
+
+        JoinableTask? joinTask = !join ? null : JoinUiTaskFactory.RunAsync(async () =>
+        {
+            // await JoinUiTaskFactory.SwitchToMainThreadAsync();
+
+            Task? init = null, prepare = null, activation = null;
+            
+            if (JoinInitBeforeOnActivationFinished) init = Init?.JoinAsync(token);
+            if (JoinPrepareBeforeOnActivationFinished) prepare = Prepare?.JoinAsync(token);
+            if (JoinActivationBeforeOnActivationFinished) activation = Activation?.JoinAsync(token);
+            
+            List<Task> tasks = new(3);
+            
+            if (JoinInitBeforeOnActivationFinished && init is not null)
+                tasks.Add(init.IgnoreExceptionAsync<OperationCanceledException>());
+            
+            if (JoinPrepareBeforeOnActivationFinished && prepare is not null)
+                tasks.Add(prepare.IgnoreExceptionAsync<OperationCanceledException>());
+            
+            if (JoinActivationBeforeOnActivationFinished && activation is not null)
+                tasks.Add(activation.IgnoreExceptionAsync<OperationCanceledException>());
+
+            await tasks;
+        });
+
+        if (join)
+        {
+            try
+            {
+                joinTask?.Join(token);
+            }
+            catch (OperationCanceledException e)
+            {
+                Debug.WriteLine(e);
+            }
+        }
+
+        OnActivationFinished(disposables, cancellationToken);
+    }
+    protected virtual void OnActivationFinished(CompositeDisposable disposables, CancellationToken cancellationToken){}
+
+    private void OnDeactivationBase()
+    {
+        SetDeactivated();
+        
+        ActivationCancellationTokenSource.Cancel();
+        ActivationCancellationTokenSource.Dispose();
+        // todo put recreation of ActivationCancellationTokenSource in here
+        OnDeactivation();
+    }
+    protected virtual void OnDeactivation() { }
     
     [IgnoreDataMember] public IServiceProvider Services { get; protected init; }
 

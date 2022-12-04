@@ -1,5 +1,6 @@
 using DDS.Core.Helper;
 using DDS.Core.Services;
+using Microsoft.VisualStudio.Threading;
 
 namespace DDS.Core.ViewModels;
 
@@ -25,25 +26,51 @@ public sealed partial class LoginViewModel : ViewModelBase
             execute: TryRegister,
             canExecute: canLogin);
     }
-    
 
-    protected override void HandleActivation()
+
+    protected override async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        Console.WriteLine("Login Activation");
+        Console.WriteLine("s:Initialize Task");
+        await Task.Yield();
+        await Task.Delay(1000, cancellationToken);
+        await Task.Delay(2000, cancellationToken);
+        // await Task.Delay(4000);
+        Console.WriteLine("_:Initialize Task done");
+    }
+    
+    protected override async Task OnPrepareAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        Console.WriteLine("s:Prepare Task");
+        await Task.Yield();
+        await Task.Delay(2000, cancellationToken);
+        // throw new Exception("Evil prepare");
+        Console.WriteLine("_:Prepare Task done");
+    }
+    
+    protected override async Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        Console.WriteLine("s:Login Activation Task");
+        await Task.Yield();
+        await Task.Delay(2000, cancellationToken);
+        // throw new Exception("Evil activation");
+        Console.WriteLine("_:Login Activation Task done");
         if (_loginService.IsLoggedIn)
         {
             // Navigation.To<TestViewModel>();
             // Nav2();
         }
-    }
-
-    async void Nav2()
-    {
-        await 4.Seconds();
-        Navigation.To<SecondTestViewModel>();
+    
+        // return Task.CompletedTask;
     }
     
-    protected override void HandleDeactivation()
+    protected override void OnActivationFinished(CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        Console.WriteLine("void HandleActivation");
+    }
+    
+    //
+
+    protected override void OnDeactivation()
     {
         
     }
@@ -54,31 +81,7 @@ public sealed partial class LoginViewModel : ViewModelBase
     public ReactiveCommand<Unit,Unit> TryLoginCommand { get; }
     public ReactiveCommand<Unit,Unit> TryRegisterCommand { get; }
     
-    private static Task TryLogin() => Task.Delay(TimeSpan.FromSeconds(1));
+    private static Task TryLogin() => Task.Delay(1.s());
 
-    private static Task TryRegister() => Task.Delay(TimeSpan.FromSeconds(2));
-    
-    [RelayCommand]
-    private void Nav()
-    {
-        var r = Navigation.To<ThirdTestViewModel>();
-    }
-
-    // [RelayCommand]
-    // private void EnableBack()
-    // {
-    //     ((NavigationViewModel)Navigation).CanGoBackBool = true;
-    // }
-    //
-    // [RelayCommand]
-    // private void DisableBack()
-    // {
-    //     ((NavigationViewModel)Navigation).CanGoBackBool = false;
-    // }
-    //
-    // [RelayCommand]
-    // private void ToggleBack()
-    // {
-    //     ((NavigationViewModel)Navigation).CanGoBackBool ^= true;
-    // }
+    private static Task TryRegister() => Task.Delay(1.s());
 }

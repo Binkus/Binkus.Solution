@@ -121,11 +121,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         RawViewName = CustomViewName;
         UrlPathSegment = $"/{RawViewName.ToLowerInvariant()}?id={InstanceId}";
 
-        // this.WhenPropertyChanged(x => x.Init)
-        //     .Select(x => x).Subscribe(_ =>
-        //         Prepare = JoinUiTaskFactory.RunAsync(() => PrepareBaseAsync(PrepDisposables, default)))
-        //     .DisposeWith(PrepDisposables);
-
         this.WhenActivated(disposables =>
         {
             Debug.WriteLine(UrlPathSegment + ":");
@@ -148,13 +143,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
                 }
             }
             PrepDisposables.DisposeWith(disposables);
-            
-            // RxApp.MainThreadScheduler.ScheduleAsync(Prepare, (_, joinTask, _) => joinTask.Task);
-            // RxApp.MainThreadScheduler.ScheduleAsync(Prepare, (_, joinTask, _) => joinTask.JoinAsync());
-
-            // var taskCompletionSource = new TaskCompletionSource(Init, TaskCreationOptions.AttachedToParent);
-            // var taskCompletionSource = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
-            // Activation = taskCompletionSource.Task;
 
             // todo FirstActivation with Initialization CancellationToken (not canceled through Deactivation)
             // FirstActivation ??=
@@ -168,57 +156,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
                 RxApp.TaskpoolScheduler.Schedule(Activation, (joinTask,_) => joinTask?.Join());
             }
 
-            // RxApp.MainThreadScheduler.ScheduleAsync((CancellationToken token) => 
-            //     HandleActivationBaseAsync(disposables, taskCompletionSource, token)
-            //         .ContinueWith(a => 
-            //             a.TrySetResultsToSource(taskCompletionSource, token), TaskScheduler.Current),
-            //     static (_, activateAsync, token) => activateAsync.Invoke(token));
-            
-            //
-
-            // Task? t = null;
-            // CancellationToken? ct = null;
-            // Observable.StartAsync((CancellationToken token) =>
-            //         {
-            //             ct = token;
-            //             return t = HandleActivationBaseAsync(disposables, taskCompletionSource, token);
-            //         },
-            //         RxApp.MainThreadScheduler)
-            //     .ObserveOn(RxApp.TaskpoolScheduler)
-            //     .SubscribeOn(RxApp.TaskpoolScheduler)
-            //     .Subscribe(_ => t?.TrySetResultsToSource(taskCompletionSource, ct))
-            //     ;
-            
-            //
-
-            // this.WhenAnyValue(x => x.Init).Select(init => init)
-            //     .ObserveOn(RxApp.TaskpoolScheduler)
-            //     .Subscribe(init =>
-            //     {
-            //         Console.WriteLine("onNext");
-            //         if (init is not null)
-            //         {
-            //             RxApp.MainThreadScheduler.ScheduleAsync(disposables,
-            //                     (_, d, token) =>
-            //                         HandleActivationBase(d, taskCompletionSource, token)
-            //                             .ContinueWith(a => 
-            //                                 a.TrySetResultsToSource(taskCompletionSource, token, false)))
-            //                 // init.ContinueWith(_ =>
-            //                 //     HandleActivation(d, token).ContinueWith(_ =>
-            //                 // _.TrySetResultsToSource(taskCompletionSource, token))))
-            //                 .DisposeWith(disposables);
-            //         }
-            //     }).DisposeWith(disposables);
-
-            // RxApp.MainThreadScheduler.ScheduleAsync(
-            //         (CancellationToken t) => CreateHandleActivationTask(disposables, t),
-            //         static (_, state, token) => state.Invoke(token))
-            //     .DisposeWith(disposables);
-            
-            // RxApp.MainThreadScheduler.Schedule(() => HandleActivation(disposables), (_, state)
-            //         => Observable.StartAsync(state, RxApp.MainThreadScheduler).Subscribe())
-            //     .DisposeWith(disposables);
-
             JoinAsyncInitPrepareActivation(disposables, token);
             Disposable
                 .Create(OnDeactivationBase)
@@ -228,22 +165,12 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         Debug.WriteLine("c:"+ViewModelName);
     }
 
-    // JoinableTask IInitializable.Init { set => Init = value; }
-
-    // private TaskCompletionSource _taskCompletionSource = null!;
-
-    // private Task? _init;
-    // public Task Init { get => _init ?? Task.CompletedTask; private set => _init = value; }
-    // private JoinableTask? _init;
-    // public JoinableTask? Init { get => _init; private set => this.RaiseAndSetIfChanged(ref _init, value); }
     [IgnoreDataMember] protected JoinableTask? Init { get; private set; }
     
     [IgnoreDataMember] protected JoinableTask? Prepare { get; private set; }
 
     // [IgnoreDataMember] protected JoinableTask? FirstActivation { get; private set; }
     
-    // private Task? _activation;
-    // public Task Activation { get => _activation ?? Task.CompletedTask; private set => _activation = value; }
     [IgnoreDataMember] protected JoinableTask? Activation { get; private set; }
 
     [IgnoreDataMember] public bool IsInitInitiated { get; private set; }
@@ -251,8 +178,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     void IInitializable.Initialize(CancellationToken cancellationToken)
     {
         IsInitInitiated = true;
-        // Init = JoinUiTaskFactory.RunAsync(() => Observable.StartAsync(() => 
-        //     InitializeAsync(cancellationToken), RxApp.MainThreadScheduler).ToTask());
         
         Init = JoinUiTaskFactory.RunAsync(() => InitializeAsync(cancellationToken));
         
@@ -299,28 +224,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         if (Init is { } init) await init.IgnoreExceptionAsync<OperationCanceledException>();
         if (Prepare is { } prepare) await prepare.IgnoreExceptionAsync<OperationCanceledException>();
         await OnActivationAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
-        // source.TrySetResult();
-        
-        // return Observable.StartAsync(() => HandleActivationBase(disposables, cancellationToken),
-        // RxApp.MainThreadScheduler).ToTask(cancellationToken);
-
-        // var d = disposables;
-        // var t = cancellationToken;
-        //
-        // if (Init is null) throw new NullReferenceException();
-        //
-        // return Init.ContinueWith(init =>
-        //         init.TrySetResultsToSource(source, t, false, 
-        //             () => HandleActivation(d, t)))
-        //     .ContinueWith(activation => activation.TrySetResultsToSource(source, t));
-        // .ContinueWith(async _ =>
-        // {
-        //     await _;
-        //     await SetResults(_, source, token);
-        //     await Init;
-        //     await Activation;
-        //     source.SetResult();
-        // });
 
         TrySetActivated(disposables, cancellationToken);
     }
@@ -348,47 +251,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     // ReSharper disable once CognitiveComplexity
     private void JoinAsyncInitPrepareActivation(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        // this.WhenAnyValue(x => x.Init).Select(x => x)
-        //     .ObserveOn(RxApp.TaskpoolScheduler)
-        //     .Synchronize()
-        //     .SubscribeOn(RxApp.MainThreadScheduler)
-        //     .Subscribe(x => x?.GetAwaiter().GetResult()).Dispose();
-        //
-        // this.WhenAnyValue(x => x.Activation).Select(x => x)
-        //     .ObserveOn(RxApp.TaskpoolScheduler)
-        //     .Synchronize()
-        //     .SubscribeOn(RxApp.MainThreadScheduler)
-        //     .Subscribe(x => x?.GetAwaiter().GetResult()).Dispose();
-        //
-        //
-        // RxApp.MainThreadScheduler.Sleep(15.Seconds()).GetAwaiter().GetResult();
-        
-        // Init?.ConfigureAwait(false).GetAwaiter().GetResult();
-        // Activation?.ConfigureAwait(false).GetAwaiter().GetResult();
-
-        // Task.Run(async () => await Activation!.ConfigureAwait(false))
-        //     .ConfigureAwait(false).GetAwaiter().GetResult();
-        // Activation?.GetAwaiter().GetResult();
-        // Activation?.AwaitBeforeExecution(Init ?? Task.CompletedTask).GetAwaiter().GetResult();
-        
-        //
-
-        // var jtf = new JoinableTaskFactory(new JoinableTaskContext(Thread.CurrentThread,
-        //     SynchronizationContext.Current));
-        // var init = jtf.RunAsync(async () => { if (Init is not null) await Init; });
-        // var activation = jtf.RunAsync(async () => { if (Activation is not null) await Activation; });
-        //
-        // var joinTask = jtf.RunAsync(async () =>
-        // {
-        //     var t0 = init.JoinAsync();
-        //     var t1 = activation.JoinAsync();
-        //     await t0;
-        //     await t1;
-        // });
-        // joinTask.Join();
-        
-        //
-        
         // per default not canceling joinTask, cause it would partially mess up the execution order, and
         // per default generally ignoring OperationCanceledExceptions, cause GUI App would crash unnecessarily
         CancellationToken token = default; // could be a token triggered when App closing
@@ -408,19 +270,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
             if (JoinPrepareBeforeOnActivationFinished) prepare = Prepare?.JoinAsync(token);
             if (JoinActivationBeforeOnActivationFinished) activation = Activation?.JoinAsync(token);
             
-            //
-            
-            // if (JoinInitBeforeOnActivationFinished && init is not null)
-            //     await init.IgnoreExceptionAsync<OperationCanceledException>();
-            //
-            // if (JoinPrepareBeforeOnActivationFinished && prepare is not null)
-            //     await prepare.IgnoreExceptionAsync<OperationCanceledException>();
-            //
-            // if (JoinActivationBeforeOnActivationFinished && activation is not null)
-            //     await activation.IgnoreExceptionAsync<OperationCanceledException>();
-            
-            //
-            
             List<Task> tasks = new(3);
             
             if (JoinInitBeforeOnActivationFinished && init is not null)
@@ -436,26 +285,16 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         });
 
         if (join)
+        {
             try
             {
-                // currently any join would block all tasks scheduled to MainThread
-                // todo make sync join somehow async while sync by doing continuations of Tasks scheduled to MainThread
-                // probably not possible
-                
-                // joinTask.Join(token);
-                // var t = joinTask.JoinAsync(token);
-                // var d = RxApp.MainThreadScheduler.ScheduleAsync(t, (scheduler, task, arg3) => task);
-                // JoinUiTaskFactory.RunAsync(() => t).Join();
-
                 joinTask?.Join(token);
             }
             catch (OperationCanceledException e)
             {
                 Debug.WriteLine(e);
             }
-        
-        // todo notification system - IObservable<bool> for canExecute for parent Views to temporarily optionally
-        // todo ^| disable e.g. Buttons while Initialization after WhenActivated called
+        }
 
         OnActivationFinished(disposables, cancellationToken);
     }
@@ -463,7 +302,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
 
     private void OnDeactivationBase()
     {
-        // todo schedule after Activation task & locking mechanism | atomic
         SetDeactivated();
         
         ActivationCancellationTokenSource.Cancel();

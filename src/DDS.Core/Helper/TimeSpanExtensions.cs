@@ -44,16 +44,28 @@ public static class TimeSpanExtensions
     /// <summary>
     /// Creates a duration as TimeSpan which can be awaited by Task.Delay or directly through ext method
     /// <see cref="GetAwaiter"/>.
-    /// <p>E.g. await 5.Seconds() or 5.s() which is equal to await Task.Delay(TimeSpan.FromSeconds(5).</p>
+    /// <p>E.g. await 5.Seconds() or 5.s() which is equal to await Task.Delay(TimeSpan.FromSeconds(5)).</p>
     /// <p>Alternatively you can use ConfigureAwait(false) if you do not wish to continueOnCapturedContext,
     /// e.g. by await 5.Seconds().ConfigureAwait(false)</p>
+    /// <p><b>Examples:</b></p>
+    /// <p>await 42.s().ConfigureAwait(false);</p>
+    /// <p>await 42.s().Delay(cancellationToken).ConfigureAwait(false);</p>
+    /// <p>await 42.s().DelayWithoutContinuingOnCapturedContext(cancellationToken);</p>
     /// </summary>
+    /// <returns>TimeSpan / Duration / Delay of specified unit</returns>
+    /// <seealso cref="Task.Delay(TimeSpan)"/>
+    /// <seealso cref="Delay(TimeSpan, CancellationToken)"/>
+    /// <seealso cref="DelayWithoutContinuingOnCapturedContext(TimeSpan, CancellationToken)"/>
     /// <seealso cref="GetAwaiter"/>
     /// <seealso cref="ConfigureAwait"/>
     /// <seealso cref="Seconds(int)"/>
     /// <seealso cref="Seconds(double)"/>
+    /// <seealso cref="s(int)"/>
+    /// <seealso cref="s(double)"/>
     /// <seealso cref="Milliseconds(int)"/>
     /// <seealso cref="Milliseconds(double)"/>
+    /// <seealso cref="ms(int)"/>
+    /// <seealso cref="ms(double)"/>
     /// <seealso cref="Microseconds(int)"/>
     /// <seealso cref="Microseconds(double)"/>
     /// <seealso cref="Hours(int)"/>

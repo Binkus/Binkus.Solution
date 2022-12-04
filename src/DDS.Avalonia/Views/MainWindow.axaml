@@ -15,21 +15,4 @@
     <Design.DataContext>
         <viewModels:MainWindowViewModel />
     </Design.DataContext>
-    <!-- <views:MainView /> -->
-        
-        <!-- <reactiveUi:ReactiveUserControl x:TypeArguments="views:MainView" -->
-        <!--                           Content="{Binding MainView}" -->
-        <!-- /> -->
-    
-                <!-- <Application.DataTemplates> -->
-                <!--   <local:ViewLocator/> -->
-                <!-- </Application.DataTemplates> -->
-                <!-- <rxui:RoutedViewHost Grid.Row="0" Router="{Binding Router}"> -->
-                <!--   <rxui:RoutedViewHost.DefaultContent> -->
-                <!--     ~1~ <TextBlock Text="{Binding Greeting}" @1@ -->
-                <!--     ~1~            HorizontalAlignment="Center" @1@ -->
-                <!--     ~1~            VerticalAlignment="Center" /> @1@ -->
-                <!--   </rxui:RoutedViewHost.DefaultContent> -->
-                <!-- </rxui:RoutedViewHost>   -->
-        <!-- </reactiveUi:ReactiveUserControl> -->
 </Window>

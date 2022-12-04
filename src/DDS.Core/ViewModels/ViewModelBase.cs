@@ -2,6 +2,7 @@
 
 using System.Reactive.Concurrency;
 using System.Reactive.Threading.Tasks;
+using System.Runtime.CompilerServices;
 using DDS.Core.Helper;
 using DDS.Core.Services;
 using DynamicData.Binding;
@@ -204,7 +205,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     
     private async Task OnPrepareBaseAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        // await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
         if (Init is { } init) await init.IgnoreExceptionAsync<OperationCanceledException>();
         await OnPrepareAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
     }
@@ -214,13 +214,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     
     private async Task OnActivationBaseAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        // await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
-        
-        // per default generally ignoring OperationCanceledExceptions, cause GUI App would crash unnecessarily
-        // explicitly in this method additionally cause HandleActivationAsync would not be executed at all when
-        // Prepare is throwing OperationCanceledException, which would violate the implemented idea of
-        // Creation => Init => Prepare; VM-Active => Prep (skip first prepare done by Init) => HandleActivationAsync
-        // HandleActivation awaits Async variant which awaits Preparation which awaits Init, executing one after another
         if (Init is { } init) await init.IgnoreExceptionAsync<OperationCanceledException>();
         if (Prepare is { } prepare) await prepare.IgnoreExceptionAsync<OperationCanceledException>();
         await OnActivationAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
@@ -228,16 +221,11 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         TrySetActivated(disposables, cancellationToken);
     }
     
-    private readonly object _activationMutex = new();
-    private void TrySetActivated(ICancelable cancelable, CancellationToken token = default)
-    {
-        if (token.IsCancellationRequested || cancelable.IsDisposed || PrepDisposables.IsDisposed) return;
-        lock (_activationMutex)
-        {
-            if (token.IsCancellationRequested || cancelable.IsDisposed || PrepDisposables.IsDisposed) return;
-            IsActivated = true;
-        }
-    }
+    /// if !(token.IsCancellationRequested || cancelable.IsDisposed || PrepDisposables.IsDisposed) IsActivated = true;
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void TrySetActivated(ICancelable cancelable, CancellationToken token = default) => IsActivated = 
+        !((token.IsCancellationRequested || cancelable.IsDisposed || PrepDisposables.IsDisposed) && !IsActivated);
+    
     private void SetDeactivated() => IsActivated = false;
 
     private bool _isActivated;
@@ -251,7 +239,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
     // ReSharper disable once CognitiveComplexity
     private void JoinAsyncInitPrepareActivation(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        // per default not canceling joinTask, cause it would partially mess up the execution order, and
         // per default generally ignoring OperationCanceledExceptions, cause GUI App would crash unnecessarily
         CancellationToken token = default; // could be a token triggered when App closing
         
@@ -262,8 +249,6 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
 
         JoinableTask? joinTask = !join ? null : JoinUiTaskFactory.RunAsync(async () =>
         {
-            // await JoinUiTaskFactory.SwitchToMainThreadAsync();
-
             Task? init = null, prepare = null, activation = null;
             
             if (JoinInitBeforeOnActivationFinished) init = Init?.JoinAsync(token);

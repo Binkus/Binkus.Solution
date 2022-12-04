@@ -1,3 +1,5 @@
+using DDS.Core.Helper;
+
 namespace DDS.Core.ViewModels;
 
 [DataContract]
@@ -18,9 +20,14 @@ public sealed partial class TemplateViewModel : ViewModelBase
         Greeting = "Property is available because of [ObservableProperty] Attribute and Mvvm Toolkit Source Generator";
     }
 
-    protected override Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
+    protected override async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        return Task.CompletedTask;
+        await 1.ms();
+    }
+
+    protected override async Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        await 1.ms();
     }
     
     protected override void OnDeactivation()

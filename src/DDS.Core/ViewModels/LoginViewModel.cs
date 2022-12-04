@@ -57,15 +57,13 @@ public sealed partial class LoginViewModel : ViewModelBase
         if (_loginService.IsLoggedIn)
         {
             // Navigation.To<TestViewModel>();
-            // Nav2();
         }
-    
         // return Task.CompletedTask;
     }
     
     protected override void OnActivationFinishing(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        Console.WriteLine("void HandleActivation");
+        Console.WriteLine("void OnActivationFinishing");
     }
     
     //

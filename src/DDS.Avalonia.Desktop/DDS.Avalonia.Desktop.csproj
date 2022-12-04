@@ -9,34 +9,7 @@
         <!--Avalonia doesen't support TrimMode=link currently,but we are working on that https://github.com/AvaloniaUI/Avalonia/issues/6892 -->
         <TrimMode>copyused</TrimMode>
         <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
-        <RootNamespace>DDS.Avalonia.Desktop</RootNamespace>        
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)'=='Release'">
-        <!-- Normal .NET 7 -->
-        <PublishAot>true</PublishAot>
-        <SelfContained>true</SelfContained>
-        <TrimmerDefaultAction>link</TrimmerDefaultAction>
-        <InvariantGlobalization>true</InvariantGlobalization>
-        <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
-        <IlcOptimizationPreference>Size</IlcOptimizationPreference>
-        <DebugType>none</DebugType>
-        <GenerateRuntimeConfigurationFiles>false</GenerateRuntimeConfigurationFiles>
-
-        <!-- Only some may work - From the experimental AOT version -->
-        <IlcFoldIdenticalMethodBodies>true</IlcFoldIdenticalMethodBodies>
-        <IlcTrimMetadata>true</IlcTrimMetadata>
-        <IlcInvariantGlobalization>true</IlcInvariantGlobalization>
-        <IlcGenerateStackTraceData>false</IlcGenerateStackTraceData>
-        <IlcGenerateCompleteTypeMetadata>false</IlcGenerateCompleteTypeMetadata>
-
-        <!-- Still works from the experimental AOT version, but high risk -->
-        <!-- <IlcDisableReflection>true</IlcDisableReflection> -->
-        
-        <!-- dotnet publish -r linux-x64 -c Release -->
-        <!-- cp -pa DDS.Avalonia.Desktop ~/Mytemp/ava -->
-        <!-- cp -pa {,~/Mytemp/}DDS.Avalonia.Desktop.dll -->
-        <PublishNativeAot>true</PublishNativeAot>
-        <NativeAOT>true</NativeAOT>
+        <RootNamespace>DDS.Avalonia.Desktop</RootNamespace>
     </PropertyGroup>
     <ItemGroup>
         <!--This helps with theme dll-s trimming.

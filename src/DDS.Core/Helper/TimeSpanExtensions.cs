@@ -25,6 +25,22 @@ public static class TimeSpanExtensions
         return Task.Delay(delay).ConfigureAwait(continueOnCapturedContext);
     }
     
+    /// <inheritdoc cref="Task.Delay(TimeSpan, CancellationToken)"/>
+    public static Task Delay(this TimeSpan delay, CancellationToken cancellationToken = default)
+        => Task.Delay(delay, cancellationToken);
+    
+    /// <summary>
+    /// <p>Not continuing on captured context:
+    /// No attempt to marshal the continuation back to the originally captured context.</p>
+    /// <p>Equivalent to "Task.Delay(TimeSpan, CancellationToken).ConfigureAwait(false)"</p>
+    /// <inheritdoc cref="Task.Delay(TimeSpan, CancellationToken)"/>
+    /// </summary>
+    /// <inheritdoc cref="Task.Delay(TimeSpan, CancellationToken)"/>
+    /// <returns>An object used to await this task that represents the time delay.</returns>
+    public static ConfiguredTaskAwaitable DelayWithoutContinuingOnCapturedContext(
+        this TimeSpan delay, CancellationToken cancellationToken = default)
+        => Task.Delay(delay, cancellationToken).ConfigureAwait(false);
+    
     /// <summary>
     /// Creates a duration as TimeSpan which can be awaited by Task.Delay or directly through ext method
     /// <see cref="GetAwaiter"/>.

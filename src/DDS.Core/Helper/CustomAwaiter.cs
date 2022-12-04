@@ -12,12 +12,37 @@ public interface IAwaitable<out TAwaiter> where TAwaiter : ICriticalNotifyComple
     TAwaiter GetAwaiter();
 }
 
+//
+
 public interface ICustomAwaitable<out TAwaiter> : IAwaitable<TAwaiter>
     where TAwaiter : ICustomAwaiter, ICriticalNotifyCompletion, INotifyCompletion
 {
     TAwaiter IAwaitable<TAwaiter>.GetAwaiter() => GetAwaiter();
     new TAwaiter GetAwaiter();
 }
+
+//
+
+// public interface ICustomAwaitable<out TAwaiter, out TResult> : IAwaitable<TAwaiter>
+//     where TAwaiter : ICustomAwaiter<TResult>, ICriticalNotifyCompletion, INotifyCompletion
+// {
+//     TAwaiter IAwaitable<TAwaiter>.GetAwaiter() => GetAwaiter();
+//     new TAwaiter GetAwaiter();
+// }
+//
+// public interface ICustomAwaitable2<out TResult> : IAwaitable<ICustomAwaiter<TResult>>
+// {
+//     ICustomAwaiter<TResult> IAwaitable<ICustomAwaiter<TResult>>.GetAwaiter() => GetAwaiter();
+//     new ICustomAwaiter<TResult> GetAwaiter();
+// }
+//
+// public interface ICustomAwaitable2 : IAwaitable<ICustomAwaiter>
+// {
+//     ICustomAwaiter IAwaitable<ICustomAwaiter>.GetAwaiter() => GetAwaiter();
+//     new ICustomAwaiter GetAwaiter();
+// }
+
+//
 
 public interface ICustomAwaiter : ICriticalNotifyCompletion
 {

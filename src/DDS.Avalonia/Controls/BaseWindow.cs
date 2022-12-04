@@ -4,6 +4,7 @@ using System.Reactive.Disposables;
 using Avalonia.Input;
 using DDS.Core;
 using DDS.Core.Services;
+using ReactiveUI;
 
 namespace DDS.Avalonia.Controls;
 
@@ -13,7 +14,11 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
     public new TViewModel ViewModel { get => base.ViewModel!; /*protected init => base.ViewModel = value;*/ }
     
+    public Guid Id { get; } = Guid.NewGuid();
+    
     public bool DisposeWhenActivatedSubscription { get; set; }
+
+    public bool DisposeOnDeactivation { get; set; } = true;
     
     protected BaseWindow(TViewModel viewModel) : this() => base.DataContext = viewModel;
     protected BaseWindow()
@@ -24,9 +29,10 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
             if (base.DataContext is null or not TViewModel) 
                 throw new InvalidOperationException($"{nameof(base.DataContext)} of {GetType().Name} is null.");
             
+            (DataContext as ViewModelBase)?.OnViewActivation(disposables);
             HandleActivation();
             Disposable
-                .Create(DeactivateView)
+                .Create(DisposeOnDeactivation ? DisposeView : HandleDeactivationBase)
                 .DisposeWith(disposables);
 
             if (DisposeWhenActivatedSubscription)
@@ -39,9 +45,15 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
     
     protected virtual void HandleActivation() {}
     protected virtual void HandleDeactivation() {}
-    private void DeactivateView()
+    private void HandleDeactivationBase()
     {
+        (DataContext as ViewModelBase)?.OnViewDeactivation();
         HandleDeactivation();
+    }
+    private void DisposeView()
+    {
+        HandleDeactivationBase();
+        (DataContext as ViewModelBase)?.OnViewDisposal();
         Dispose(true);
     }
 

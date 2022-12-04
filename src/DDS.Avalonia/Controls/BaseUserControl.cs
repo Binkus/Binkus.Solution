@@ -15,10 +15,10 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
     public new TViewModel ViewModel { get => base.ViewModel!; /*protected init => base.ViewModel = value;*/ }
 
+    public Guid Id { get; } = Guid.NewGuid();
     
     public bool DisposeWhenActivatedSubscription { get; set; }
-
-    [UsedImplicitly] public bool DisposeOnDeactivation { get; set; }
+    public bool DisposeOnDeactivation { get; set; }
     
     protected BaseUserControl(TViewModel viewModel) : this() => base.DataContext = viewModel;
     protected BaseUserControl()
@@ -31,9 +31,10 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
 
             Debug.Write($"    |_ {(DataContext as ViewModelBase)?.ViewModelName} _ View Activated\n");
 
+            (DataContext as ViewModelBase)?.OnViewActivation(disposables);
             HandleActivation();
             Disposable
-                .Create(DisposeOnDeactivation ? DisposeView : HandleDeactivation)
+                .Create(DisposeOnDeactivation ? DisposeView : HandleDeactivationBase)
                 .DisposeWith(disposables);
 
             if (DisposeWhenActivatedSubscription)
@@ -49,9 +50,15 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
 
     protected virtual void HandleActivation() {}
     protected virtual void HandleDeactivation() {}
+    private void HandleDeactivationBase()
+    {
+        (DataContext as ViewModelBase)?.OnViewDeactivation();
+        HandleDeactivation();
+    }
     private void DisposeView()
     {
-        HandleDeactivation();
+        HandleDeactivationBase();
+        (DataContext as ViewModelBase)?.OnViewDisposal();
         Dispose(true);
     }
     

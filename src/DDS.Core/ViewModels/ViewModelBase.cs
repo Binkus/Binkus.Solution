@@ -104,9 +104,8 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         set => _joinInit = _joinPrepare = _joinActivation = IsInitInitiated
             ? throw new InvalidOperationException() : value; }
 
-    [IgnoreDataMember]
-    private JoinableTaskFactory JoinUiTaskFactory { get; } =
-        new(new JoinableTaskContext(Thread.CurrentThread, SynchronizationContext.Current));
+    [IgnoreDataMember] private JoinableTaskFactory JoinUiTaskFactory { get; init; } = Globals.JoinUiTaskFactory;
+        // new(new JoinableTaskContext(Thread.CurrentThread, SynchronizationContext.Current));
     [IgnoreDataMember] private CompositeDisposable PrepDisposables { get; set; } = new();
     [IgnoreDataMember] private CancellationTokenSource ActivationCancellationTokenSource { get; set; } = new();
 

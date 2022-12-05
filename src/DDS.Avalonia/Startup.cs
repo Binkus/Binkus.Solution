@@ -9,6 +9,7 @@ using DDS.Core.Helper;
 using DDS.Core.Services;
 using DDS.Core.Services.Installer;
 using DDS.Core.ViewModels;
+using Microsoft.VisualStudio.Threading;
 using Splat.Microsoft.Extensions.DependencyInjection;
 
 namespace DDS.Avalonia;
@@ -64,6 +65,10 @@ public static class Startup
                         : new SingleViewLifetimeWrapper((ISingleViewApplicationLifetime)Globals.ApplicationLifetime);
             }
             services.AddSingleton<IAppCore>(Globals.Instance);
+            
+            Globals.ISetGlobalsOnlyOnceOnStartup.JoinUiTaskFactory = new JoinableTaskFactory(new JoinableTaskContext());
+            // services.AddSingleton<JoinableTaskFactory>(Globals.JoinUiTaskFactory);
+            
             _ = services.ConfigureAppServiceProvider();
             Globals.ISetGlobalsOnlyOnceOnStartup.FinishGlobalsSetupByMakingGlobalsImmutable();
         });
@@ -203,7 +208,7 @@ public static class Startup
         Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default,
         bool setDataContext = false,
         ServiceLifetime viewLifetime = ServiceLifetime.Transient)
-        where TView : ContentControl, IViewFor<TViewModel>
+        where TView : class, IViewFor<TViewModel>
         where TViewModel : class
     {
         // return services.AddViewViewModel(typeof(TView), typeof(TViewModel), lifetime, viewImplFactory, viewModelImplFactory,
@@ -233,7 +238,7 @@ public static class Startup
         {
             var view = viewImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance<TView>(p);
             // if (view is BaseUserControl<TViewModel> baseUserControl) baseUserControl.DisposeOnDeactivation = true;
-            if (setDataContext) view.DataContext = p.GetRequiredService<TViewModel>();
+            if (setDataContext) view.ViewModel = p.GetRequiredService<TViewModel>();
             if (viewLifetime is ServiceLifetime.Transient && view is ICoreView cw)
                 cw.DisposeWhenActivatedSubscription = true;
             postViewCreationAction?.Invoke(p, view);
@@ -310,7 +315,7 @@ public static class Startup
         {
             var view = viewImplFactory?.Invoke(p) ?? ActivatorUtilities.CreateInstance(p, viewType);
             // if (view is BaseUserControl<TViewModel> baseUserControl) baseUserControl.DisposeOnDeactivation = true;
-            if (setDataContext && view is Control control) control.DataContext = p.GetRequiredService(viewModelType);
+            if (setDataContext && view is IViewFor v) v.ViewModel = p.GetRequiredService(viewModelType);
             if (viewLifetime is ServiceLifetime.Transient && view is ICoreView cw)
                 cw.DisposeWhenActivatedSubscription = true;
             postViewCreationAction?.Invoke(p, view);

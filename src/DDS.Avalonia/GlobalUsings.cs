@@ -7,7 +7,7 @@ global using System.Reactive.Linq;
 global using System.Runtime.Serialization;
 global using System.Threading.Tasks;
 global using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
-global using ViewModelBase = DDS.Core.ViewModels.ViewModelBase;
+// global using ViewModelBase = DDS.Core.ViewModels.ViewModelBase;
 global using Avalonia.ReactiveUI;
 global using Avalonia.Controls;
 global using DDS.Avalonia.Controls;

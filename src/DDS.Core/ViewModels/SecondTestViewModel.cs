@@ -1,6 +1,6 @@
 namespace DDS.Core.ViewModels;
 
-public partial class SecondTestViewModel : ViewModelBase
+public partial class SecondTestViewModel : ViewModel
 {
     public SecondTestViewModel() : this(Globals.Services) { }
 

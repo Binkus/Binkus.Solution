@@ -1,6 +1,6 @@
 namespace DDS.Core.ViewModels;
 
-public sealed partial class MainWindowViewModel : ViewModelBase
+public sealed partial class MainWindowViewModel : ViewModel
 {
     // empty ctor for Designer
     public MainWindowViewModel() : this(Globals.Services, Globals.GetService<IViewFor<MainViewModel>>()) { }

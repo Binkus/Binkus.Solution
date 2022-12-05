@@ -29,9 +29,9 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
             if (base.DataContext is null or not TViewModel) 
                 throw new InvalidOperationException($"{nameof(base.DataContext)} of {GetType().Name} is null.");
 
-            Debug.Write($"    |_ {(DataContext as ViewModelBase)?.ViewModelName} _ View Activated\n");
+            Debug.Write($"    |_ {(DataContext as ViewModel)?.ViewModelName} _ View Activated\n");
 
-            (DataContext as ViewModelBase)?.OnViewActivation(disposables);
+            (DataContext as ViewModel)?.OnViewActivation(disposables);
             HandleActivation();
             Disposable
                 .Create(DisposeOnDeactivation ? DisposeView : HandleDeactivationBase)
@@ -52,13 +52,13 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
     protected virtual void HandleDeactivation() {}
     private void HandleDeactivationBase()
     {
-        (DataContext as ViewModelBase)?.OnViewDeactivation();
+        (DataContext as ViewModel)?.OnViewDeactivation();
         HandleDeactivation();
     }
     private void DisposeView()
     {
         HandleDeactivationBase();
-        (DataContext as ViewModelBase)?.OnViewDisposal();
+        (DataContext as ViewModel)?.OnViewDisposal();
         Dispose(true);
     }
     

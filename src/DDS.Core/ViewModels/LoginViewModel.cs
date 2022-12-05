@@ -5,7 +5,7 @@ using Microsoft.VisualStudio.Threading;
 namespace DDS.Core.ViewModels;
 
 [DataContract]
-public sealed partial class LoginViewModel : ViewModelBase
+public sealed partial class LoginViewModel : ViewModel
 {
     private readonly ILoginService _loginService;
     public LoginViewModel() : this(Globals.Services) { }

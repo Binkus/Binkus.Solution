@@ -2,7 +2,7 @@ using DDS.Core.Controls;
 
 namespace DDS.Core.ViewModels;
 
-public sealed partial class DialogViewModel : ViewModelBase
+public sealed partial class DialogViewModel : ViewModel
 {
     [ObservableProperty]
     private IDialogAlertMessageBox.DialogConfigBuilder _dialogConfig;

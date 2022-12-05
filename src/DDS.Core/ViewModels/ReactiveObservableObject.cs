@@ -71,8 +71,8 @@ public abstract class ReactiveObservableObject : ObservableObject,
                 changingHandler => PropertyChanging += changingHandler,
                 changingHandler => PropertyChanging -= changingHandler
             ).Select(eventPattern => // new ReactivePropertyChangedEventArgs works too, interface uses IReactivePropertyChangedEventArgs
-                new ReactivePropertyChangingEventArgs<ViewModelBase>(
-                    (eventPattern.Sender as ViewModelBase)!, eventPattern.EventArgs.PropertyName!)));
+                new ReactivePropertyChangingEventArgs<ViewModel>(
+                    (eventPattern.Sender as ViewModel)!, eventPattern.EventArgs.PropertyName!)));
 
         _changed = new Lazy<IObservable<IReactivePropertyChangedEventArgs<IReactiveObject>>>(
             () => Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
@@ -80,8 +80,8 @@ public abstract class ReactiveObservableObject : ObservableObject,
                 changedHandler => PropertyChanged += changedHandler,
                 changedHandler => PropertyChanged -= changedHandler
             ).Select(eventPattern => 
-                new ReactivePropertyChangedEventArgs<ViewModelBase>(
-                    (eventPattern.Sender as ViewModelBase)!, eventPattern.EventArgs.PropertyName!)));
+                new ReactivePropertyChangedEventArgs<ViewModel>(
+                    (eventPattern.Sender as ViewModel)!, eventPattern.EventArgs.PropertyName!)));
     }
 
     /// <summary>

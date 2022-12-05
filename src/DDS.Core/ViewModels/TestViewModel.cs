@@ -3,7 +3,7 @@ using DDS.Core.Services;
 
 namespace DDS.Core.ViewModels;
 
-public partial class TestViewModel : ViewModelBase
+public partial class TestViewModel : ViewModel
 {
     public TestViewModel() : this(Globals.Services) { }
     

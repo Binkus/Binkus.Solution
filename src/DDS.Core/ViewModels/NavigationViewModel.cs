@@ -21,7 +21,7 @@ public sealed class NavigationViewModel<TForViewModel> : NavigationViewModelBase
     public NavigationViewModel(IServiceProvider services) : base(services) { }
 }
 
-public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModelBase<TForViewModel>, INavigationViewModel<TForViewModel>
+public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel<TForViewModel>, INavigationViewModel<TForViewModel>
     where TForViewModel : class, IViewModel
 {
     [IgnoreDataMember]
@@ -83,7 +83,7 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
 
         this.WhenAnyObservable(x => x.Router.CurrentViewModel)
             .Do(_ => IsCurrentViewEnabled = true)
-            .Where(x => x is ViewModelBase).Select(x => (ViewModelBase)x!)
+            .Where(x => x is ViewModel).Select(x => (ViewModel)x!)
             .Select(x => x.WhenAnyValue(vm => vm.IsActivated))
             .Switch().Subscribe(b => IsCurrentViewEnabled = b);
     }

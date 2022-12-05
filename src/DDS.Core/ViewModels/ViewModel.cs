@@ -11,18 +11,18 @@ using Microsoft.VisualStudio.Threading;
 namespace DDS.Core.ViewModels;
 
 [DataContract]
-public abstract class ViewModelBase : ViewModelBase<IViewModel>
+public abstract class ViewModel : ViewModel<IViewModel>
 {
-    protected ViewModelBase(IServiceProvider services, IScreen hostScreen) : base(services, hostScreen) { }
-    protected ViewModelBase(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : base(services, lazyHostScreen){}
-    protected ViewModelBase(IServiceProvider services) : base(services) { }
+    protected ViewModel(IServiceProvider services, IScreen hostScreen) : base(services, hostScreen) { }
+    protected ViewModel(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : base(services, lazyHostScreen){}
+    protected ViewModel(IServiceProvider services) : base(services) { }
 }
 
 
 [DataContract]
 [SuppressMessage("ReSharper", "StringLiteralTypo")]
-public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
-    IViewModelBase,  IViewModelBase<TIViewModel>, IEquatable<ViewModelBase<TIViewModel>>
+public abstract class ViewModel<TIViewModel> : ReactiveObservableObject,
+    IViewModelBase,  IViewModelBase<TIViewModel>, IEquatable<ViewModel<TIViewModel>>
     where TIViewModel : class, IViewModel
 {
     [DataMember] public string UrlPathSegment { get; }
@@ -111,9 +111,9 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
 
     // [IgnoreDataMember] public CompositeDisposable Disposables { get; } = new();
 
-    protected ViewModelBase(IServiceProvider services, IScreen hostScreen) : this(services) => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
-    protected ViewModelBase(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : this(services) => _lazyHostScreen = lazyHostScreen;
-    protected ViewModelBase(IServiceProvider services)
+    protected ViewModel(IServiceProvider services, IScreen hostScreen) : this(services) => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
+    protected ViewModel(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : this(services) => _lazyHostScreen = lazyHostScreen;
+    protected ViewModel(IServiceProvider services)
     {
         Services = services;
         var type = GetType().UnderlyingSystemType;
@@ -357,7 +357,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
 
     #region Equality
     
-    public bool Equals(ViewModelBase<TIViewModel>? other)
+    public bool Equals(ViewModel<TIViewModel>? other)
     {
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
@@ -369,7 +369,7 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         if (ReferenceEquals(null, obj)) return false;
         if (ReferenceEquals(this, obj)) return true;
         if (obj.GetType() != this.GetType()) return false;
-        return Equals((ViewModelBase<TIViewModel>)obj);
+        return Equals((ViewModel<TIViewModel>)obj);
     }
 
     public override int GetHashCode()
@@ -377,12 +377,12 @@ public abstract class ViewModelBase<TIViewModel> : ReactiveObservableObject,
         return InstanceId.GetHashCode();
     }
 
-    public static bool operator ==(ViewModelBase<TIViewModel>? left, ViewModelBase<TIViewModel>? right)
+    public static bool operator ==(ViewModel<TIViewModel>? left, ViewModel<TIViewModel>? right)
     {
         return Equals(left, right);
     }
 
-    public static bool operator !=(ViewModelBase<TIViewModel>? left, ViewModelBase<TIViewModel>? right)
+    public static bool operator !=(ViewModel<TIViewModel>? left, ViewModel<TIViewModel>? right)
     {
         return !Equals(left, right);
     }

@@ -6,7 +6,7 @@ using DynamicData.Binding;
 
 namespace DDS.Core.ViewModels;
 
-public sealed partial class MainViewModel : ViewModelBase
+public sealed partial class MainViewModel : ViewModel
 {
     private readonly IAvaloniaEssentials _avaloniaEssentials;
 

@@ -3,7 +3,7 @@ using DDS.Core.Helper;
 namespace DDS.Core.ViewModels;
 
 [DataContract]
-public sealed partial class TemplateExampleViewModel : ViewModelBase
+public sealed partial class TemplateExampleViewModel : ViewModel
 {
     [ObservableProperty] private string _greeting; // CommunityToolkit.Mvvm, generates "Greeting"-Property
 

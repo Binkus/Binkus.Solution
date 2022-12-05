@@ -2,7 +2,7 @@ using DDS.Core.Controls;
 
 namespace DDS.Core.ViewModels;
 
-public class ApplicationViewModel : ViewModelBase
+public class ApplicationViewModel : ViewModel
 {
     public ApplicationViewModel() : base(Globals.Services)
     {

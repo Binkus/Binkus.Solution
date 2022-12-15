@@ -4,6 +4,34 @@ namespace DDS.Core.Helper;
 
 public static class TaskExtensions
 {
+    public static async Task<TException?> TryAwaitAsync<TException>(this Task task) where TException : Exception
+    {
+        try
+        {
+            await task;
+            return null;
+        }
+        catch (TException e)
+        {
+            return e;
+        }
+    }
+    
+    public static async Task<TException?> TryAwaitAsync<TException>(this JoinableTask task) where TException : Exception
+    {
+        try
+        {
+            await task;
+            return null;
+        }
+        catch (TException e)
+        {
+            return e;
+        }
+    }
+    
+    //
+    
     public static async Task IgnoreExceptionAsync<TException>(this Task task) where TException : Exception
     {
         try

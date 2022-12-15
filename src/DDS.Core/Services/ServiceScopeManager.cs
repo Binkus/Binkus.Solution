@@ -1,3 +1,5 @@
+using System.Reactive.Concurrency;
+
 namespace DDS.Core.Services;
 
 public class ServiceScopeManager
@@ -33,6 +35,7 @@ public class ServiceScopeManager
         _scopes.Remove(mainScope);
         if (disposeOldMainScope)
             mainScope.DisposeAsync();
+            // RxApp.TaskpoolScheduler.ScheduleAsync(mainScope, async (_, scope, _) => await scope.DisposeAsync());
         var newMainScope = newScope ?? CreateScope();
         if (newScope.HasValue)
         {

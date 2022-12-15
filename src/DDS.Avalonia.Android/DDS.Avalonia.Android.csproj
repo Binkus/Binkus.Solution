@@ -6,7 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>Nullable</WarningsAsErrors>
-        <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+        <SupportedOSPlatformVersion>30</SupportedOSPlatformVersion>
         <ApplicationId>com.CompanyName.DDS</ApplicationId>
         <ApplicationVersion>1</ApplicationVersion>
         <ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
@@ -46,7 +46,6 @@
         <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.5.1.1" />
         <PackageReference Include="Xamarin.AndroidX.Lifecycle.ViewModel" Version="2.5.1.1" />
         <PackageReference Include="Avalonia.Android" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.0.0" />
         <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" />
 <!--        <PackageReference Include="Xamarin.Essentials" Version="1.7.3" />-->
     </ItemGroup>

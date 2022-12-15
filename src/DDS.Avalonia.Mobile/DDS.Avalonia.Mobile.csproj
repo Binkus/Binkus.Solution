@@ -19,10 +19,6 @@
         <ProjectReference Include="..\DDS.Avalonia\DDS.Avalonia.csproj" PrivateAssets="None" />
     </ItemGroup>
 
-    <ItemGroup>    
-      <PackageReference Include="Xamarin.AndroidX.AppCompat" Version="1.5.1.1" /> <!-- to bump the version, implicitly lower by UseMauiEssentials -->
-    </ItemGroup>
-
     <ItemGroup>
       <Folder Include="Services" />
     </ItemGroup>

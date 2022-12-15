@@ -101,7 +101,11 @@
           <!-- </StackPanel> -->
         </Grid>
       </TabItem>
-      <Button Content="Hello" Name="MyBtnName" Command="{Binding OpenDialogCommand}"></Button>
+      <!-- The following would cause StackOverflow when ViewLocator IDataTemplate is set in App.axaml
+      cause probably some Content is set to this DataContext of MainViewModel,
+      which then tries resolving itself again and again.
+      Would not be useful anyway currently, cause no Button would be rendered, only the Content Hello. -->
+      <!-- <Button Content="Hello" Name="MyBtnName" Command="{Binding OpenDialogCommand}"></Button> -->
       <TabItem Header="Hi"
                
       ></TabItem>

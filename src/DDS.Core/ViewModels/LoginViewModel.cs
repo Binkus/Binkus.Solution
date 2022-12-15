@@ -13,6 +13,11 @@ public sealed partial class LoginViewModel : ViewModel
     [ActivatorUtilitiesConstructor, UsedImplicitly]
     public LoginViewModel(IServiceProvider services, ILoginService? loginService = null) : base(services)
     {
+        // EnableAsyncInitPrepareActivate = false;
+        // JoinInitBeforeOnActivationFinished = true;
+        // JoinPrepareBeforeOnActivationFinished = true;
+        // JoinActivationBeforeOnActivationFinished = true;
+
         _loginService = loginService ?? GetService<ILoginService>();
 
         IObservable<bool> canLogin = this.WhenAnyValue(
@@ -34,6 +39,7 @@ public sealed partial class LoginViewModel : ViewModel
         await Task.Yield();
         await Task.Delay(1000, cancellationToken);
         await Task.Delay(2000, cancellationToken);
+        // throw new Exception("Evil Init");
         // await Task.Delay(4000);
         Console.WriteLine("_:Initialize Task done");
     }
@@ -60,7 +66,13 @@ public sealed partial class LoginViewModel : ViewModel
         }
         // return Task.CompletedTask;
     }
-    
+
+    protected override void OnActivation(CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        Console.WriteLine("void OnActivation");
+
+    }
+
     protected override void OnActivationFinishing(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
         Console.WriteLine("void OnActivationFinishing");

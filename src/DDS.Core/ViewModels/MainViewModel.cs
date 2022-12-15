@@ -21,6 +21,8 @@ public sealed partial class MainViewModel : ViewModel
     [ActivatorUtilitiesConstructor, UsedImplicitly]
     public MainViewModel(IServiceProvider services) : base(services)
     {
+        // EnableAsyncInitPrepareActivate = false;
+        
         _avaloniaEssentials = GetService<IAvaloniaEssentials>();
 
         GoLogin = NavigateReactiveCommand<LoginViewModel>();
@@ -28,8 +30,26 @@ public sealed partial class MainViewModel : ViewModel
         GoSecondTest = NavigateReactiveCommand<SecondTestViewModel>();
         GoThirdTest = NavigateReactiveCommand<ThirdTestViewModel>();
 
-        Navigation.BackCountOffset++;
+        // Navigation.BackCountOffset++;
+        // Navigation.ResetTo<LoginViewModel>();
+    }
+    
+    protected override Task InitializeAsync(CancellationToken cancellationToken)
+    {
+        // TeeAsync();
+        // RxApp.MainThreadScheduler.ScheduleAsync(StartAsyncTestAsync, (_, func, _) => func());
+        
         Navigation.ResetTo<LoginViewModel>();
+        return Task.CompletedTask;
+    }
+
+    private static async Task StartAsyncTestAsync()
+    {
+        for (int i = 1; i <= 20; i++)
+        {
+            await 500.ms();
+            Console.WriteLine($":M:{i}");
+        }
     }
     
     public ReactiveCommand<Unit, IRoutableViewModel> GoLogin { get; }
@@ -38,7 +58,7 @@ public sealed partial class MainViewModel : ViewModel
     public ReactiveCommand<Unit, IRoutableViewModel> GoThirdTest { get; }
 
     [RelayCommand]
-    private async Task OpenFilePicker()
+    private async Task OpenFilePickerAsync()
     {
         if (Globals.IsDesignMode) return;
         var fileResult = await _avaloniaEssentials.FilePickerAsync();
@@ -47,7 +67,7 @@ public sealed partial class MainViewModel : ViewModel
     }
 
     [RelayCommand]
-    private Task OpenDialog()
+    private Task OpenDialogAsync()
     {
         var dialog = GetService<IDialogAlertMessageBox>();
         return dialog.ShowAsync(x =>

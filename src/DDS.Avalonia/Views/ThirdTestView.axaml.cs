@@ -4,15 +4,11 @@ using Avalonia.Markup.Xaml;
 
 namespace DDS.Avalonia.Views;
 
+[UsedImplicitly]
 public partial class ThirdTestView : BaseUserControl<ThirdTestViewModel>
 {
     public ThirdTestView()
     {
         InitializeComponent();
-    }
-
-    private void InitializeComponent()
-    {
-        AvaloniaXamlLoader.Load(this);
     }
 }

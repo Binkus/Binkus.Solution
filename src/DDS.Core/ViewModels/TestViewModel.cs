@@ -27,3 +27,11 @@ public partial class TestViewModel : ViewModel
         await 1.s();
     }
 }
+
+/*
+ * todo
+ * E.g. lock in ServiceScopeManager, event or Observable OnMainScopeChang{ing,ed}, replacing IServiceProvider references  
+ * of disposed IServiceProviders, or something similar.
+ * When MainScope is disposed, its ServiceProvider gets disposed, objects referencing those disposed ServiceProviders
+ * have to adapt to the change. Mostly affected VMs like this one - Singletons, their HostScreen / NavigationVM.
+ */

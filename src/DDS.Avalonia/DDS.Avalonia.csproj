@@ -5,9 +5,14 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>Nullable</WarningsAsErrors>
-        <RootNamespace>DDS.Avalonia</RootNamespace>
+        <RootNamespace>DDS.Avalonia</RootNamespace>        
+        <AvaloniaNameGeneratorDefaultFieldModifier>public</AvaloniaNameGeneratorDefaultFieldModifier>        
     </PropertyGroup>
     <ItemGroup>
+        <!-- Remember to ensure XAML files are included via <AdditionalFiles>,
+         otherwise C# source generator won't see XAML files. -->
+        <AdditionalFiles Include="**\*.xaml" />
+        <AdditionalFiles Include="**\*.axaml" />
         <AvaloniaResource Include="Assets\**" />
     </ItemGroup>
     <ItemGroup>
@@ -17,18 +22,10 @@
         <PackageReference Include="Avalonia.ReactiveUI" Version="$(AvaloniaVersion)" />
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
-        <PackageReference Include="CommunityToolkit.Mvvm" Version="8.0.0" />
         <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.4.27" />
-        <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.4.27">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.2.3">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
+        <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.2.3" PrivateAssets="all" ExcludeAssets="runtime" />
         <PackageReference Include="ReactiveUI.Fody" Version="18.4.1" />
-        <PackageReference Include="XamlNameReferenceGenerator" Version="1.4.2" />
+        <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" ExcludeAssets="runtime" />
     </ItemGroup>
     <ItemGroup>
       <ProjectReference Include="..\DDS.Core\DDS.Core.csproj" />

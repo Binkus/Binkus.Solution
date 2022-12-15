@@ -23,15 +23,31 @@ public static class ObservableExtensions
 
     public static bool ExecuteIfExecutable<TResult>(this ReactiveCommandBase<Unit, TResult> cmd)
     {
-        if (cmd.CanExecute() is false) return false;
-        cmd.Execute(Unit.Default).SubscribeAndDisposeOnNext();
-        return true;
+        try
+        {
+            if (cmd.CanExecute() is false) return false;
+            cmd.Execute(Unit.Default).SubscribeAndDisposeOnNext();
+            return true;
+        }
+        catch (ReactiveUI.UnhandledErrorException e)
+        {
+            Debug.WriteLine(e);
+            throw e.InnerException ?? e;
+        }
     }
     
     public static bool ExecuteIfExecutable<TParam, TResult>(this ReactiveCommandBase<TParam, TResult> cmd, TParam? executionParam = default)
     {
-        if (cmd.CanExecute() is false) return false;
-        cmd.Execute(executionParam ?? default!).SubscribeAndDisposeOnNext();
-        return true;
+        try
+        {
+            if (cmd.CanExecute() is false) return false;
+            cmd.Execute(executionParam ?? default!).SubscribeAndDisposeOnNext();
+            return true;
+        }
+        catch (ReactiveUI.UnhandledErrorException e)
+        {
+            Debug.WriteLine(e);
+            throw e.InnerException ?? e;
+        }
     }
 }

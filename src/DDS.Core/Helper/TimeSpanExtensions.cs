@@ -45,15 +45,16 @@ public static class TimeSpanExtensions
     /// <summary>
     /// Creates a duration as TimeSpan which can be awaited by Task.Delay or directly through ext method
     /// <see cref="GetAwaiter(TimeSpan)"/>.
-    /// <p>E.g. await 5.Seconds() or 5.s() which is equal to await Task.Delay(TimeSpan.FromSeconds(5)).</p>
+    /// <p>E.g. <see langword="await 5.Seconds()"/> or <see langword="5.s()"/>
+    /// which is equal to <see langword="await Task.Delay(TimeSpan.FromSeconds(5)"/>.</p>
     /// <p>Alternatively you can use ConfigureAwait(false) if you do not wish to continueOnCapturedContext,
-    /// e.g. by await 5.Seconds().ConfigureAwait(false)</p>
+    /// e.g. by <see langword="await 5.Seconds().ConfigureAwait(false)"/>.</p>
+    /// <p>When awaiting the timespan with the custom awaiter <see cref="GetAwaiter(System.TimeSpan)"/> the timespan has to be positive,
+    /// or <see langword="TimeSpan.FromMilliseconds(-1)" /> or equiv. <see langword="-1.ms()" /> to wait indefinitely.</p>
     /// <p><b>Examples:</b></p>
     /// <p><see langword="await 42.s().ConfigureAwait(false);"/></p>
     /// <p><see langword="await 42.s().Delay(cancellationToken).ConfigureAwait(false);"/></p>
     /// <p><see langword="await 42.s().DelayWithoutContinuingOnCapturedContext(cancellationToken);"/></p>
-    /// <p>When awaiting the timespan with the custom awaiter <see cref="GetAwaiter(System.TimeSpan)"/> the timespan has to be positive,
-    /// or <see langword="TimeSpan.FromMilliseconds(-1)" /> or equiv. <see langword="-1.ms()" /> to wait indefinitely.</p>
     /// </summary>
     /// <exception cref="T:System.ArgumentOutOfRangeException">
     ///        When awaited Task.<see cref="Task.Delay(TimeSpan,CancellationToken)"/> will be called, only then this exception can throw. When
@@ -66,8 +67,13 @@ public static class TimeSpanExtensions
     /// <seealso cref="Task.Delay(TimeSpan)"/>
     /// <seealso cref="Delay(TimeSpan, CancellationToken)"/>
     /// <seealso cref="DelayWithoutContinuingOnCapturedContext(TimeSpan, CancellationToken)"/>
+    /// 
     /// <seealso cref="GetAwaiter(TimeSpan)"/>
     /// <seealso cref="ConfigureAwait(TimeSpan, bool)"/>
+    /// 
+    /// <seealso cref="TimeSpanCancellationToken"/>
+    /// <seealso cref="TimeSpanCancellationToken.GetAwaiter()"/>
+    /// 
     /// <seealso cref="Seconds(int)"/>
     /// <seealso cref="Seconds(double)"/>
     /// <seealso cref="s(int)"/>
@@ -87,8 +93,6 @@ public static class TimeSpanExtensions
     /// <seealso cref="Ticks(int)"/>
     /// <seealso cref="Ticks(long)"/>
     ///
-    /// <seealso cref="TimeSpanCancellationToken"/>
-    /// <seealso cref="TimeSpanCancellationToken.GetAwaiter()"/>
     /// <seealso cref="Seconds(int, CancellationToken)"/>
     /// <seealso cref="Seconds(double, CancellationToken)"/>
     /// <seealso cref="s(int, CancellationToken)"/>
@@ -242,12 +246,6 @@ public static class TimeSpanExtensions
         
         public static TimeSpanCancellationToken UnsafeIndefinitelyNonCancelableDeadLock 
             => new(-1.ms(), default);
-        
-        // public void Deconstruct(out TimeSpan timeSpan, out CancellationToken cancellationToken)
-        // {
-        //     timeSpan = TimeSpan;
-        //     cancellationToken = CancellationToken;
-        // }
 
         /// <summary>Awaitable TimeSpanCancellationToken</summary>
         /// <exception cref="T:System.ArgumentOutOfRangeException"><inheritdoc cref="TimeSpanExtensions.Delay"/></exception>
@@ -268,9 +266,6 @@ public static class TimeSpanExtensions
 
         ///<inheritdoc cref="Task.Delay(System.TimeSpan,System.Threading.CancellationToken)"/>
         public Task Delay() => Task.Delay(TimeSpan, CancellationToken);
-
-        // public ConfiguredTaskAwaitable Delay(bool continueOnCapturedContext) =>
-        //     Task.Delay(TimeSpan, CancellationToken).ConfigureAwait(continueOnCapturedContext);
         
         public static implicit operator TimeSpan(TimeSpanCancellationToken _) => _.TimeSpan;
         public static implicit operator CancellationToken(TimeSpanCancellationToken _) => _.CancellationToken;
@@ -299,8 +294,6 @@ public static class TimeSpanExtensions
             => (_.TimeSpan, _.CancellationToken);
 
         // public static implicit operator Task(TimeSpanCancellationToken _) => _.Delay();
-        
-        // public static implicit operator TaskAwaiter(TimeSpanCancellationToken _) => _.Delay().GetAwaiter();
     }
     
     //

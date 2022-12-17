@@ -67,7 +67,7 @@ public static class Startup
             services.AddSingleton<IAppCore>(Globals.Instance);
             
             Globals.ISetGlobalsOnlyOnceOnStartup.JoinUiTaskFactory = new JoinableTaskFactory(new JoinableTaskContext());
-            // services.AddSingleton<JoinableTaskFactory>(Globals.JoinUiTaskFactory);
+            services.AddSingleton<JoinableTaskFactory>(Globals.JoinUiTaskFactory);
             
             _ = services.ConfigureAppServiceProvider();
             Globals.ISetGlobalsOnlyOnceOnStartup.FinishGlobalsSetupByMakingGlobalsImmutable();

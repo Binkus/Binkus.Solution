@@ -52,6 +52,9 @@ public static class TimeSpanExtensions
     /// <p>When awaiting the timespan with the custom awaiter <see cref="GetAwaiter(System.TimeSpan)"/> the timespan has to be positive,
     /// or <see langword="TimeSpan.FromMilliseconds(-1)" /> or equiv. <see langword="-1.ms()" /> to wait indefinitely.</p>
     /// <p><b>Examples:</b></p>
+    /// <p><see langword="await 0.5.Hours(cancellationToken).ConfigureAwait(false);"/></p>
+    /// <p><see langword="await 4.2.s(cancellationToken).ConfigureAwait(false);"/></p>
+    /// <p><see langword="await 42.ms(cancellationToken);"/></p>
     /// <p><see langword="await 42.s().ConfigureAwait(false);"/></p>
     /// <p><see langword="await 42.s().Delay(cancellationToken).ConfigureAwait(false);"/></p>
     /// <p><see langword="await 42.s().DelayWithoutContinuingOnCapturedContext(cancellationToken);"/></p>

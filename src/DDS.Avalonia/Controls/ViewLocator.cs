@@ -60,99 +60,32 @@ public sealed class ViewLocator : IDataTemplate
     private static readonly List<string> SearchNamespaces = new(2);
 
     // todo evaluate moving to Core
-    // ReSharper disable once CognitiveComplexity
     public static Type? GetViewType(Type viewModelType)
     {
-        // var vmFullName = viewModelType.FullName ?? throw new UnreachableException();
         var viewName = viewModelType.Name.Replace("ViewModel", "View");
         
-        // static Type? Fun(string searchName, string viewName)
-        // {
-        //     var name = searchName + viewName;
-        //     
-        //     var type = Type.GetType(name);
-        //
-        //     return type;
-        // }
-        //
-        // static bool Fun2(string searchName, string viewName, out Type? type)
-        // {
-        //     var name = searchName + viewName;
-        //     
-        //     type = Type.GetType(name);
-        //     
-        //     return type is not null;
-        // }
-        
-        // todo single loop to reduce complexity :)
+        foreach (var type in SearchNamespaces.Select(searchName => searchName + viewName).Select(Type.GetType).Where(type => type is not null))
+            return type;
 
-        foreach (string searchName in SearchNamespaces)
-        {
-            var name = searchName + viewName;
-            
-            var type = Type.GetType(name);
-
-            if (type is not null) return type;
-        }
-        
         viewName = viewModelType.Name.Replace("View", "Window");
         
-        foreach (string searchName in SearchNamespaces)
-        {
-            var name = searchName + viewName;
-            
-            var type = Type.GetType(name);
+        foreach (var type in SearchNamespaces.Select(searchName => searchName + viewName).Select(Type.GetType).Where(type => type is not null))
+            return type;
 
-            if (type is not null) return type;
-        }
-        
-        foreach (string searchName in SearchNamespaces)
-        {
-            var name = searchName.Replace("View", "Window") + viewName;
-            
-            var type = Type.GetType(name);
+        foreach (var type in SearchNamespaces.Select(searchName => searchName.Replace("View", "Window") + viewName).Select(Type.GetType).Where(type => type is not null))
+            return type;
 
-            if (type is not null) return type;
-        }
-        
         viewName = viewModelType.Name.Replace("Window", "");
         
-        foreach (string searchName in SearchNamespaces)
-        {
-            var name = searchName + viewName;
-            
-            var type = Type.GetType(name);
+        foreach (var type in SearchNamespaces.Select(searchName => searchName + viewName).Select(Type.GetType).Where(type => type is not null))
+            return type;
 
-            if (type is not null) return type;
-        }
-        
-        foreach (string searchName in SearchNamespaces)
-        {
-            var name = searchName.Replace("View", "Window") + viewName;
-            
-            var type = Type.GetType(name);
+        foreach (var type in SearchNamespaces.Select(searchName => searchName.Replace("View", "Window") + viewName).Select(Type.GetType).Where(type => type is not null))
+            return type;
 
-            if (type is not null) return type;
-        }
-        
-        foreach (string searchName in SearchNamespaces)
-        {
-            var name = searchName.Replace("Views.", "") + viewName;
-            
-            var type = Type.GetType(name);
+        foreach (var type in SearchNamespaces.Select(searchName => searchName.Replace("Views.", "") + viewName).Select(Type.GetType).Where(type => type is not null))
+            return type;
 
-            if (type is not null) return type;
-        }
-        
-        foreach (string searchName in SearchNamespaces)
-        {
-            var name = searchName.Replace("Views", "Controls") + viewName;
-            
-            var type = Type.GetType(name);
-
-            if (type is not null) return type;
-        }
-        
-        return null;
+        return SearchNamespaces.Select(searchName => searchName.Replace("Views", "Controls") + viewName).Select(Type.GetType).FirstOrDefault(type => type is not null);
     }
 }

@@ -31,18 +31,17 @@ public sealed class ReactiveViewLocator : IViewLocator
     /// IViewFor&lt;typeof(viewModel)&gt;. If still null tries to find registered interface
     /// with similar name and tries getting the service through that, if still null, tries more reflective search if
     /// enabled during ReactiveViewLocator creation.
+    /// <p>The ViewModel property (DataContext) of the returned IViewFor will be set automatically
+    /// to the same ViewModel as the parameter
+    /// "T? viewModel" by ViewModelViewHost and RoutedViewHost, which are the ones who can call this method
+    /// the latter RoutedViewHost calls this method in this template.</p>
     /// </summary>
     /// <param name="viewModel">ViewModel, should not be null by normal usage of e.g. RoutedViewHost</param>
     /// <param name="contract">Contract from Splat, ignored.</param>
     /// <typeparam name="T"><inheritdoc cref="IViewLocator.ResolveView{T}"/></typeparam>
     /// <returns><inheritdoc cref="IViewLocator.ResolveView{T}"/></returns>
     public IViewFor? ResolveView<T>(T? viewModel, string? contract = null) =>
-        // BTW ViewModel property of the returned IViewFor will be set automatically to the same ViewModel as parameter
-        // "T? viewModel" by ViewModelViewHost and RoutedViewHost, which are the ones who can call this method
-        // the latter RoutedViewHost calls this method
         viewModel is null ? Globals.Services.GetService<IViewFor>() // tries to get global default IViewFor when VM null
-            // ? throw new NullReferenceException($"{nameof(ReactiveViewLocator)}::{nameof(ResolveView)}:" +
-            //                                    $"{nameof(viewModel)} -> null")
             : (viewModel is IViewModel vm ? vm.Services : Globals.Services)
             .GetService(DictOfViews.TryGetValue(viewModel.GetType().UnderlyingSystemType.FullName
                                                 ?? throw new UnreachableException(), out var type)
@@ -92,13 +91,5 @@ public sealed class ReactiveViewLocator : IViewLocator
 
     private static IViewFor? TryGetOrCreateView(IServiceProvider services, 
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type? vType)
-    {
-        // if (vType is null || !vType.IsAssignableTo(typeof(IViewFor))) return null;
-        //
-        // if (!vType.IsAbstract) return (IViewFor?)ActivatorUtilities.GetServiceOrCreateInstance(services, vType);
-        //
-        // return (IViewFor?)services.GetService(vType);
-
-        return services.TryGetServiceOrCreateInstance<IViewFor>(vType);
-    }
+        => services.TryGetServiceOrCreateInstance<IViewFor>(vType);
 }

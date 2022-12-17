@@ -8,13 +8,10 @@ namespace DDS.Avalonia.Controls;
 public sealed class ViewLocator : IDataTemplate
 {
     private IViewLocator? _reactiveViewLocator;
-    
-    // public ViewLocator() => _reactiveViewLocator = Globals.GetService<IViewLocator>();
-    // Global ServiceProvider not initialized yet
 
     [UsedImplicitly] public ViewLocator(/* NO DI here, called by App.axaml */) {/*Global ServiceProvider not yet set*/}
     
-    
+
     // When firstly called by framework the Global ServiceProvider (Global.Services) is initialized already.
     public IControl? Build(object? data) =>
         (_reactiveViewLocator ??= Globals.GetService<IViewLocator>())
@@ -35,26 +32,13 @@ public sealed class ViewLocator : IDataTemplate
 
         type ??= GetViewType(data.GetType());
 
-        // if (type is null || !type.IsAssignableTo(typeof(IControl))) return null;
-        //
-        // if (!type.IsAbstract) return (IControl?)ActivatorUtilities.GetServiceOrCreateInstance(services, type);
-        //
-        // return (IControl?)services.GetService(type);
-
         return services.TryGetServiceOrCreateInstance<IControl>(type);
-
-        // return ActivatorUtilities.GetServiceOrCreateInstance(services, type) as IControl;
     }
     
     static ViewLocator()
     {
         AddViewSearchPath(typeof(MainView));
-        // var a = GetViewType(typeof(HamburgerMenu)); // Gets HamburgerMenu Control as expected
-        
-        // AddViewSearchPathAssemblyRootNamespace(typeof(IAssemblyMarker));
     }
-    
-    // class HamburgerMenu {}
 
     public static void AddViewSearchPath(Type viewType)
     {

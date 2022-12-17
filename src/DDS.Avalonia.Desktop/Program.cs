@@ -21,18 +21,15 @@ namespace DDS.Avalonia.Desktop
     {
         // Initialization code. Don't use any Avalonia, third-party APIs or any
         // SynchronizationContext-reliant code before AppMain is called: things aren't initialized
-        // yet and stuff might break. (:
+        // yet and stuff might break.
         [STAThread]
-        private static async Task<int> Main(string[] args) => await BuildAvaloniaApp()
-            .StartAsync(args).ConfigureAwait(false)
-            // .Inject(b => StartStuff(b, args))
-            // .StartWithClassicDesktopLifetime(args)
-        ;
+        private static async Task<int> Main(string[] args) 
+            => await BuildAvaloniaApp().StartAsync(args).ConfigureAwait(false);
 
         // Avalonia configuration, don't remove; also used by visual designer.
         private static AppBuilder BuildAvaloniaApp()
             => AppBuilder.Configure<App>()
-                .Inject(DoSomething)
+                .Inject(MiddlewareBeforeConfiguringServicesWhileAppBuilding)
                 .ConfigureAppServices(services => services
                         .AddSingleton<ICloseAppService,CloseAppService>()
                         .AddScoped<IDialogAlertMessageBox,DialogAlertMessageBox>()
@@ -49,16 +46,21 @@ namespace DDS.Avalonia.Desktop
         // -> basically new service scope with shared singletons and static, like with new window with new scope
         // -> but switchable / exchangeable between one window (makes mostly only sense for Mobile SingleViewApps)
 
-        private static void DoSomething()
+        private static void MiddlewareBeforeConfiguringServicesWhileAppBuilding(AppBuilder builder)
         {
+            // builder.AfterPlatformServicesSetup(b =>
+            // { // Global ServiceProvider NOT yet initialized:
+            //
+            // });
             
+            // builder.AfterSetup(b =>
+            // { // Global ServiceProvider initialized:
+            //
+            // });
         }
 
         private static async Task<int> StartAsync(this AppBuilder builder, string[] args)
         {
-            if (false)
-                builder.UseManagedSystemDialogs(); // non-native - Avalonia - e.g. FileDialogs
-
             using var lifetime = new ReactiveClassicDesktopStyleApplicationLifetime(args);
             // using var lifetime = new ClassicDesktopStyleApplicationLifetime
             //     { ShutdownMode = ShutdownMode.OnLastWindowClose, Args = args };
@@ -74,19 +76,6 @@ namespace DDS.Avalonia.Desktop
             //     exitCode = (await lifetime.StartAsync(args)).exitCode;
             // }
             return exitCode;
-            // builder.Start(AppMain, args);
         }
-        
-        // public static ThemeSelector Selector;
-        
-        // private static void AppMain(Application app, string[] args)
-        // {
-        //     // Selector = ThemeSelector.Create("Themes");
-        //     // Selector.LoadSelectedTheme("AvaloniaApp.theme");
-        //
-        //     app.Run(new MainWindow());
-        //
-        //     // Selector.SaveSelectedTheme("AvaloniaApp.theme");
-        // }
     }
 }

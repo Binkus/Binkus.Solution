@@ -35,46 +35,6 @@ public abstract partial class ReactiveValidationObservableObject : ReactiveObser
     private readonly HashSet<string> _mentionedPropertyNames = new();
     protected IValidationTextFormatter<string> Formatter { get; init; }
     private bool _hasErrors;
-
-    // /// <summary>
-    // /// Initializes a new instance of the <see cref="ReactiveValidationObservableObject"/> class which is basically a
-    // /// copy of <see cref="ReactiveValidationObject"/>, which uses <see cref="ReactiveObservableObject"/> instead of
-    // /// <see cref="ReactiveObject"/> as its base, for compatibility with CommunityToolkit.Mvvm.
-    // /// </summary>
-    // /// <param name="services">IServiceProvider instance, defaults to Global IServiceProvider, used to retrieve
-    // /// IValidationTextFormatter&lt;string&gt;</param>
-    // /// <param name="reactiveObjectCompatibility"></param>
-    // /// <param name="validationContext"></param>
-    // /// <param name="setDefaultValidationContextIfNotSet"></param>
-    // /// <param name="subscribeToValidationStatusChange"></param>
-    // /// <param name="scheduler">
-    // /// Scheduler for the <see cref="ValidationContext"/>. Uses <see cref="CurrentThreadScheduler"/> by default.
-    // /// </param>
-    // /// <param name="formatter">
-    // /// Validation formatter. Defaults to <see cref="SingleLineFormatter"/>. In order to override the global
-    // /// default value, implement <see cref="IValidationTextFormatter{TOut}"/> and register an instance of
-    // /// IValidationTextFormatter&lt;string&gt; into Global ServiceProvider on Startup.
-    // /// </param>
-    // protected ReactiveValidationObservableObject(
-    //     IServiceProvider? services = null,
-    //     bool reactiveObjectCompatibility = true,
-    //     ValidationContext? validationContext = null,
-    //     bool setDefaultValidationContextIfNotSet = true,
-    //     bool subscribeToValidationStatusChange = true,
-    //     IScheduler? scheduler = null,
-    //     IValidationTextFormatter<string>? formatter = null) : base(reactiveObjectCompatibility)
-    // {
-    //     Formatter = formatter 
-    //                 ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
-    //                 ?? SingleLineFormatter.Default;
-    //
-    //     _validationContext = validationContext;
-    //     if (setDefaultValidationContextIfNotSet) _validationContext ??= new ValidationContext(scheduler);
-    //     if (_validationContext is not null && subscribeToValidationStatusChange) SubscribeToValidationStatusChange();
-    //     else if (subscribeToValidationStatusChange)
-    //         this.WhenPropertyChanged(x => x.ValidationContext, notifyOnInitialValue:false)
-    //             .SubscribeAndDisposeOnNext(_ => SubscribeToValidationStatusChange());
-    // }
     
     /// <summary>
     /// Initializes a new instance of the <see cref="ReactiveValidationObservableObject"/> class which is basically a
@@ -157,24 +117,9 @@ public abstract partial class ReactiveValidationObservableObject : ReactiveObser
         get => _hasErrors;
         private set => this.RaiseAndSetIfChanged(ref _hasErrors, value);
     }
-    
-    // protected void SetValidationContext(ValidationContext validationContext, bool subscribeToValidationStatusChange = true)
-    // {
-    //     this.RaisePropertyChanging(nameof(ValidationContext));
-    //     ValidationContext = validationContext;
-    //     this.RaisePropertyChanged(nameof(ValidationContext));
-    //     if (subscribeToValidationStatusChange) SubscribeToValidationStatusChange();
-    // }
 
     /// <inheritdoc />
     public ValidationContext ValidationContext { get; }
-
-    // /// <inheritdoc cref="IValidatableViewModel.ValidationContext"/>
-    // private readonly ValidationContext? _validationContext;
-    //
-    // /// <inheritdoc cref="_validationContext"/>
-    // public ValidationContext ValidationContext { get => _validationContext ?? throw new NullReferenceException(); 
-    //     init => this.RaiseAndSetIfChanged(ref _validationContext, value); }
 
     /// <summary>
     /// Returns a collection of error messages, required by the INotifyDataErrorInfo interface.

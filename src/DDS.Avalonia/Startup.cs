@@ -57,17 +57,20 @@ public static class Startup
 
             if (!appBuilderAfterSetup.ApplicationType!.IsAssignableTo(typeof(App)))
                 throw new InvalidOperationException("App has to implement IAppCore");
-            Globals.ISetGlobalsOnlyOnceOnStartup.InstanceNullable = appBuilderAfterSetup.Instance as App;
-            if (Globals.ISetGlobalsOnlyOnceOnStartup.InstanceNullable == null)
-                throw new InvalidOperationException("App has to implement IAppCore or Instance is absent, " +
-                                    "consider checking breaking changes of recent Avalonia updates");
+            
+            Globals.ISetGlobalsOnlyOnceOnStartup.InstanceNullable = appBuilderAfterSetup.Instance 
+                as App ?? throw new InvalidOperationException("App has to implement IAppCore or Instance is absent, " +
+                                                              "consider checking breaking changes of recent Avalonia updates");
+            
             if (!Globals.IsDesignMode) // => appBuilderAfterSetup.Instance.ApplicationLifetime is null when IsDesignMode
             {
                 Globals.ISetGlobalsOnlyOnceOnStartup.ApplicationLifetime = appBuilderAfterSetup.Instance?.ApplicationLifetime
                                                           ?? throw new InvalidOperationException(
                                                               "Instance of Application or ApplicationLifetime is null");
+                
                 Globals.ISetGlobalsOnlyOnceOnStartup.IsClassicDesktopStyleApplicationLifetime =
                     appBuilderAfterSetup.Instance.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime;
+                
                 Globals.ISetGlobalsOnlyOnceOnStartup.ApplicationLifetimeWrapped =
                     Globals.IsClassicDesktopStyleApplicationLifetime
                         ? new DesktopLifetimeWrapper(
@@ -80,6 +83,7 @@ public static class Startup
             services.AddSingleton<JoinableTaskFactory>(Globals.JoinUiTaskFactory);
             
             _ = services.ConfigureAppServiceProvider(); // => kick-starting all our registrations
+            
             Globals.ISetGlobalsOnlyOnceOnStartup.FinishGlobalsSetupByMakingGlobalsImmutable();
             
             time.LogTime("AfterSetup time (includes DI time) ");

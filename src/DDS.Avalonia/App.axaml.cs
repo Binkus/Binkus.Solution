@@ -58,7 +58,13 @@ public sealed partial class App : Application, IAppCore
             time2.LogTime("MainView creation time");
         }
 
+        TimeSpan notAvaloniaTime = TimeSpan.Zero;
+        PerformanceLogger.PerformanceLogs.Values.ForEach(x => notAvaloniaTime = notAvaloniaTime.Add(x));
+        notAvaloniaTime.AddTimestamp().LogTime("Total app startup time without Avalonia Framework time but with first view / MainWindow creation time");
         Startup.StartTimestamp.LogTime("Total App Startup time");
+        var total = PerformanceLogger.TryGetResult("Total App Startup time")!.Value;
+        total.Subtract(notAvaloniaTime).AddTimestamp().LogTime("Avalonia Startup time (already in total startup time), without first view / window creation time");
+        PerformanceLogger.ClearLogs();
 
         base.OnFrameworkInitializationCompleted();
     }

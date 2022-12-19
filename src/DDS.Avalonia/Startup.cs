@@ -86,7 +86,9 @@ public static class Startup
             
             Globals.ISetGlobalsOnlyOnceOnStartup.FinishGlobalsSetupByMakingGlobalsImmutable();
             
-            time.LogTime("AfterSetup time (includes DI time) ");
+            // time.LogTime("AfterSetup time (includes DI time) ");
+            var diTime = PerformanceLogger.TryGetResult("DI TIME")!.Value;
+            time.GetElapsedTime().Subtract(diTime).AddTimestamp().LogTime("AfterSetup time ");
         });
     
     private static IServiceProvider ConfigureAppServiceProvider(this IServiceCollection services)

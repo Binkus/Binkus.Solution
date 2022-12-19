@@ -16,6 +16,13 @@ namespace DDS.Avalonia;
 
 public static class Startup
 {
+    public static long StartTimestamp { get; }
+
+    static Startup()
+    {
+        StartTimestamp = 0.AddTimestamp();
+    }
+
     public static TAppBuilder ConfigureAppServices<TAppBuilder>(
         this TAppBuilder appBuilder, Action<IServiceCollection>? servicesAction = default
     )
@@ -33,13 +40,16 @@ public static class Startup
         services.UseMicrosoftDependencyResolver();
         appBuilder.UseReactiveUI(); // Most of ReactiveUI is initialized here already, so DI additions below here: 
         servicesAction?.Invoke(services);
-        return appBuilder.ConfigureBuilder(services);
+        appBuilder.ConfigureBuilder(services);
+        StartTimestamp.LogTime("Startup time");
+        return appBuilder;
     }
     
     private static TAppBuilder ConfigureBuilder<TAppBuilder>(this TAppBuilder appBuilder, IServiceCollection services)
         where TAppBuilder : AppBuilderBase<TAppBuilder>, new()
         => appBuilder.AfterSetup(appBuilderAfterSetup =>
-        { 
+        {
+            var time = 0.AddTimestamp();
             // callback after Application has been constructed; Application itself may register services
             // which is why we build the ServiceProvider after it has been built,
             // ServiceProvider.UseMicrosoftDependencyResolver (extension method by Splat) throws exception
@@ -69,13 +79,16 @@ public static class Startup
             Globals.ISetGlobalsOnlyOnceOnStartup.JoinUiTaskFactory = new JoinableTaskFactory(new JoinableTaskContext());
             services.AddSingleton<JoinableTaskFactory>(Globals.JoinUiTaskFactory);
             
-            _ = services.ConfigureAppServiceProvider();
+            _ = services.ConfigureAppServiceProvider(); // => kick-starting all our registrations
             Globals.ISetGlobalsOnlyOnceOnStartup.FinishGlobalsSetupByMakingGlobalsImmutable();
+            
+            time.LogTime("AfterSetup time (includes DI time) ");
         });
     
     private static IServiceProvider ConfigureAppServiceProvider(this IServiceCollection services)
     {
-        StartupFacade.ConfigureServices(services);
+        var time = 0.AddTimestamp();
+        StartupFacade.ConfigureServices(services); // => kick-starting all our registrations
         _ = services.ConfigureAppServices(); // => kick-starting all our registrations
 #if DEBUG
         Globals.ISetGlobalsOnlyOnceOnStartup.ServiceProvider = services.BuildServiceProvider(
@@ -104,6 +117,7 @@ public static class Startup
             // ReSharper disable once ConvertToLambdaExpression
             return Task.CompletedTask;
         });
+        time.LogTime("DI TIME");
         return Globals.Services;
     }
     

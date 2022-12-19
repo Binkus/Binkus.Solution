@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using DDS.Avalonia.Helper;
 using DDS.Core;
 using DDS.Core.Helper;
 using DDS.Core.Services;
@@ -27,24 +28,37 @@ public sealed partial class App : Application, IAppCore
     public override void OnFrameworkInitializationCompleted()
     {
         // Global ServiceProvider available:
+        var time = 0.AddTimestamp();
         
         DataContext = Globals.Services.GetRequiredService<ApplicationViewModel>();
         var scopeManager = Globals.Services.GetRequiredService<ServiceScopeManager>();
         
+        time.LogTime("Set App DataContext and create scope");
         var scope = scopeManager.CreateScope();
         var services = scope.ServiceProvider;
         
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
+            var time2 = 0.AddTimestamp();
             desktop.MainWindow = services.GetRequiredService<MainWindow>();
+            time2.LogTime("MainWindow with MainView creation time");
+
             desktop.MainWindow.Height = 960;
             desktop.MainWindow.Width = 690;
+            
+            // WindowSpawnHelper.SpawnMainWindow();
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
+            var time2 = 0.AddTimestamp();
+
             // services = Globals.Services; // as long as no ScopeManagerService exists
             singleViewPlatform.MainView = services.GetRequiredService<MainView>();
+            
+            time2.LogTime("MainView creation time");
         }
+
+        Startup.StartTimestamp.LogTime("Total App Startup time");
 
         base.OnFrameworkInitializationCompleted();
     }

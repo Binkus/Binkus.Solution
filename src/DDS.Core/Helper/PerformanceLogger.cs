@@ -2,7 +2,7 @@ namespace DDS.Core.Helper;
 
 public static class PerformanceLogger
 {
-    private const bool UseOnlyDebugWriteLine = false;
+    private const bool UseOnlyDebugWriteLine = true;
     
     public static readonly Action<string> LogAction = UseOnlyDebugWriteLine ?
 #if DEBUG

@@ -21,7 +21,7 @@ public abstract class ViewModel : ViewModel<IViewModel>
 
 [DataContract]
 [SuppressMessage("ReSharper", "StringLiteralTypo")]
-public abstract class ViewModel<TIViewModel> : ReactiveObservableObject,
+public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableObject,
     IViewModelBase,  IViewModelBase<TIViewModel>, IEquatable<ViewModel<TIViewModel>>
     where TIViewModel : class, IViewModel
 {
@@ -113,7 +113,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveObservableObject,
 
     protected ViewModel(IServiceProvider services, IScreen hostScreen) : this(services) => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
     protected ViewModel(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : this(services) => _lazyHostScreen = lazyHostScreen;
-    protected ViewModel(IServiceProvider services)
+    protected ViewModel(IServiceProvider services) : base(services)
     {
         Services = services;
         var type = GetType().UnderlyingSystemType;

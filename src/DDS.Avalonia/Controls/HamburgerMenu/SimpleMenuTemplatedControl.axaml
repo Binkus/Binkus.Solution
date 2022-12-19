@@ -1,0 +1,33 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:controls="using:DDS.Avalonia.Controls">
+    <Design.PreviewWith>
+        <controls:SimpleMenuTemplatedControl />
+    </Design.PreviewWith>
+
+    <Style Selector="controls|SimpleMenuTemplatedControl">
+        <!-- Set Defaults -->
+        <Setter Property="Template">
+            <ControlTemplate>
+                <!-- <TextBlock Text="Templated Control" /> -->
+                <SplitView 
+                    IsPaneOpen="{Binding IsMenuOpen}"
+                    DisplayMode="Overlay"
+                    OpenPaneLength="200"
+                    PanePlacement="Left"
+                >
+                    <SplitView.Pane>
+                        <ListBox>
+                            <ListBoxItem>Menu Item 1</ListBoxItem>
+                            <ListBoxItem>Menu Item 2</ListBoxItem>
+                            <ListBoxItem>Menu Item 3</ListBoxItem>
+                        </ListBox>
+                    </SplitView.Pane>
+                    <SplitView.Content>
+                        <!-- Your main content goes here -->
+                    </SplitView.Content>
+                </SplitView>
+            </ControlTemplate>
+        </Setter>
+    </Style>
+</Styles>

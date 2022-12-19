@@ -15,13 +15,12 @@ public static class PerformanceLogger
     public static void LogTime(this long timestamp, string msg)
         => LogAction($"{msg}:{timestamp.GetElapsedMilliseconds()}ms");
     
-    public static void LogTime<T>(this long timestamp) where T : IPerformanceLoggerMarker<Action<long, string>>
-        => T.LogAction?.Invoke(timestamp, T.LogMessage);
-
-    public interface IPerformanceLoggerMarker : IPerformanceLoggerMarker<Action<long, string>> { }
-    public interface IPerformanceLoggerMarker<TLogAction> where TLogAction : class
+    public static void LogTime<T>(this long timestamp) where T : IPerformanceLoggerMarker
+        => T.LogAction.Invoke(timestamp, T.LogMessage);
+    
+    public interface IPerformanceLoggerMarker
     {
-        static virtual TLogAction? LogAction { get; } = ((Action<long, string>)LogTime as TLogAction);
+        static virtual Action<long, string> LogAction { get; } = LogTime;
         static abstract string LogMessage { get; }
     }
 }

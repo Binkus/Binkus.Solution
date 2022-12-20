@@ -34,42 +34,52 @@ public sealed partial class App : Application, IAppCore
         DataContext = Globals.Services.GetRequiredService<ApplicationViewModel>();
         var scopeManager = Globals.Services.GetRequiredService<ServiceScopeManager>();
         
-        time.LogTime<PerformanceLogger.AppViewModelCreationAndSetPerformance>().Save();
+        var appVmPerfLog = time.LogTime<PerformanceLogger.AppViewModelCreationAndSetPerformance>().Save();
         var scope = scopeManager.CreateScope();
         var services = scope.ServiceProvider;
         
+        time = 0.AddTimestamp();
+
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
-            var time2 = 0.AddTimestamp();
-            
             desktop.MainWindow = services.GetRequiredService<MainWindow>();
             desktop.MainWindow.Height = 960;
             desktop.MainWindow.Width = 690;
             
-            time2.LogTime<PerformanceLogger.MainViewsViewModelsStartupPerformance>().Save();
-
             // WindowSpawnHelper.SpawnMainWindow(); // devOnly: test spawning multiple MainWindows without reason
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
-            var time2 = 0.AddTimestamp();
-            
             singleViewPlatform.MainView = services.GetRequiredService<MainView>();
-            
-            time2.LogTime<PerformanceLogger.MainViewsViewModelsStartupPerformance>().Save();
         }
-
-        TimeSpan notAvaloniaTime = TimeSpan.Zero;
-        PerformanceLogger.PerformanceLogs.Values.ForEach(x => notAvaloniaTime = notAvaloniaTime.Add(x));
-        PerformanceLogger.ClearLogs();
-        notAvaloniaTime.LogTime<PerformanceLogger.TotalAppWithoutFrameworkStartupPerformance>();
         
-        var total = Startup.StartTimestamp.LogTime<PerformanceLogger.TotalAppStartupPerformance>(false);
-        total.TimeSpan.Subtract(notAvaloniaTime).LogTime<PerformanceLogger.AvaloniaStartupPerformance>();
-        total.Print();
+        var mainVMsPerfLog = time.LogTime<PerformanceLogger.MainViewsViewModelsStartupPerformance>().Save();
+
+        LogPerformance(appVmPerfLog, mainVMsPerfLog);
 
         base.OnFrameworkInitializationCompleted();
     }
+
+    private static void LogPerformance(
+        scoped in PerformanceLogger.DurationLogEntry appPerf, 
+        scoped in PerformanceLogger.DurationLogEntry mainPerf)
+    {
+        TimeSpan notAvaloniaTime = PerformanceLogger.GetNotFrameworkInitPerformance();
+        
+        if (PerformanceLogger.ClearLogsAfterInit) PerformanceLogger.ClearLogs();
+        
+        notAvaloniaTime.LogTime<PerformanceLogger.TotalAppWithoutFrameworkStartupPerformance>();
+        
+        var total = Startup.StartTimestamp.LogTime<PerformanceLogger.TotalAppStartupPerformance>(false);
+        
+        notAvaloniaTime.Subtract(appPerf).Subtract(mainPerf)
+            .LogTime<PerformanceLogger.TotalAppWithoutFrameworkWithoutInitVmsStartupPerformance>();
+        
+        total.TimeSpan.Subtract(notAvaloniaTime).LogTime<PerformanceLogger.AvaloniaStartupPerformance>();
+
+        total.Print();
+    }
+    
 
     public void Post(Action action)
     {

@@ -8,6 +8,10 @@ namespace DDS.Core.Helper;
 
 public static class PerformanceLogger
 {
+    // ReSharper disable once FieldCanBeMadeReadOnly.Global
+    // ReSharper disable once ConvertToConstant.Global
+    public static bool ClearLogsAfterInit = true;
+    
     private const bool UseOnlyDebugWriteLine = true;
     
 #pragma warning disable CS0162
@@ -61,7 +65,7 @@ public static class PerformanceLogger
     {
         var duration = log.TimeSpan;
         var key = log.Key;
-        UpdatablePerformanceLogs.AddOrUpdate(key, _ => duration, (_, _) => duration);
+        _ = UpdatablePerformanceLogs.AddOrUpdate(key, _ => duration, (_, _) => duration);
         return log;
     }
     
@@ -99,8 +103,8 @@ public static class PerformanceLogger
         public string Key { get; init; }
         public bool PrintsKey { get; init; }
 
-        public static implicit operator TimeSpan(DurationLogEntry _) => _.TimeSpan;
-        public static implicit operator string(DurationLogEntry _) => _.ToString();
+        public static implicit operator TimeSpan(DurationLogEntry log) => log.TimeSpan;
+        public static implicit operator string(DurationLogEntry log) => log.ToString();
 
         public override string ToString()
         {
@@ -123,11 +127,39 @@ public static class PerformanceLogger
     }
     
     //
+
+    private static IList<string> NonFrameworkPerformanceTypes => new[]
+    {
+        // typeof(StartupPerformance).FullName!, // mostly framework related
+        typeof(StartupConfigureBuilderPerformance).FullName!,
+        typeof(DependencyInjectionPerformance).FullName!,
+        typeof(AfterSetupPerformance).FullName!,
+        typeof(AppViewModelCreationAndSetPerformance).FullName!,
+        typeof(MainViewsViewModelsStartupPerformance).FullName!,
+    };
+
+    public static TimeSpan GetNotFrameworkInitPerformance()
+    {
+        var types = NonFrameworkPerformanceTypes;
+        TimeSpan notAvaloniaTime = TimeSpan.Zero;
+        PerformanceLogs.Filter(x => types.Contains(x.Key))
+            .Select(x => x.Value)
+            .ForEach(x => notAvaloniaTime = notAvaloniaTime.Add(x));
+        return notAvaloniaTime;
+    }
+    
+    //
     
     public abstract class StartupPerformance : IPerformanceLoggerMarker
     {
         private StartupPerformance() { }
         public static string LogMessage => "Init Startup";
+    }
+    
+    public abstract class StartupConfigureBuilderPerformance : IPerformanceLoggerMarker
+    {
+        private StartupConfigureBuilderPerformance() { }
+        public static string LogMessage => "Startup ConfigureBuilder / platform DI";
     }
     
     public abstract class DependencyInjectionPerformance : IPerformanceLoggerMarker
@@ -151,7 +183,13 @@ public static class PerformanceLogger
     public abstract class AvaloniaStartupPerformance : IPerformanceLoggerMarker
     {
         private AvaloniaStartupPerformance() { }
-        public static string LogMessage => "(Avalonia/ReactiveUI) Framework Startup";
+        public static string LogMessage => "Total (Avalonia/ReactiveUI) Framework Startup";
+    }
+    
+    public abstract class TotalAppWithoutFrameworkWithoutInitVmsStartupPerformance : IPerformanceLoggerMarker
+    {
+        private TotalAppWithoutFrameworkWithoutInitVmsStartupPerformance() { }
+        public static string LogMessage => "Total App Startup without Framework without View/-Models";
     }
     
     public abstract class TotalAppWithoutFrameworkStartupPerformance : IPerformanceLoggerMarker

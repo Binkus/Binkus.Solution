@@ -38,10 +38,12 @@ public static class Startup
     {
         Globals.ISetGlobalsOnlyOnceOnStartup.IsDesignMode = Design.IsDesignMode;
         services.UseMicrosoftDependencyResolver();
-        appBuilder.UseReactiveUI(); // Most of ReactiveUI is initialized here already, so DI additions below here: 
+        appBuilder.UseReactiveUI(); // Most of ReactiveUI is initialized here already, so DI additions below here:
+        StartTimestamp.LogTime<PerformanceLogger.StartupPerformance>().Save();
+        var time = 0.AddTimestamp();
         servicesAction?.Invoke(services);
         appBuilder.ConfigureBuilder(services);
-        StartTimestamp.LogTime<PerformanceLogger.StartupPerformance>().Save();
+        time.LogTime<PerformanceLogger.StartupConfigureBuilderPerformance>().Save();
         return appBuilder;
     }
     

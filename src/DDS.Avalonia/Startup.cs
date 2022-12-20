@@ -41,7 +41,7 @@ public static class Startup
         appBuilder.UseReactiveUI(); // Most of ReactiveUI is initialized here already, so DI additions below here: 
         servicesAction?.Invoke(services);
         appBuilder.ConfigureBuilder(services);
-        StartTimestamp.LogTime("Startup time");
+        StartTimestamp.LogTime<PerformanceLogger.StartupPerformance>().Save();
         return appBuilder;
     }
     
@@ -87,8 +87,8 @@ public static class Startup
             Globals.ISetGlobalsOnlyOnceOnStartup.FinishGlobalsSetupByMakingGlobalsImmutable();
             
             // time.LogTime("AfterSetup time (includes DI time) ");
-            var diTime = PerformanceLogger.TryGetResult("DI TIME")!.Value;
-            time.GetElapsedTime().Subtract(diTime).AddTimestamp().LogTime("AfterSetup time ");
+            var diTime = PerformanceLogger.TryGetResult<PerformanceLogger.DependencyInjectionPerformance>();
+            time.GetElapsedTime().Subtract(diTime ?? 0.Ticks()).LogTime<PerformanceLogger.AfterSetupPerformance>().Save();
         });
     
     private static IServiceProvider ConfigureAppServiceProvider(this IServiceCollection services)
@@ -123,7 +123,7 @@ public static class Startup
             // ReSharper disable once ConvertToLambdaExpression
             return Task.CompletedTask;
         });
-        time.LogTime("DI TIME");
+        time.LogTime<PerformanceLogger.DependencyInjectionPerformance>().Save();
         return Globals.Services;
     }
     

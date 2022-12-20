@@ -60,7 +60,7 @@ public static class PerformanceLogger
     public static DurationLogEntry Save(this in DurationLogEntry log)
     {
         var duration = log.TimeSpan;
-        var key = log.Key.ToString();
+        var key = log.Key;
         UpdatablePerformanceLogs.AddOrUpdate(key, _ => duration, (_, _) => duration);
         return log;
     }
@@ -73,7 +73,7 @@ public static class PerformanceLogger
 
     //
     
-    public readonly ref struct DurationLogEntry
+    public readonly record struct DurationLogEntry
     {
         public DurationLogEntry(TimeSpan timeSpan, string message, string? key = null, bool printsKey = false)
         {
@@ -85,18 +85,18 @@ public static class PerformanceLogger
         public void Deconstruct(out TimeSpan timeSpan, out string message, out string key)
         {
             timeSpan = TimeSpan;
-            message = Message.ToString();
-            key = Key.ToString();
+            message = Message;
+            key = Key;
         }
         
         public void Deconstruct(out TimeSpan timeSpan, out string message)
         {
             timeSpan = TimeSpan;
-            message = Message.ToString();
+            message = Message;
         }
         public TimeSpan TimeSpan { get; init; }
-        public ReadOnlySpan<char> Message { get; init; }
-        public ReadOnlySpan<char> Key { get; init; }
+        public string Message { get; init; }
+        public string Key { get; init; }
         public bool PrintsKey { get; init; }
 
         public static implicit operator TimeSpan(DurationLogEntry _) => _.TimeSpan;
@@ -157,7 +157,7 @@ public static class PerformanceLogger
     public abstract class TotalAppWithoutFrameworkStartupPerformance : IPerformanceLoggerMarker
     {
         private TotalAppWithoutFrameworkStartupPerformance() { }
-        public static string LogMessage => "Total App without Framework but incl. App-&MainVMs Startup";
+        public static string LogMessage => "Total App Startup without Framework but incl. App-&MainVMs";
     }
 
     public abstract class TotalAppStartupPerformance : IPerformanceLoggerMarker

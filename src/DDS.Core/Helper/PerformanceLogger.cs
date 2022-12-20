@@ -33,11 +33,6 @@ public static class PerformanceLogger
 
     public static DurationLogEntry LogTime(this TimeSpan duration, string msg, bool print = true, bool saveResult = false, string? key = null)
     {
-        // if (print) LogAction($"{msg} took:{duration.TotalMilliseconds}ms");
-        // if (!saveResult) return duration.ToDurationLogEntry(msg, key);
-        // UpdatablePerformanceLogs.AddOrUpdate(key ?? msg, _ => duration, (_, _) => duration);
-        // return duration.ToDurationLogEntry(msg, key);
-        
         var log = duration.ToDurationLogEntry(msg, key);
         if (print) log.Print();
         if (!saveResult) return log;
@@ -72,9 +67,6 @@ public static class PerformanceLogger
     
     public static DurationLogEntry Print(this in DurationLogEntry log)
     {
-        // var ms = log.Duration.TotalMilliseconds;
-        // var msg = log.LogMessage;
-        // LogAction($"{msg} took:{ms}ms");
         LogAction(log);
         return log;
     }
@@ -138,16 +130,16 @@ public static class PerformanceLogger
         public static string LogMessage => "Init Startup";
     }
     
+    public abstract class DependencyInjectionPerformance : IPerformanceLoggerMarker
+    {
+        private DependencyInjectionPerformance() { }
+        public static string LogMessage => "DI";
+    }
+    
     public abstract class AfterSetupPerformance : IPerformanceLoggerMarker
     {
         private AfterSetupPerformance() { }
         public static string LogMessage => "After Setup Startup";
-    }
-    
-    public abstract class AvaloniaStartupPerformance : IPerformanceLoggerMarker
-    {
-        private AvaloniaStartupPerformance() { }
-        public static string LogMessage => "(Avalonia/ReactiveUI) Framework Startup";
     }
     
     public abstract class MauiStartupPerformance : IPerformanceLoggerMarker
@@ -156,16 +148,28 @@ public static class PerformanceLogger
         public static string LogMessage => "(Maui) Framework Startup";
     }
     
-    public abstract class DependencyInjectionPerformance : IPerformanceLoggerMarker
+    public abstract class AvaloniaStartupPerformance : IPerformanceLoggerMarker
     {
-        private DependencyInjectionPerformance() { }
-        public static string LogMessage => "DI";
+        private AvaloniaStartupPerformance() { }
+        public static string LogMessage => "(Avalonia/ReactiveUI) Framework Startup";
     }
     
+    public abstract class TotalAppWithoutFrameworkStartupPerformance : IPerformanceLoggerMarker
+    {
+        private TotalAppWithoutFrameworkStartupPerformance() { }
+        public static string LogMessage => "Total App without Framework but incl. App-&MainVMs Startup";
+    }
+
     public abstract class TotalAppStartupPerformance : IPerformanceLoggerMarker
     {
         private TotalAppStartupPerformance() { }
         public static string LogMessage => "Total App Startup";
+    }
+    
+    public abstract class AppViewModelCreationAndSetPerformance : IPerformanceLoggerMarker
+    {
+        private AppViewModelCreationAndSetPerformance() { }
+        public static string LogMessage => "AppViewModel Creation and Setup";
     }
     
     public abstract class MainViewsViewModelsStartupPerformance : IPerformanceLoggerMarker

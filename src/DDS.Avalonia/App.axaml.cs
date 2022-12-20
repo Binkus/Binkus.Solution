@@ -28,6 +28,7 @@ public sealed partial class App : Application, IAppCore
     public override void OnFrameworkInitializationCompleted()
     {
         // Global ServiceProvider available:
+        
         var time = 0.AddTimestamp();
         
         DataContext = Globals.Services.GetRequiredService<ApplicationViewModel>();
@@ -40,19 +41,19 @@ public sealed partial class App : Application, IAppCore
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             var time2 = 0.AddTimestamp();
+            
             desktop.MainWindow = services.GetRequiredService<MainWindow>();
-            time2.LogTime<PerformanceLogger.MainViewsViewModelsStartupPerformance>().Save();
-
             desktop.MainWindow.Height = 960;
             desktop.MainWindow.Width = 690;
             
-            // WindowSpawnHelper.SpawnMainWindow();
+            time2.LogTime<PerformanceLogger.MainViewsViewModelsStartupPerformance>().Save();
+
+            // WindowSpawnHelper.SpawnMainWindow(); // devOnly: test spawning multiple MainWindows without reason
         }
         else if (ApplicationLifetime is ISingleViewApplicationLifetime singleViewPlatform)
         {
             var time2 = 0.AddTimestamp();
-
-            // services = Globals.Services; // as long as no ScopeManagerService exists
+            
             singleViewPlatform.MainView = services.GetRequiredService<MainView>();
             
             time2.LogTime<PerformanceLogger.MainViewsViewModelsStartupPerformance>().Save();
@@ -61,10 +62,10 @@ public sealed partial class App : Application, IAppCore
         TimeSpan notAvaloniaTime = TimeSpan.Zero;
         PerformanceLogger.PerformanceLogs.Values.ForEach(x => notAvaloniaTime = notAvaloniaTime.Add(x));
         PerformanceLogger.ClearLogs();
-        notAvaloniaTime.LogTime<PerformanceLogger.TotalAppWithoutFrameworkStartupPerformance>(); // "Total app startup time without Avalonia Framework time but with first view / MainWindow creation time"
+        notAvaloniaTime.LogTime<PerformanceLogger.TotalAppWithoutFrameworkStartupPerformance>();
         
         var total = Startup.StartTimestamp.LogTime<PerformanceLogger.TotalAppStartupPerformance>(false);
-        total.TimeSpan.Subtract(notAvaloniaTime).LogTime<PerformanceLogger.AvaloniaStartupPerformance>(); // "Avalonia Startup time (already in total startup time), without first view / window creation time"
+        total.TimeSpan.Subtract(notAvaloniaTime).LogTime<PerformanceLogger.AvaloniaStartupPerformance>();
         total.Print();
 
         base.OnFrameworkInitializationCompleted();

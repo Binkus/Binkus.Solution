@@ -7,15 +7,12 @@ namespace DDS.Avalonia.Controls;
 
 public sealed class ViewLocator : IDataTemplate
 {
-    private IViewLocator? _reactiveViewLocator;
+    private readonly IViewLocator _reactiveViewLocator;
 
-    [UsedImplicitly] public ViewLocator(/* NO DI here, called by App.axaml */) {/*Global ServiceProvider not yet set*/}
-    
+    [ActivatorUtilitiesConstructor] // DI is working here, ReactiveViewLocator is a Singleton by default
+    public ViewLocator(IViewLocator viewLocator) => _reactiveViewLocator = viewLocator;
 
-    // When firstly called by framework the Global ServiceProvider (Global.Services) is initialized already.
-    public IControl? Build(object? data) =>
-        (_reactiveViewLocator ??= Globals.GetService<IViewLocator>())
-        .ResolveView(data) as IControl ?? BackupBuild(data);
+    public IControl? Build(object? data) => _reactiveViewLocator.ResolveView(data) as IControl ?? BackupBuild(data);
 
     public bool Match(object? data) => data is IViewModel;
     

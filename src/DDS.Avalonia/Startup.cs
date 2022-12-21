@@ -143,6 +143,7 @@ public static class Startup
         services
             .AddScoped<TopLevelService>()
             .AddSingleton<IViewLocator, ReactiveViewLocator>()
+            .AddSingleton<Controls.ViewLocator>()
             .AddSingleton<ApplicationViewModel>();
         // services.Add(ServiceDescriptor.Describe(typeof(IReactiveWindowFor<>), 
         //     typeof(BaseWindow<>), ServiceLifetime.Transient));

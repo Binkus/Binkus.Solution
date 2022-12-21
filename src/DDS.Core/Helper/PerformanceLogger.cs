@@ -207,7 +207,7 @@ public static class PerformanceLogger
     public abstract class AppViewModelCreationAndSetPerformance : IPerformanceLoggerMarker
     {
         private AppViewModelCreationAndSetPerformance() { }
-        public static string LogMessage => "AppViewModel Creation and Setup";
+        public static string LogMessage => "AppViewModel, DataTemplate-ViewLocator & ServiceScope Creation";
     }
     
     public abstract class MainViewsViewModelsStartupPerformance : IPerformanceLoggerMarker

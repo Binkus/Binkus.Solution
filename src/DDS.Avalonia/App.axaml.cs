@@ -30,13 +30,16 @@ public sealed partial class App : Application, IAppCore
         // Global ServiceProvider available:
         
         var time = 0.AddTimestamp();
-        
+
+        var locator = Globals.Services.GetRequiredService<Controls.ViewLocator>();
         DataContext = Globals.Services.GetRequiredService<ApplicationViewModel>();
-        var scopeManager = Globals.Services.GetRequiredService<ServiceScopeManager>();
+        DataTemplates.Add(locator);
         
-        var appVmPerfLog = time.LogTime<PerformanceLogger.AppViewModelCreationAndSetPerformance>().Save();
+        var scopeManager = Globals.Services.GetRequiredService<ServiceScopeManager>();
         var scope = scopeManager.CreateScope();
         var services = scope.ServiceProvider;
+        
+        var appVmPerfLog = time.LogTime<PerformanceLogger.AppViewModelCreationAndSetPerformance>().Save();
         
         time = 0.AddTimestamp();
 
@@ -60,6 +63,7 @@ public sealed partial class App : Application, IAppCore
         base.OnFrameworkInitializationCompleted();
     }
 
+    // [Conditional("DEBUG")]
     private static void LogPerformance(
         scoped in PerformanceLogger.DurationLogEntry appPerf, 
         scoped in PerformanceLogger.DurationLogEntry mainPerf)

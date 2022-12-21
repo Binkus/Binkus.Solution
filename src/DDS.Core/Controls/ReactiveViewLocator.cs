@@ -1,9 +1,9 @@
-using DDS.Core;
 using DDS.Core.Helper;
+using DDS.Core.ViewModels;
 
 // ReSharper disable HeapView.PossibleBoxingAllocation
 
-namespace DDS.Avalonia.Controls;
+namespace DDS.Core.Controls;
 
 public sealed class ReactiveViewLocator : IViewLocator
 {

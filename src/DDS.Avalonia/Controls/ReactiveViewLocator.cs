@@ -83,7 +83,7 @@ public sealed class ReactiveViewLocator : IViewLocator
         var vm = viewModel as IViewModel;
         var services = vm?.Services ?? Globals.Services;
         var vmType = viewModel.GetType().UnderlyingSystemType;
-        var vType = ViewLocator.GetViewType(vmType);
+        var vType = ReflectiveViewLocation.GetViewType(vmType);
         // todo check with VM interface
 
         return TryGetOrCreateView(services, vType);

@@ -1,7 +1,12 @@
 namespace DDS.Core.Controls;
 
-public interface ICoreWindowFor<TViewModel>  : ICoreViewFor<TViewModel>
+public interface ICoreWindowFor<TViewModel> : ICoreWindow, ICoreViewFor<TViewModel>
     where TViewModel : class
+{
+    
+}
+
+public interface ICoreWindow : ICoreView
 {
     /// <summary>
     /// Closes the window.

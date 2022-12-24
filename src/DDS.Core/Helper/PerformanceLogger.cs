@@ -142,7 +142,7 @@ public static class PerformanceLogger
     {
         var types = NonFrameworkPerformanceTypes;
         TimeSpan notAvaloniaTime = TimeSpan.Zero;
-        PerformanceLogs.Filter(x => types.Contains(x.Key))
+        PerformanceLogs.Where(x => types.Contains(x.Key))
             .Select(x => x.Value)
             .ForEach(x => notAvaloniaTime = notAvaloniaTime.Add(x));
         return notAvaloniaTime;

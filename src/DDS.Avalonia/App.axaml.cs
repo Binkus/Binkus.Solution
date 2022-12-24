@@ -85,8 +85,8 @@ public sealed partial class App : Application, IAppCore
     }
     
 
-    public void Post(Action action)
-    {
-        Dispatcher.UIThread.Post(action);
-    }
+    // public void Post(Action action)
+    // {
+    //     Dispatcher.UIThread.Post(action);
+    // }
 }

@@ -5,7 +5,6 @@
              xmlns:controls="clr-namespace:DDS.Avalonia.Controls"
              x:Class="DDS.Avalonia.App"
              >
-
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
@@ -40,7 +39,4 @@
             <Setter Property="FontSize" Value="12" />
         </Style>
     </Application.Styles>
-    <!-- <Application.DataTemplates> -->
-    <!--     <controls:ViewLocator/> -->
-    <!-- </Application.DataTemplates> -->
 </Application>

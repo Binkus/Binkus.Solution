@@ -23,6 +23,7 @@
         <!--Condition below is needed to remove Avalonia.Diagnostics package from build output in Release configuration.-->
         <PackageReference Condition="'$(Configuration)' == 'Debug'" Include="Avalonia.Diagnostics" Version="$(AvaloniaVersion)" />
         <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.4.27" />
+        <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.4.27" PrivateAssets="all" ExcludeAssets="runtime" />        
         <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.2.3" PrivateAssets="all" ExcludeAssets="runtime" />
         <PackageReference Include="ReactiveUI.Fody" Version="18.4.1" />
         <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" ExcludeAssets="runtime" />

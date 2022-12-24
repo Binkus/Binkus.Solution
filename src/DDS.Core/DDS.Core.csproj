@@ -23,6 +23,7 @@
         <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="7.0.0" />
         <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="7.0.0" />
         <PackageReference Include="Microsoft.VisualStudio.Threading" Version="17.4.27" />
+        <PackageReference Include="Microsoft.VisualStudio.Threading.Analyzers" Version="17.4.27" PrivateAssets="all" ExcludeAssets="runtime" />
         <PackageReference Include="OneOf" Version="3.0.223" />
         <PackageReference Include="OneOf.SourceGenerator" Version="3.0.223" PrivateAssets="all" />
         <PackageReference Include="ReactiveMarbles.ObservableEvents.SourceGenerator" Version="1.2.3" PrivateAssets="all" ExcludeAssets="runtime" />

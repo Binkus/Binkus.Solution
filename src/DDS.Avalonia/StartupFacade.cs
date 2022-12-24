@@ -1,4 +1,5 @@
 using DDS.Core.Services;
+using DDS.Core.Services.Installer;
 using DDS.Core.ViewModels;
 
 namespace DDS.Avalonia;

@@ -19,21 +19,17 @@ public static class ServiceProviderServiceExtensions
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TServiceToGetOrCreate>
         (this IServiceProvider services) where TServiceToGetOrCreate : TServiceToBeAssignableTo
     {
-        // if (!typeof(TServiceToGetOrCreate).IsAssignableTo(typeof(TServiceToBeAssignableTo))) return default;
-        
-        if (!typeof(TServiceToGetOrCreate).IsAbstract)
-            return ActivatorUtilities.GetServiceOrCreateInstance<TServiceToGetOrCreate>(services);
-        
-        return services.GetService<TServiceToGetOrCreate>();
+        return !typeof(TServiceToGetOrCreate).IsAbstract
+            ? ActivatorUtilities.GetServiceOrCreateInstance<TServiceToGetOrCreate>(services)
+            : services.GetService<TServiceToGetOrCreate>();
     }
 
     public static TService? TryGetServiceOrCreateInstance<
             [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TService>
         (this IServiceProvider services)
     {
-        if (!typeof(TService).IsAbstract)
-            return (TService?)ActivatorUtilities.GetServiceOrCreateInstance<TService>(services);
-        
-        return services.GetService<TService>();
+        return !typeof(TService).IsAbstract
+            ? ActivatorUtilities.GetServiceOrCreateInstance<TService>(services)
+            : services.GetService<TService>();
     }
 }

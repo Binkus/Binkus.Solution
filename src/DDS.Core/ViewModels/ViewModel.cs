@@ -3,6 +3,7 @@
 using System.Reactive.Concurrency;
 using System.Reactive.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using CommunityToolkit.Mvvm.Messaging;
 using DDS.Core.Helper;
 using DDS.Core.Services;
 using DynamicData.Binding;
@@ -21,7 +22,7 @@ public abstract class ViewModel : ViewModel<IViewModel>
 
 [DataContract]
 [SuppressMessage("ReSharper", "StringLiteralTypo")]
-public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableObject,
+public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecipientValidator,
     IViewModelBase,  IViewModelBase<TIViewModel>, IEquatable<ViewModel<TIViewModel>>
     where TIViewModel : class, IViewModel
 {
@@ -111,9 +112,9 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableObjec
 
     // [IgnoreDataMember] public CompositeDisposable Disposables { get; } = new();
 
-    protected ViewModel(IServiceProvider services, IScreen hostScreen) : this(services) => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
-    protected ViewModel(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : this(services) => _lazyHostScreen = lazyHostScreen;
-    protected ViewModel(IServiceProvider services) : base(services)
+    protected ViewModel(IServiceProvider services, IScreen hostScreen, IMessenger? messenger = null) : this(services, messenger) => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
+    protected ViewModel(IServiceProvider services, Lazy<IScreen> lazyHostScreen, IMessenger? messenger = null) : this(services, messenger) => _lazyHostScreen = lazyHostScreen;
+    protected ViewModel(IServiceProvider services, IMessenger? messenger = null) : base(messenger, services)
     {
         Services = services;
         var type = GetType().UnderlyingSystemType;

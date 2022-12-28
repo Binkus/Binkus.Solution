@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>$(DotnetVersionMobile)-ios</TargetFramework>
+        <TargetFramework Condition="$([MSBuild]::IsOSPlatform('windows')) Or $([MSBuild]::IsOSPlatform('OSX'))">$(DotnetVersionMobile)-ios</TargetFramework>
         <LangVersion>$(DotnetLangVersionMobile)</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>

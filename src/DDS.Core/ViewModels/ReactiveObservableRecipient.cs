@@ -1,3 +1,4 @@
+using Binkus.ReactiveMvvm;
 using CommunityToolkit.Mvvm.Messaging;
 
 namespace DDS.Core.ViewModels;

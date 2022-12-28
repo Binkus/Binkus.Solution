@@ -1,8 +1,7 @@
 using System.Reflection;
 using System.Runtime.CompilerServices;
-using DDS.Core.Helper;
 
-namespace DDS.Core.ViewModels;
+namespace Binkus.ReactiveMvvm;
 
 [DataContract]
 public abstract class ReactiveObservableObject : ObservableObject,
@@ -79,8 +78,8 @@ public abstract class ReactiveObservableObject : ObservableObject,
                 changingHandler => PropertyChanging += changingHandler,
                 changingHandler => PropertyChanging -= changingHandler
             ).Select(eventPattern => // new ReactivePropertyChangedEventArgs works too, interface uses IReactivePropertyChangedEventArgs
-                new ReactivePropertyChangingEventArgs<ViewModel>(
-                    (eventPattern.Sender as ViewModel)!, eventPattern.EventArgs.PropertyName!)));
+                new ReactivePropertyChangingEventArgs<ReactiveObservableObject>(
+                    (eventPattern.Sender as ReactiveObservableObject)!, eventPattern.EventArgs.PropertyName!)));
 
         _changed = new Lazy<IObservable<IReactivePropertyChangedEventArgs<IReactiveObject>>>(
             () => Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
@@ -88,8 +87,8 @@ public abstract class ReactiveObservableObject : ObservableObject,
                 changedHandler => PropertyChanged += changedHandler,
                 changedHandler => PropertyChanged -= changedHandler
             ).Select(eventPattern => 
-                new ReactivePropertyChangedEventArgs<ViewModel>(
-                    (eventPattern.Sender as ViewModel)!, eventPattern.EventArgs.PropertyName!)));
+                new ReactivePropertyChangedEventArgs<ReactiveObservableObject>(
+                    (eventPattern.Sender as ReactiveObservableObject)!, eventPattern.EventArgs.PropertyName!)));
     }
 
     /// <summary>
@@ -273,8 +272,8 @@ public abstract class ReactiveObservableValidator : ObservableValidator,
                 changingHandler => PropertyChanging += changingHandler,
                 changingHandler => PropertyChanging -= changingHandler
             ).Select(eventPattern => // new ReactivePropertyChangedEventArgs works too, interface uses IReactivePropertyChangedEventArgs
-                new ReactivePropertyChangingEventArgs<ViewModel>(
-                    (eventPattern.Sender as ViewModel)!, eventPattern.EventArgs.PropertyName!)));
+                new ReactivePropertyChangingEventArgs<ReactiveObservableValidator>(
+                    (eventPattern.Sender as ReactiveObservableValidator)!, eventPattern.EventArgs.PropertyName!)));
 
         _changed = new Lazy<IObservable<IReactivePropertyChangedEventArgs<IReactiveObject>>>(
             () => Observable.FromEventPattern<PropertyChangedEventHandler, PropertyChangedEventArgs>
@@ -282,8 +281,8 @@ public abstract class ReactiveObservableValidator : ObservableValidator,
                 changedHandler => PropertyChanged += changedHandler,
                 changedHandler => PropertyChanged -= changedHandler
             ).Select(eventPattern => 
-                new ReactivePropertyChangedEventArgs<ViewModel>(
-                    (eventPattern.Sender as ViewModel)!, eventPattern.EventArgs.PropertyName!)));
+                new ReactivePropertyChangedEventArgs<ReactiveObservableValidator>(
+                    (eventPattern.Sender as ReactiveObservableValidator)!, eventPattern.EventArgs.PropertyName!)));
     }
 
     /// <summary>

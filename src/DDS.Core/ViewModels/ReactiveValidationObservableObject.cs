@@ -12,6 +12,7 @@
 using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using System.Reactive.Concurrency;
+using Binkus.ReactiveMvvm;
 using DDS.Core.Helper;
 using DynamicData;
 using DynamicData.Binding;

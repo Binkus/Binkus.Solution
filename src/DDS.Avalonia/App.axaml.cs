@@ -1,5 +1,7 @@
 using Avalonia;
 using Avalonia.Controls.ApplicationLifetimes;
+using Avalonia.Data.Core;
+using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using DDS.Avalonia.Helper;
@@ -30,7 +32,10 @@ public sealed partial class App : Application, IAppCore
         // Global ServiceProvider available:
         
         var time = 0.AddTimestamp();
-
+        
+        // Remove the DataAnnotations validator
+        ExpressionObserver.DataValidators.RemoveAll(x => x is DataAnnotationsValidationPlugin);
+        
         var locator = Globals.Services.GetRequiredService<Controls.ViewLocator>();
         DataContext = Globals.Services.GetRequiredService<ApplicationViewModel>();
         DataTemplates.Add(locator);

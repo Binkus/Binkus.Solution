@@ -1,3 +1,4 @@
+using CommunityToolkit.Mvvm.DependencyInjection;
 using DDS.Core.Controls;
 using Microsoft.VisualStudio.Threading;
 
@@ -24,7 +25,7 @@ public static class Globals
         [UsedImplicitly] static bool IsDesignMode { private get => Globals.IsDesignMode; set => Globals.IsDesignMode = value.D(); }
         // [UsedImplicitly] static IHost Host { private get => Globals.Host; set => Globals.Host = value.D(); }
         [UsedImplicitly] static IServiceCollection ServiceCollection { private get => Globals.ServiceCollection; set => Globals.ServiceCollection = value.D(); }
-        [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Globals.Services; set => Globals.Services = value.D(); }
+        [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Globals.Services; set => Ioc.Default.ConfigureServices(Globals.Services = value.D()); }
         [UsedImplicitly] static object ApplicationLifetime { private get => Globals.ApplicationLifetime; set => Globals.ApplicationLifetime = value.D(); }
         [UsedImplicitly] static ICoreLifetime ApplicationLifetimeWrapped { private get => Globals.ApplicationLifetimeWrapped; set => Globals.ApplicationLifetimeWrapped = value.D(); }
         [UsedImplicitly] static JoinableTaskFactory JoinUiTaskFactory { private get => Globals.JoinUiTaskFactory; set => Globals.JoinUiTaskFactory = value.D(); }

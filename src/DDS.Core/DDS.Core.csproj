@@ -41,5 +41,9 @@
         <PackageReference Include="System.Reactive" Version="5.0.0" />
 <!--        <PackageReference Include="ValueOf" Version="2.0.31" />-->
     </ItemGroup>
+    
+    <ItemGroup>
+      <ProjectReference Include="..\Binkus.ReactiveMvvm\Binkus.ReactiveMvvm.csproj" />
+    </ItemGroup>
 
 </Project>

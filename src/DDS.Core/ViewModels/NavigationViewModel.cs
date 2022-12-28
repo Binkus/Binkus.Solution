@@ -1,4 +1,6 @@
-using System.Windows.Input;
+// using System.Windows.Input;
+using Binkus.ReactiveMvvm;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using DDS.Core.Helper;
 using DynamicData.Binding;
 
@@ -6,7 +8,7 @@ namespace DDS.Core.ViewModels;
 
 public sealed class NavigationViewModel : NavigationViewModelBase<IViewModel>
 {
-    public NavigationViewModel() : this(Globals.Services) { }
+    public NavigationViewModel() : this(Ioc.Default) { }
     
     [ActivatorUtilitiesConstructor, UsedImplicitly]
     public NavigationViewModel(IServiceProvider services) : base(services) { }
@@ -15,7 +17,7 @@ public sealed class NavigationViewModel : NavigationViewModelBase<IViewModel>
 public sealed class NavigationViewModel<TForViewModel> : NavigationViewModelBase<TForViewModel>
     where TForViewModel : class, IViewModel
 {
-    public NavigationViewModel() : this(Globals.Services) { }
+    public NavigationViewModel() : this(Ioc.Default) { }
     
     [ActivatorUtilitiesConstructor, UsedImplicitly]
     public NavigationViewModel(IServiceProvider services) : base(services) { }

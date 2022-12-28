@@ -1,3 +1,5 @@
+using Binkus.ReactiveMvvm;
+
 namespace DDS.Core.ViewModels;
 
 public partial class SecondTestViewModel : ViewModel

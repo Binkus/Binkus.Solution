@@ -3,6 +3,7 @@ using System.Windows.Input;
 using Android.App;
 using Android.Content.PM;
 using Avalonia.Android;
+using Binkus.ReactiveMvvm;
 using DDS.Avalonia.Android.Controls;
 using DDS.Avalonia.Services;
 using DDS.Core.ViewModels;

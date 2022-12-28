@@ -1,4 +1,4 @@
-namespace DDS.Core.ViewModels;
+namespace Binkus.ReactiveMvvm;
 
 public interface INavigationViewModel<TForViewModel> : INavigationViewModel, IViewModelBase<TForViewModel> 
     where TForViewModel : class, IViewModel

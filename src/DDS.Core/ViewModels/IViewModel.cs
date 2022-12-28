@@ -1,6 +1,4 @@
-using Binkus.ReactiveMvvm;
-
-namespace DDS.Core.ViewModels;
+namespace Binkus.ReactiveMvvm;
 
 public interface IViewModel 
     : IRoutableViewModel, IActivatableViewModel, IProvideServices, IReactiveNotifyPropertyChanged<IReactiveObject>,

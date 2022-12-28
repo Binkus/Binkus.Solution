@@ -3,6 +3,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.VisualTree;
+using Binkus.ReactiveMvvm;
 using DDS.Avalonia.Controls.Application;
 using DDS.Core;
 using DDS.Core.Controls;

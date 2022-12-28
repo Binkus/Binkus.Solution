@@ -12,6 +12,6 @@ global using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 global using CommunityToolkit.Mvvm.ComponentModel;
 global using CommunityToolkit.Mvvm.Input;
 global using JetBrains.Annotations;
-// global using Microsoft.Extensions.DependencyInjection;
+global using Microsoft.Extensions.DependencyInjection;
 global using ReactiveUI;
 // global using ReactiveUI.Fody.Helpers;

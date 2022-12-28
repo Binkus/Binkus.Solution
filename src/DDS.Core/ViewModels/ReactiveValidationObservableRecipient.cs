@@ -13,8 +13,8 @@ using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using System.Reactive.Concurrency;
 using System.Reflection;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
-using DDS.Core.Helper;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI.Validation.Abstractions;
@@ -27,10 +27,10 @@ using ValidationContext = ReactiveUI.Validation.Contexts.ValidationContext;
 
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace DDS.Core.ViewModels;
+namespace Binkus.ReactiveMvvm;
 
 /// <summary>
-/// Base class for <see cref="ReactiveObservableRecipient"/> that supports <see cref="INotifyDataErrorInfo"/> validation
+/// Base class for <see cref="Binkus.ReactiveMvvm.ReactiveObservableRecipient"/> that supports <see cref="INotifyDataErrorInfo"/> validation
 /// and implements <see cref="IValidatableViewModel"/>.
 /// </summary>
 public abstract partial class ReactiveValidationObservableRecipient : ReactiveObservableRecipient, IValidatableViewModel, INotifyDataErrorInfo
@@ -62,7 +62,7 @@ public abstract partial class ReactiveValidationObservableRecipient : ReactiveOb
         IServiceProvider? services = null) : base(reactiveObjectCompatibility)
     {
         Formatter = formatter 
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
     
         ValidationContext = validationContext;
@@ -90,7 +90,7 @@ public abstract partial class ReactiveValidationObservableRecipient : ReactiveOb
         IValidationTextFormatter<string>? formatter = null)
     {
         Formatter = formatter
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
 
         ValidationContext = new ValidationContext(scheduler);
@@ -105,7 +105,7 @@ public abstract partial class ReactiveValidationObservableRecipient : ReactiveOb
     /// copy of <see cref="ReactiveValidationObject"/>, which uses <see cref="ReactiveObservableObject"/> instead of
     /// <see cref="ReactiveObject"/> as its base, for compatibility with CommunityToolkit.Mvvm.
     /// </summary>
-    /// <param name="messenger"><inheritdoc cref="ReactiveObservableRecipient(IMessenger,bool)"/></param>
+    /// <param name="messenger"><inheritdoc cref="ReactiveObservableRecipient"/></param>
     /// <param name="validationContext"></param>
     /// <param name="subscribeToValidationStatusChange"></param>
     /// <param name="reactiveObjectCompatibility"></param>
@@ -125,7 +125,7 @@ public abstract partial class ReactiveValidationObservableRecipient : ReactiveOb
         IServiceProvider? services = null) : base(messenger, reactiveObjectCompatibility)
     {
         Formatter = formatter 
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
     
         ValidationContext = validationContext;
@@ -137,7 +137,7 @@ public abstract partial class ReactiveValidationObservableRecipient : ReactiveOb
     /// copy of <see cref="ReactiveValidationObject"/>, which uses <see cref="ReactiveObservableObject"/> instead of
     /// <see cref="ReactiveObject"/> as its base, for compatibility with CommunityToolkit.Mvvm.
     /// </summary>
-    /// <param name="messenger"><inheritdoc cref="ReactiveObservableRecipient(IMessenger,bool)"/></param>
+    /// <param name="messenger"><inheritdoc cref="ReactiveObservableRecipient"/></param>
     /// <param name="services">IServiceProvider instance, defaults to Global IServiceProvider, used to retrieve
     /// IValidationTextFormatter&lt;string&gt;</param>
     /// <param name="scheduler">
@@ -155,7 +155,7 @@ public abstract partial class ReactiveValidationObservableRecipient : ReactiveOb
         IValidationTextFormatter<string>? formatter = null) : base(messenger)
     {
         Formatter = formatter
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
 
         ValidationContext = new ValidationContext(scheduler);
@@ -259,7 +259,7 @@ public abstract partial class ReactiveValidationObservableRecipient : ReactiveOb
 //
 
 /// <summary>
-/// Base class for <see cref="ReactiveObservableRecipientValidator"/> that supports <see cref="INotifyDataErrorInfo"/> validation
+/// Base class for <see cref="Binkus.ReactiveMvvm.ReactiveObservableRecipientValidator"/> that supports <see cref="INotifyDataErrorInfo"/> validation
 /// and implements <see cref="IValidatableViewModel"/>.
 /// </summary>
 public abstract partial class ReactiveValidationObservableRecipientValidator : ReactiveObservableRecipientValidator, IValidatableViewModel, INotifyDataErrorInfo
@@ -291,7 +291,7 @@ public abstract partial class ReactiveValidationObservableRecipientValidator : R
         IServiceProvider? services = null) : base(null, services, null, reactiveObjectCompatibility)
     {
         Formatter = formatter 
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
     
         ValidationContext = validationContext;
@@ -319,7 +319,7 @@ public abstract partial class ReactiveValidationObservableRecipientValidator : R
         IValidationTextFormatter<string>? formatter = null) : base(null, services, null)
     {
         Formatter = formatter
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
 
         ValidationContext = new ValidationContext(scheduler);
@@ -334,7 +334,7 @@ public abstract partial class ReactiveValidationObservableRecipientValidator : R
     /// copy of <see cref="ReactiveValidationObject"/>, which uses <see cref="ReactiveObservableObject"/> instead of
     /// <see cref="ReactiveObject"/> as its base, for compatibility with CommunityToolkit.Mvvm.
     /// </summary>
-    /// <param name="messenger"><inheritdoc cref="ReactiveObservableRecipient(IMessenger,bool)"/></param>
+    /// <param name="messenger"><inheritdoc cref="ReactiveObservableRecipient"/></param>
     /// <param name="validationContext"></param>
     /// <param name="subscribeToValidationStatusChange"></param>
     /// <param name="reactiveObjectCompatibility"></param>
@@ -354,7 +354,7 @@ public abstract partial class ReactiveValidationObservableRecipientValidator : R
         IServiceProvider? services = null) : base(messenger, services, null, reactiveObjectCompatibility)
     {
         Formatter = formatter 
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
     
         ValidationContext = validationContext;
@@ -366,7 +366,7 @@ public abstract partial class ReactiveValidationObservableRecipientValidator : R
     /// copy of <see cref="ReactiveValidationObject"/>, which uses <see cref="ReactiveObservableObject"/> instead of
     /// <see cref="ReactiveObject"/> as its base, for compatibility with CommunityToolkit.Mvvm.
     /// </summary>
-    /// <param name="messenger"><inheritdoc cref="ReactiveObservableRecipient(IMessenger,bool)"/></param>
+    /// <param name="messenger"><inheritdoc cref="ReactiveObservableRecipient"/></param>
     /// <param name="services">IServiceProvider instance, defaults to Global IServiceProvider, used to retrieve
     /// IValidationTextFormatter&lt;string&gt;</param>
     /// <param name="scheduler">
@@ -384,7 +384,7 @@ public abstract partial class ReactiveValidationObservableRecipientValidator : R
         IValidationTextFormatter<string>? formatter = null) : base(messenger, null, null)
     {
         Formatter = formatter
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
 
         ValidationContext = new ValidationContext(scheduler);

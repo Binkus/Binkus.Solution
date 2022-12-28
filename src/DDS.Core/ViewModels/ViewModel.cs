@@ -3,6 +3,7 @@
 using System.Reactive.Concurrency;
 using System.Reactive.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using Binkus.ReactiveMvvm;
 using CommunityToolkit.Mvvm.Messaging;
 using DDS.Core.Helper;
 using DDS.Core.Services;

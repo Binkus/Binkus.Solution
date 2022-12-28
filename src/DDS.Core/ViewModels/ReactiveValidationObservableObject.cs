@@ -12,8 +12,7 @@
 using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using System.Reactive.Concurrency;
-using Binkus.ReactiveMvvm;
-using DDS.Core.Helper;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using DynamicData;
 using DynamicData.Binding;
 using ReactiveUI.Validation.Abstractions;
@@ -26,7 +25,7 @@ using ValidationContext = ReactiveUI.Validation.Contexts.ValidationContext;
 
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace DDS.Core.ViewModels;
+namespace Binkus.ReactiveMvvm;
 
 /// <summary>
 /// Base class for <see cref="ReactiveObservableObject"/> that supports <see cref="INotifyDataErrorInfo"/> validation
@@ -61,7 +60,7 @@ public abstract partial class ReactiveValidationObservableObject : ReactiveObser
         IServiceProvider? services = null) : base(reactiveObjectCompatibility)
     {
         Formatter = formatter 
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
     
         ValidationContext = validationContext;
@@ -89,7 +88,7 @@ public abstract partial class ReactiveValidationObservableObject : ReactiveObser
         IValidationTextFormatter<string>? formatter = null)
     {
         Formatter = formatter
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
 
         ValidationContext = new ValidationContext(scheduler);
@@ -223,7 +222,7 @@ public abstract partial class ReactiveValidationObservableValidator : ReactiveOb
         IServiceProvider? services = null) : base(services, null, reactiveObjectCompatibility)
     {
         Formatter = formatter 
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
     
         ValidationContext = validationContext;
@@ -251,7 +250,7 @@ public abstract partial class ReactiveValidationObservableValidator : ReactiveOb
         IValidationTextFormatter<string>? formatter = null) : base(services, null)
     {
         Formatter = formatter
-                    ?? (services ?? Globals.Services).GetService<IValidationTextFormatter<string>>()
+                    ?? (services ?? Ioc.Default).GetService<IValidationTextFormatter<string>>()
                     ?? SingleLineFormatter.Default;
 
         ValidationContext = new ValidationContext(scheduler);

@@ -12,6 +12,7 @@ using ReactiveMarbles.ObservableEvents;
 
 namespace DDS.Avalonia.Views;
 
+[UsedImplicitly]
 public partial class LoginView : BaseUserControl<LoginViewModel>
 {
     public LoginView()

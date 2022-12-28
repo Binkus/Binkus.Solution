@@ -24,6 +24,23 @@
       <TextBox Text="{Binding Password}"
                PasswordChar="*"
       />
+      
+      <TextBlock Text=" "></TextBlock>
+      <TextBlock Text=" "></TextBlock>
+      <TextBlock Text="TestValidationReactiveProperty"></TextBlock>
+      <TextBox Text="{Binding TestValidationReactiveProperty}" />
+      <TextBlock Text=" "></TextBlock>
+      <TextBlock Text="{Binding HasErrors}"></TextBlock>
+      
+      <TextBlock Text=" "></TextBlock>
+      <TextBlock Text=" "></TextBlock>
+      <TextBlock Text="TestValidationObservableProperty"></TextBlock>
+      <TextBox Text="{Binding TestValidationObservableProperty}" />
+      <TextBlock Text=" "></TextBlock>
+      <TextBlock Text="{Binding HasErrors}"></TextBlock>
+      
+      <TextBlock Text=" "></TextBlock>
+      
       <TextBlock Text=" "></TextBlock>
       <TextBlock Text=" "></TextBlock>
       <Button Command="{Binding TryLoginCommand}" Content="Login" />

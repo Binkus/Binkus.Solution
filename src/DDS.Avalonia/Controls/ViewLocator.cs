@@ -8,11 +8,17 @@ namespace DDS.Avalonia.Controls;
 public sealed class ViewLocator : IDataTemplate
 {
     private readonly IViewLocator _reactiveViewLocator;
+    private readonly bool _doReflectiveSearch;
 
     [ActivatorUtilitiesConstructor] // DI is working here, ReactiveViewLocator is a Singleton by default
-    public ViewLocator(IViewLocator viewLocator) => _reactiveViewLocator = viewLocator;
+    public ViewLocator(IViewLocator viewLocator, bool doReflectiveSearch = false)
+    {
+        _reactiveViewLocator = viewLocator;
+        _doReflectiveSearch = doReflectiveSearch;
+    }
 
-    public IControl? Build(object? data) => _reactiveViewLocator.ResolveView(data) as IControl ?? BackupBuild(data);
+    public IControl? Build(object? data) => _reactiveViewLocator.ResolveView(data) as IControl ??
+                                            (_doReflectiveSearch ? BackupBuild(data) : null);
 
     public bool Match(object? data) => data is IViewModel;
     

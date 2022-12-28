@@ -1,7 +1,7 @@
-// using System.Windows.Input;
+using System.Windows.Input;
 using Binkus.ReactiveMvvm;
 using CommunityToolkit.Mvvm.DependencyInjection;
-using DDS.Core.Helper;
+// using DDS.Core.Helper;
 using DynamicData.Binding;
 
 namespace DDS.Core.ViewModels;
@@ -120,5 +120,40 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     {
         using var cmd = NavigateReactiveCommand(viewModelType, canExecute);
         return cmd.ExecuteIfExecutable();
+    }
+
+// using DDS.Core.Helper; temp alternative:
+file static class Helper
+{
+    private static IDisposable SubscribeAndDisposeOnNext<T>(this IObservable<T> source, Action<T>? onNext = default)
+    {
+        IDisposable? subscription = null;
+        // ReSharper disable once AccessToModifiedClosure
+        subscription = source.Subscribe(x =>
+        {
+            onNext?.Invoke(x);
+            subscription?.Dispose();
+        });
+        return subscription;
+    }
+
+    private static bool CanExecute(this ICommand command)
+    {
+        return command.CanExecute(null);
+    }
+    
+    internal static bool ExecuteIfExecutable<TResult>(this ReactiveCommandBase<Unit, TResult> cmd)
+    {
+        try
+        {
+            if (cmd.CanExecute() is false) return false;
+            cmd.Execute(Unit.Default).SubscribeAndDisposeOnNext();
+            return true;
+        }
+        catch (ReactiveUI.UnhandledErrorException e)
+        {
+            Debug.WriteLine(e);
+            throw e.InnerException ?? e;
+        }
     }
 }

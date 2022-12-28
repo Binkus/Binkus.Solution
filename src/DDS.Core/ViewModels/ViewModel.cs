@@ -67,7 +67,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     }
     private string? _customViewName;
 
-    private bool _hasKnownLifetime = true;
+    private volatile bool _hasKnownLifetime = true;
     private ServiceLifetime? _lifetime;
 
     private ServiceLifetime? Lifetime
@@ -79,6 +79,8 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
             var lifetime = !Globals.IsDesignMode && ReferenceEquals(Services, Globals.Services) 
                 ? ServiceLifetime.Singleton 
                 : ((IKnowMyLifetime?)Services.GetService(typeof(LifetimeOf<>).MakeGenericType(GetType())))?.Lifetime;
+            if (lifetime.HasValue) return _lifetime = lifetime;
+            lifetime = Globals.ServiceCollection.FirstOrDefault(x => x.ServiceType == GetType())?.Lifetime;
             if (lifetime.HasValue) return _lifetime = lifetime;
             _hasKnownLifetime = false;
             return null;

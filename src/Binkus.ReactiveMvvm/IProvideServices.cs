@@ -1,4 +1,4 @@
-namespace DDS.Core.Services;
+namespace Binkus.ReactiveMvvm;
 
 public interface IProvideServices
 {

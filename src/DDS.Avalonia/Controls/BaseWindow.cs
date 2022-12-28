@@ -2,6 +2,7 @@
 
 using System.Reactive.Disposables;
 using Avalonia.Input;
+using Binkus.ReactiveMvvm;
 using DDS.Core;
 using DDS.Core.Services;
 using ReactiveUI;

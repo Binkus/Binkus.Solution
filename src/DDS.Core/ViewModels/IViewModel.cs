@@ -1,5 +1,4 @@
-using DDS.Core.Services;
-using Microsoft.VisualStudio.Threading;
+using Binkus.ReactiveMvvm;
 
 namespace DDS.Core.ViewModels;
 

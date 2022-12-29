@@ -16,8 +16,8 @@ public static class ProvideServicesExtensions
     public static object? GetService(this IProvideServices serviceProviderProvider, Type serviceType)
         => serviceProviderProvider.Services.GetService(serviceType);
     
-    // not required
     //
+    // not required (for simpler access of those basic functions with just one using Binkus.DependencyInjection):
     
     /// <summary><inheritdoc cref="Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetService{T}"/></summary>
     /// <param name="serviceProviderProvider">The <see cref="IProvideServices"/> to retrieve the

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Reactive.Concurrency;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
@@ -22,35 +23,41 @@ public static class ViewViewModelInstaller
         Action<IServiceProvider, TView>? postViewCreationAction = default,
         Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default,
         bool setDataContext = false,
+        IDictionary<Type, Type>? viewModelTypeViewTypeDictionary = null,
         ServiceLifetime viewLifetime = ServiceLifetime.Transient)
         where TView : class, IViewFor<TViewModel>
         where TViewModel : class =>
         services.AddViewViewModel(ServiceLifetime.Singleton, viewImplFactory, viewModelImplFactory,
-            postViewCreationAction, postViewModelCreationAction, setDataContext, viewLifetime);
-    
+            postViewCreationAction, postViewModelCreationAction, setDataContext, viewModelTypeViewTypeDictionary,
+            viewLifetime);
+
     public static IServiceCollection AddScopedViewViewModel<TView, TViewModel>(this IServiceCollection services,
         Func<IServiceProvider, TView>? viewImplFactory = default,
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
         Action<IServiceProvider, TView>? postViewCreationAction = default,
         Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default,
         bool setDataContext = false,
+        IDictionary<Type, Type>? viewModelTypeViewTypeDictionary = null,
         ServiceLifetime viewLifetime = ServiceLifetime.Transient)
         where TView : class, IViewFor<TViewModel>
         where TViewModel : class =>
         services.AddViewViewModel(ServiceLifetime.Scoped, viewImplFactory, viewModelImplFactory,
-            postViewCreationAction, postViewModelCreationAction, setDataContext, viewLifetime);
-    
+            postViewCreationAction, postViewModelCreationAction, setDataContext, viewModelTypeViewTypeDictionary,
+            viewLifetime);
+
     public static IServiceCollection AddTransientViewViewModel<TView, TViewModel>(this IServiceCollection services,
         Func<IServiceProvider, TView>? viewImplFactory = default,
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
         Action<IServiceProvider, TView>? postViewCreationAction = default,
         Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default,
         bool setDataContext = false,
+        IDictionary<Type, Type>? viewModelTypeViewTypeDictionary = null,
         ServiceLifetime viewLifetime = ServiceLifetime.Transient)
         where TView : class, IViewFor<TViewModel>
         where TViewModel : class =>
         services.AddViewViewModel(ServiceLifetime.Transient, viewImplFactory, viewModelImplFactory,
-            postViewCreationAction, postViewModelCreationAction, setDataContext, viewLifetime);
+            postViewCreationAction, postViewModelCreationAction, setDataContext, viewModelTypeViewTypeDictionary,
+            viewLifetime);
 
     /// <summary>
     /// Registers View and ViewModel and match them together for Navigation through ReactiveViewLocator.
@@ -65,6 +72,7 @@ public static class ViewViewModelInstaller
     /// <param name="postViewCreationAction">Default is do nothing</param>
     /// <param name="postViewModelCreationAction">Default is do nothing</param>
     /// <param name="setDataContext">When true sets the DataContext after View resolvation.</param>
+    /// <param name="viewModelTypeViewTypeDictionary"></param>
     /// <param name="viewLifetime">ServiceLifetime of View - highly recommended to stay default transient.</param>
     /// <typeparam name="TView">View type, ContentControl and IViewFor&lt;TViewModel&gt;</typeparam>
     /// <typeparam name="TViewModel">ViewModel type</typeparam>
@@ -77,6 +85,7 @@ public static class ViewViewModelInstaller
         Action<IServiceProvider, TView>? postViewCreationAction = default, 
         Action<IServiceProvider, TViewModel>? postViewModelCreationAction = default,
         bool setDataContext = false,
+        IDictionary<Type, Type>? viewModelTypeViewTypeDictionary = null,
         ServiceLifetime viewLifetime = ServiceLifetime.Transient)
         where TView : class, IViewFor<TViewModel>
         where TViewModel : class
@@ -121,15 +130,15 @@ public static class ViewViewModelInstaller
         services.Add(ServiceDescriptor.Describe(typeof(IViewFor<TViewModel>), 
             p => p.GetRequiredService<TView>(), ServiceLifetime.Transient));
 
-        var dict = Globals.ViewModelNameViewTypeDictionary;
-        dict[typeof(TViewModel).FullName ?? throw new NullReferenceException()] = typeof(TView);
+        var dict = viewModelTypeViewTypeDictionary ?? TryGetDefaultViewModelTypeViewTypeDictionary;
+        if (dict is not null) dict[typeof(TViewModel)] = typeof(TView);
 
         // services.AddSingleton<LifetimeOf<TView>>(new LifetimeOf<TView>(viewLifetime));
         services.AddSingleton<LifetimeOf<TViewModel>>(new LifetimeOf<TViewModel>(lifetime));
         
         return services;
     }
-    
+
     /// <summary>
     /// Registers View and ViewModel and match them together for Navigation through ReactiveViewLocator.
     /// <p>Default Scope of IServiceProvider is used for first instance of MainViewModel, so scoped for each Main instance.</p>
@@ -145,6 +154,7 @@ public static class ViewViewModelInstaller
     /// <param name="postViewCreationAction">Default is do nothing</param>
     /// <param name="postViewModelCreationAction">Default is do nothing</param>
     /// <param name="setDataContext">When true sets the DataContext after View resolvation.</param>
+    /// <param name="viewModelTypeViewTypeDictionary"></param>
     /// <param name="viewLifetime">ServiceLifetime of View - highly recommended to stay default transient.</param>
     /// <returns><see cref="services"/></returns>
     /// <exception cref="NullReferenceException"></exception>
@@ -155,8 +165,11 @@ public static class ViewViewModelInstaller
         Action<IServiceProvider, object>? postViewCreationAction = default, 
         Action<IServiceProvider, object>? postViewModelCreationAction = default,
         bool setDataContext = false,
+        IDictionary<Type, Type>? viewModelTypeViewTypeDictionary = null,
         ServiceLifetime viewLifetime = ServiceLifetime.Transient)
     {
+        viewType = viewType.UnderlyingSystemType;
+        viewModelType = viewModelType.UnderlyingSystemType;
 #if DEBUG
         if (!viewType.IsAssignableTo(typeof(ICoreViewFor<>).MakeGenericType(viewModelType)) /*&&
             !viewType.IsAssignableTo(typeof(ICoreWindowFor<>).MakeGenericType(viewModelType))*/)
@@ -198,8 +211,8 @@ public static class ViewViewModelInstaller
         services.Add(ServiceDescriptor.Describe(typeof(IViewFor<>).MakeGenericType(viewModelType), 
             p => p.GetRequiredService(viewType), ServiceLifetime.Transient));
 
-        var dict = Globals.ViewModelNameViewTypeDictionary;
-        dict[viewModelType.FullName ?? throw new NullReferenceException()] = viewType;
+        var dict = viewModelTypeViewTypeDictionary ?? TryGetDefaultViewModelTypeViewTypeDictionary;
+        if (dict is not null) dict[viewModelType] = viewType;
 
         // var lifetimeOfVType = typeof(LifetimeOf<>).MakeGenericType(viewType);
         // services.AddSingleton(lifetimeOfVType, Activator.CreateInstance(lifetimeOfVType, viewLifetime)!);
@@ -207,6 +220,22 @@ public static class ViewViewModelInstaller
         var lifetimeOfVmType = typeof(LifetimeOf<>).MakeGenericType(viewModelType);
         services.AddSingleton(lifetimeOfVmType, Activator.CreateInstance(lifetimeOfVmType, lifetime)!);
         
+        return services;
+    }
+
+    public record ViewModelTypeViewTypeDictionaryProvider(IReadOnlyDictionary<Type, Type> ViewModelTypeViewTypeDictionary)
+    {
+        public static readonly ViewModelTypeViewTypeDictionaryProvider Default = new(new ConcurrentDictionary<Type, Type>());
+    }
+
+    private static IDictionary<Type, Type>? TryGetDefaultViewModelTypeViewTypeDictionary =>
+        ViewModelTypeViewTypeDictionaryProvider.Default.ViewModelTypeViewTypeDictionary as IDictionary<Type, Type>;
+
+    public static IServiceCollection ConfigureViewModelTypeViewTypeDictionary(this IServiceCollection services,
+        ViewModelTypeViewTypeDictionaryProvider? viewModelTypeViewTypeDictionaryProvider = null)
+    {
+        services.AddSingleton<ViewModelTypeViewTypeDictionaryProvider>(viewModelTypeViewTypeDictionaryProvider ??
+                                                                       ViewModelTypeViewTypeDictionaryProvider.Default);
         return services;
     }
 }

@@ -1,3 +1,5 @@
+using Binkus.DependencyInjection;
+
 namespace Binkus.ReactiveMvvm;
 
 public interface IViewModel 

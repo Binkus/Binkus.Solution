@@ -1,6 +1,6 @@
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Binkus.ReactiveMvvm;
+namespace Binkus.DependencyInjection;
 
 public interface IProvideServices : IServiceProvider
 {

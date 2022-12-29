@@ -111,6 +111,7 @@ public static class Startup
         StartupFacade.ConfigureServices(services); // => kick-starting all our registrations
         _ = services.ConfigureAppServices(); // => kick-starting all our registrations
         _servicesActionAfterSetup?.Invoke(services);
+        services.AddSingleton<IServiceCollection>(services);
         Globals.ISetGlobalsOnlyOnceOnStartup.ServiceProvider = _serviceProviderFactory?.CreateServiceProvider(services)
 #if DEBUG
             ?? services.BuildServiceProvider(new ServiceProviderOptions { ValidateOnBuild = true, ValidateScopes = true });
@@ -157,6 +158,7 @@ public static class Startup
     {
         services
             .AddScoped<TopLevelService>()
+            .ConfigureViewModelTypeViewTypeDictionary()
             .AddSingleton<IViewLocator, ReactiveViewLocator>()
             .AddSingleton<Controls.ViewLocator>()
             .AddSingleton<ApplicationViewModel>();

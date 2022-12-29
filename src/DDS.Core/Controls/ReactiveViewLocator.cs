@@ -9,17 +9,22 @@ namespace DDS.Core.Controls;
 public sealed class ReactiveViewLocator : IViewLocator
 {
     // bool DoesTryGetDefault
-    
+
+    private readonly IServiceProvider _services;
     private readonly bool _doReflectiveSearch;
     private readonly bool _triesGettingDefault;
 
     [ActivatorUtilitiesConstructor] // DI is working here, ReactiveViewLocator is a Singleton by default
-    public ReactiveViewLocator(bool doReflectiveSearch = false, bool triesGettingDefault = false) : this(null, doReflectiveSearch, triesGettingDefault) { }
+    public ReactiveViewLocator(IServiceProvider services,
+        bool doReflectiveSearch = false, bool triesGettingDefault = false) 
+        : this(null, services, doReflectiveSearch, triesGettingDefault) { }
     
     [UsedImplicitly]
-    public ReactiveViewLocator(Dictionary<string, Type>? dictOfViews, bool doReflectiveSearch = false, bool triesGettingDefault = false)
+    public ReactiveViewLocator(Dictionary<string, Type>? dictOfViews, IServiceProvider services, 
+        bool doReflectiveSearch = false, bool triesGettingDefault = false)
     {
         DictOfViews = dictOfViews ?? Globals.ViewModelNameViewTypeDictionary;
+        _services = services;
         _doReflectiveSearch = doReflectiveSearch;
         _triesGettingDefault = triesGettingDefault;
     }
@@ -44,24 +49,20 @@ public sealed class ReactiveViewLocator : IViewLocator
     /// <typeparam name="T"><inheritdoc cref="IViewLocator.ResolveView{T}"/></typeparam>
     /// <returns><inheritdoc cref="IViewLocator.ResolveView{T}"/></returns>
     public IViewFor? ResolveView<T>(T? viewModel, string? contract = null) =>
-        viewModel is null ? TryGetDefault(null, _triesGettingDefault) // tries to get global default IViewFor when VM null
-            : (viewModel is IViewModel vm ? vm.Services : Globals.Services)
+        viewModel is null ? TryGetDefault(_services, _triesGettingDefault)
+            : (viewModel as IServiceProvider ?? _services)
             .GetService(DictOfViews.TryGetValue(viewModel.GetType().UnderlyingSystemType.FullName
                                                 ?? throw new UnreachableException(), out var type)
                 ? type : typeof(IViewFor<>).MakeGenericType(viewModel.GetType())
-                ) as IViewFor ?? TryGetViewByInterfaceWithSameName(viewModel, DictOfViews)
-                              ?? (_doReflectiveSearch ? TryGetViewByReflectionSearch(viewModel) : null)
-                              ?? TryGetDefault(viewModel, _triesGettingDefault);
+                ) as IViewFor ?? TryGetViewByInterfaceWithSameName(viewModel, _services, DictOfViews)
+                              ?? (_doReflectiveSearch ? TryGetViewByReflectionSearch(viewModel, _services) : null)
+                              ?? TryGetDefault(viewModel as IServiceProvider ?? _services, _triesGettingDefault);
 
 
-    private static IViewFor? TryGetDefault(object? viewModel, bool triesGettingDefault = true)
-    {
-        if (!triesGettingDefault) return null;
-        var vm = viewModel as IViewModel;
-        var services = vm?.Services ?? Globals.Services;
-        return services.GetService<IViewFor>();
-    }
-    
+    // tries to get global default IViewFor
+    private static IViewFor? TryGetDefault(IServiceProvider services, bool triesGettingDefault = true) =>
+        triesGettingDefault ? services.GetService<IViewFor>() : null;
+
     // private static Type? TryGetViewTypeByInterfaceWithSameName(object viewModel)
     // {
     //     var vmType = viewModel.GetType().UnderlyingSystemType;
@@ -69,10 +70,9 @@ public sealed class ReactiveViewLocator : IViewLocator
     //     return ivmType;
     // }
     
-    private static IViewFor? TryGetViewByInterfaceWithSameName(object viewModel, IReadOnlyDictionary<string, Type>? dictOfViews = null)
+    private static IViewFor? TryGetViewByInterfaceWithSameName(object viewModel, IServiceProvider fallbackServices, IReadOnlyDictionary<string, Type>? dictOfViews = null)
     {
-        var vm = viewModel as IViewModel;
-        var services = vm?.Services ?? Globals.Services;
+        var services = viewModel as IServiceProvider ?? fallbackServices;
         var vmType = viewModel.GetType().UnderlyingSystemType;
         var ivmType = vmType.GetInterface('I' + vmType.Name);
         if (ivmType is null) return null;
@@ -82,10 +82,9 @@ public sealed class ReactiveViewLocator : IViewLocator
             : services.GetService(typeof(IViewFor<>).MakeGenericType(ivmType)) as IViewFor;
     }
     
-    private static IViewFor? TryGetViewByReflectionSearch(object viewModel)
+    private static IViewFor? TryGetViewByReflectionSearch(object viewModel, IServiceProvider fallbackServices)
     {
-        var vm = viewModel as IViewModel;
-        var services = vm?.Services ?? Globals.Services;
+        var services = viewModel as IServiceProvider ?? fallbackServices;
         var vmType = viewModel.GetType().UnderlyingSystemType;
         var vType = ReflectiveViewLocation.GetViewType(vmType);
         // todo check with VM interface

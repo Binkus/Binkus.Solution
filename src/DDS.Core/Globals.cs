@@ -70,8 +70,6 @@ public static class Globals
     [UsedImplicitly] public static ICoreLifetime ApplicationLifetimeWrapped { get; private set; } = null!;
     [UsedImplicitly] public static bool IsClassicDesktopStyleApplicationLifetime { get; private set; }
     
-    [UsedImplicitly] public static Dictionary<string, Type> ViewModelNameViewTypeDictionary { get; } = new();
-
     [UsedImplicitly] public static JoinableTaskFactory JoinUiTaskFactory { get; private set; } = null!;
 
     #endregion

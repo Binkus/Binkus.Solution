@@ -115,31 +115,6 @@ public abstract class ReactiveObservableObject : ObservableObject,
     #endregion
 }
 
-// file static class Helper
-// {
-//     public static void ValidateProperty(ObservableValidator sender, string propertyName)
-//     {
-//         // this.ValidateAllProperties();
-//
-//         // RaiseErrorsChanged(args.PropertyName ?? "");
-//         // ((INotifyDataErrorInfo)this).GetErrors(args.PropertyName ?? "");
-//
-//         try
-//         {
-//             var propertyInfo = sender.GetType().GetProperty(propertyName, BindingFlags.Public | BindingFlags.Instance);
-//             if (propertyInfo is null) return;
-//             var propertyType = propertyInfo.PropertyType;
-//             var def = propertyType is { IsValueType: true } ? Activator.CreateInstance(propertyType) : null;
-//             var value = propertyInfo.GetValue(sender) ?? def;
-//             // sender.ValidateProperty(value, propertyName ?? "");
-//         }
-//         catch (Exception e)
-//         {
-//             Debug.WriteLine(e);
-//         }
-//     }    
-// }
-
 [DataContract]
 public abstract class ReactiveObservableValidator : ObservableValidator,
     IReactiveNotifyPropertyChanged<IReactiveObject>, IReactiveObject
@@ -211,8 +186,6 @@ public abstract class ReactiveObservableValidator : ObservableValidator,
     protected override void OnPropertyChanged(PropertyChangedEventArgs e)
     {
         this.RaisePropertyChanged(e.PropertyName);
-        // ValidateProperty(e); // ext method this.RaisePropertyChanged(string) calls RaisePropertyChanged(PropertyChangedEventArgs)
-        // (for ReactiveUI observable pipeline compatibility)
     }
 
     protected override void OnPropertyChanging(PropertyChangingEventArgs e)

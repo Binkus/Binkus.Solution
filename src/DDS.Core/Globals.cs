@@ -24,8 +24,7 @@ public static class Globals
         [UsedImplicitly] static IAppCore? InstanceNullable { private get => _instanceNullable; set => _instanceNullable = value.D(); }
         [UsedImplicitly] static bool IsDesignMode { private get => Globals.IsDesignMode; set => Globals.IsDesignMode = value.D(); }
         // [UsedImplicitly] static IHost Host { private get => Globals.Host; set => Globals.Host = value.D(); }
-        [UsedImplicitly] static IServiceCollection ServiceCollection { private get => Globals.ServiceCollection; set => Globals.ServiceCollection = value.D(); }
-        [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Globals.Services; set => Ioc.Default.ConfigureServices(Globals.Services = value.D()); }
+        [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Ioc.Default; set => Ioc.Default.ConfigureServices(value.D()); }
         [UsedImplicitly] static object ApplicationLifetime { private get => Globals.ApplicationLifetime; set => Globals.ApplicationLifetime = value.D(); }
         [UsedImplicitly] static ICoreLifetime ApplicationLifetimeWrapped { private get => Globals.ApplicationLifetimeWrapped; set => Globals.ApplicationLifetimeWrapped = value.D(); }
         [UsedImplicitly] static JoinableTaskFactory JoinUiTaskFactory { private get => Globals.JoinUiTaskFactory; set => Globals.JoinUiTaskFactory = value.D(); }
@@ -40,7 +39,7 @@ public static class Globals
 
         [UsedImplicitly] static void FinishGlobalsSetupByMakingGlobalsImmutable()
         {
-            if (ServiceProvider is null || ServiceCollection is null || (!IsDesignMode && (ApplicationLifetime is null || ApplicationLifetimeWrapped is null)) || _instanceNullable is null || DbMigrationTask is null || JoinUiTaskFactory is null)
+            if (ServiceProvider is null || (!IsDesignMode && (ApplicationLifetime is null || ApplicationLifetimeWrapped is null)) || _instanceNullable is null || DbMigrationTask is null || JoinUiTaskFactory is null)
             {
                 throw new NullReferenceException("Globals setup has not been done correctly");
             }
@@ -60,8 +59,7 @@ public static class Globals
     
     [UsedImplicitly] public static bool IsDesignMode { get; private set; }
     // [UsedImplicitly] public static IHost Host { get; private set; } = null!;
-    [UsedImplicitly] public static IServiceCollection ServiceCollection { get; private set; } = null!;
-    [UsedImplicitly] public static IServiceProvider Services { get; private set; } = null!;
+    [UsedImplicitly] public static IServiceProvider Services => Ioc.Default;
     [UsedImplicitly] public static TService GetService<TService>() where TService : notnull 
         => Services.GetRequiredService<TService>();
     [UsedImplicitly] public static object GetService(Type serviceType) => Services.GetRequiredService(serviceType);

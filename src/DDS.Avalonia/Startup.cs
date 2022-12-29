@@ -120,7 +120,6 @@ public static class Startup
 #endif
         Globals.Services.UseMicrosoftDependencyResolver();
         (services as ServiceCollection)?.MakeReadOnly();
-        Globals.ISetGlobalsOnlyOnceOnStartup.ServiceCollection = services;
 
         if (Globals.IsDesignMode)
         {

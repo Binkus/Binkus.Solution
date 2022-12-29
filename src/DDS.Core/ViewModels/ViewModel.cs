@@ -75,13 +75,14 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     {
         get
         {
+            // todo check potentially registered interface
             if (_lifetime is not null) return _lifetime;
             if (_hasKnownLifetime is false) return null;
             var lifetime = !Globals.IsDesignMode && ReferenceEquals(Services, Globals.Services) 
                 ? ServiceLifetime.Singleton 
                 : ((IKnowMyLifetime?)Services.GetService(typeof(LifetimeOf<>).MakeGenericType(GetType())))?.Lifetime;
             if (lifetime.HasValue) return _lifetime = lifetime;
-            lifetime = Globals.ServiceCollection.FirstOrDefault(x => x.ServiceType == GetType())?.Lifetime;
+            lifetime = this.GetService<IServiceCollection>()?.FirstOrDefault(x => x.ServiceType == GetType())?.Lifetime;
             if (lifetime.HasValue) return _lifetime = lifetime;
             _hasKnownLifetime = false;
             return null;
@@ -94,7 +95,8 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         if (Lifetime is ServiceLifetime.Singleton)
         {
             throw new NotSupportedException($"Operation on Singleton not supported. {GetType().FullName}'s " +
-                                            "ServiceLifetime is Singleton; consider changing lifetime to Scoped.");
+                                            "ServiceLifetime is Singleton; consider changing lifetime to Scoped " +
+                                            "or provide a HostScreen on creation.");
         }
         return value;
     }

@@ -24,4 +24,8 @@
       <Folder Include="Services" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Binkus.DependencyInjection.Abstractions\Binkus.DependencyInjection.Abstractions.csproj" />
+    </ItemGroup>
+
 </Project>

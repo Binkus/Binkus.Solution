@@ -113,7 +113,7 @@ public static class TimeSpanExtensions
     /// <seealso cref="Minutes(double, CancellationToken)"/>
     /// <seealso cref="Ticks(int, CancellationToken)"/>
     /// <seealso cref="Ticks(long, CancellationToken)"/>
-    private static TimeSpan NumbersExtToTimeSpanDocs(TimeSpan timespan = default) => TimeSpan.Zero;
+    private static TimeSpan NumbersExtToTimeSpanDocs(TimeSpan timespan = default) => timespan;
     
     /// <inheritdoc cref="NumbersExtToTimeSpanDocs"/>
     public static TimeSpan Seconds(this int seconds) => TimeSpan.FromSeconds(seconds);
@@ -326,8 +326,8 @@ public static class TimeSpanExtensions
     
 #if NET7_0_OR_GREATER
 
-    private static readonly double s_tickFrequency = 10_000_000.0 / (double)Stopwatch.Frequency; // e.g. ~== 0.01 (depending on hardware&OS)
-    private static long GetTimestampCompatibleTicks(long ticks) => (long)((double)ticks / s_tickFrequency); // e.g. ~== ticks * 100L
+    private static readonly double s_tickFrequency = 10_000_000.0 / Stopwatch.Frequency; // e.g. ~== 0.01 (depending on hardware&OS)
+    private static long GetTimestampCompatibleTicks(long ticks) => (long)(ticks / s_tickFrequency); // e.g. ~== ticks * 100L
 
     public static long AddTimestamp(this int ticks) => Stopwatch.GetTimestamp() - GetTimestampCompatibleTicks(ticks);
     public static long AddTimestamp(this long ticks) => Stopwatch.GetTimestamp() - GetTimestampCompatibleTicks(ticks);

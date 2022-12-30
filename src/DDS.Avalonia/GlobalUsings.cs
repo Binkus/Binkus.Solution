@@ -11,6 +11,7 @@ global using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 global using Avalonia.ReactiveUI;
 global using Avalonia.Controls;
 global using Binkus.DependencyInjection;
+global using Binkus.Extensions;
 global using DDS.Avalonia.Controls;
 global using DDS.Core.ViewModels;
 global using DDS.Avalonia.Views;

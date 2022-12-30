@@ -10,6 +10,7 @@ global using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
 // global using ViewModelBase = DDS.Core.ViewModels.ViewModelBase;
 // global using DDS.Core.ViewModels;
 global using Binkus.DependencyInjection;
+global using Binkus.Extensions;
 global using CommunityToolkit.Mvvm.ComponentModel;
 global using CommunityToolkit.Mvvm.Input;
 global using JetBrains.Annotations;

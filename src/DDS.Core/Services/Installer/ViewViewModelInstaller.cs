@@ -2,6 +2,7 @@ using System.Collections.Concurrent;
 using System.Reactive.Concurrency;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using Binkus.DependencyInjection;
 using Binkus.ReactiveMvvm;
 using DDS.Core;
 using DDS.Core.Controls;
@@ -10,6 +11,7 @@ using DDS.Core.Services;
 using DDS.Core.Services.Installer;
 using DDS.Core.ViewModels;
 using DynamicData;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Threading;
 using Splat.Microsoft.Extensions.DependencyInjection;
 

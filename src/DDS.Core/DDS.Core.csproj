@@ -43,6 +43,7 @@
     </ItemGroup>
     
     <ItemGroup>
+      <ProjectReference Include="..\Binkus.Extensions.TimeSpan\Binkus.Extensions.TimeSpan.csproj" />
       <ProjectReference Include="..\Binkus.ReactiveMvvm\Binkus.ReactiveMvvm.csproj" />
     </ItemGroup>
 

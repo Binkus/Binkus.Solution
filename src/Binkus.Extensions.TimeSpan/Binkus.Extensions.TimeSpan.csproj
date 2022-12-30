@@ -1,12 +1,16 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>$(DotnetVersionsShared);</TargetFrameworks>
+        <TargetFrameworks>netstandard2.0;netstandard2.1;net5.0;net6.0;net7.0</TargetFrameworks>
         <LangVersion>$(DotnetLangVersionShared)</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>Nullable</WarningsAsErrors>
         <RootNamespace>Binkus.Extensions</RootNamespace>
     </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Binkus.IsExternalInit\Binkus.IsExternalInit.csproj" />
+    </ItemGroup>
 
 </Project>

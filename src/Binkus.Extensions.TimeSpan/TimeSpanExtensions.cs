@@ -88,8 +88,6 @@ public static class TimeSpanExtensions
     /// <seealso cref="Milliseconds(double)"/>
     /// <seealso cref="ms(int)"/>
     /// <seealso cref="ms(double)"/>
-    /// <seealso cref="Microseconds(int)"/>
-    /// <seealso cref="Microseconds(double)"/>
     /// <seealso cref="Hours(int)"/>
     /// <seealso cref="Hours(double)"/>
     /// <seealso cref="Days(int)"/>
@@ -107,8 +105,6 @@ public static class TimeSpanExtensions
     /// <seealso cref="Milliseconds(double, CancellationToken)"/>
     /// <seealso cref="ms(int, CancellationToken)"/>
     /// <seealso cref="ms(double, CancellationToken)"/>
-    /// <seealso cref="Microseconds(int, CancellationToken)"/>
-    /// <seealso cref="Microseconds(double, CancellationToken)"/>
     /// <seealso cref="Hours(int, CancellationToken)"/>
     /// <seealso cref="Hours(double, CancellationToken)"/>
     /// <seealso cref="Days(int, CancellationToken)"/>

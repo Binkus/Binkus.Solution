@@ -1,10 +1,13 @@
+using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.CompilerServices;
+
 // ReSharper disable InconsistentNaming
 // ReSharper disable UnusedMember.Local
 // ReSharper disable StringLiteralTypo
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace DDS.Core.Helper;
+namespace Binkus.Extensions;
 
 [SuppressMessage("Roslynator", "RCS1213:Remove unused member declaration.")]
 [SuppressMessage("Style", "VSTHRD200:Use \"Async\" suffix for async methods")]
@@ -125,11 +128,13 @@ public static class TimeSpanExtensions
     public static TimeSpan Milliseconds(this int milliseconds) => TimeSpan.FromMilliseconds(milliseconds);
     /// <inheritdoc cref="NumbersExtToTimeSpanDocs"/>
     public static TimeSpan Milliseconds(this double milliseconds) => TimeSpan.FromMilliseconds(milliseconds);
-    
+
+#if NET7_0_OR_GREATER
     /// <inheritdoc cref="NumbersExtToTimeSpanDocs"/>
     public static TimeSpan Microseconds(this int microseconds) => TimeSpan.FromMicroseconds(microseconds);
     /// <inheritdoc cref="NumbersExtToTimeSpanDocs"/>
     public static TimeSpan Microseconds(this double microseconds) => TimeSpan.FromMicroseconds(microseconds);
+#endif
     
     /// <inheritdoc cref="NumbersExtToTimeSpanDocs"/>
     public static TimeSpan Hours(this int hours) => TimeSpan.FromHours(hours);
@@ -175,10 +180,12 @@ public static class TimeSpanExtensions
     /// <inheritdoc cref="NumbersExtToTimeSpanDocs"/>
     public static TimeSpanCancellationToken Milliseconds(this double milliseconds, CancellationToken cancellationToken) => TimeSpan.FromMilliseconds(milliseconds).ToTimeSpanCancellationToken(cancellationToken);
     
+#if NET7_0_OR_GREATER
     /// <inheritdoc cref="NumbersExtToTimeSpanDocs"/>
     public static TimeSpanCancellationToken Microseconds(this int microseconds, CancellationToken cancellationToken) => TimeSpan.FromMicroseconds(microseconds).ToTimeSpanCancellationToken(cancellationToken);
     /// <inheritdoc cref="NumbersExtToTimeSpanDocs"/>
     public static TimeSpanCancellationToken Microseconds(this double microseconds, CancellationToken cancellationToken) => TimeSpan.FromMicroseconds(microseconds).ToTimeSpanCancellationToken(cancellationToken);
+#endif
     
     /// <inheritdoc cref="NumbersExtToTimeSpanDocs"/>
     public static TimeSpanCancellationToken Hours(this int hours, CancellationToken cancellationToken) => TimeSpan.FromHours(hours).ToTimeSpanCancellationToken(cancellationToken);
@@ -320,6 +327,8 @@ public static class TimeSpanExtensions
     }
     
     // Stopwatch
+    
+#if NET7_0_OR_GREATER
 
     private static readonly double s_tickFrequency = 10_000_000.0 / (double)Stopwatch.Frequency; // e.g. ~== 0.01 (depending on hardware&OS)
     private static long GetTimestampCompatibleTicks(long ticks) => (long)((double)ticks / s_tickFrequency); // e.g. ~== ticks * 100L
@@ -351,4 +360,6 @@ public static class TimeSpanExtensions
         => startingTimestamp.GetElapsedSeconds() / 60d;
     public static double GetElapsedMinutes(this long startingTimestamp, long endingTimestamp)
         => startingTimestamp.GetElapsedSeconds(endingTimestamp) / 60d;
+
+#endif
 }

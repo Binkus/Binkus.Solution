@@ -23,7 +23,6 @@ public static class Globals
     {
         [UsedImplicitly] static IAppCore? InstanceNullable { private get => _instanceNullable; set => _instanceNullable = value.D(); }
         [UsedImplicitly] static bool IsDesignMode { private get => Globals.IsDesignMode; set => Globals.IsDesignMode = value.D(); }
-        // [UsedImplicitly] static IHost Host { private get => Globals.Host; set => Globals.Host = value.D(); }
         [UsedImplicitly] static IServiceProvider ServiceProvider { private get => Ioc.Default; set => Ioc.Default.ConfigureServices(value.D()); }
         [UsedImplicitly] static object ApplicationLifetime { private get => Globals.ApplicationLifetime; set => Globals.ApplicationLifetime = value.D(); }
         [UsedImplicitly] static ICoreLifetime ApplicationLifetimeWrapped { private get => Globals.ApplicationLifetimeWrapped; set => Globals.ApplicationLifetimeWrapped = value.D(); }
@@ -58,7 +57,6 @@ public static class Globals
         => _instanceNullable ?? throw new NullReferenceException($"{nameof(_instanceNullable)} is null");
     
     [UsedImplicitly] public static bool IsDesignMode { get; private set; }
-    // [UsedImplicitly] public static IHost Host { get; private set; } = null!;
     [UsedImplicitly] public static IServiceProvider Services => Ioc.Default;
     [UsedImplicitly] public static TService GetService<TService>() where TService : notnull 
         => Services.GetRequiredService<TService>();

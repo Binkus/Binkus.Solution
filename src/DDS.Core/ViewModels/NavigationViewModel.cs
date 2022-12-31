@@ -121,6 +121,7 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
         using var cmd = NavigateReactiveCommand(viewModelType, canExecute);
         return cmd.ExecuteIfExecutable();
     }
+}
 
 // using DDS.Core.Helper; temp alternative:
 file static class Helper

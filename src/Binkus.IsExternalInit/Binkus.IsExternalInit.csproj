@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>NETSTANDARD2.0;NETSTANDARD2.1;NETCOREAPP3.1;NET45;NET451;NET452;NET46;NET461;NET462;NET47;NET471;NET472;NET48;net6.0;net7.0</TargetFrameworks>
+<!--        <TargetFrameworks>NETSTANDARD2.0;NETSTANDARD2.1;NETCOREAPP3.1;NET45;NET451;NET452;NET46;NET461;NET462;NET47;NET471;NET472;NET48;net6.0;net7.0</TargetFrameworks>-->
+        <TargetFrameworks>NETSTANDARD2.0;NETSTANDARD2.1</TargetFrameworks>
         <LangVersion>8.0</LangVersion>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>Nullable</WarningsAsErrors>

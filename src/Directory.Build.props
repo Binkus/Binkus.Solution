@@ -5,6 +5,10 @@
     <DotnetLangVersionDesktop>latest</DotnetLangVersionDesktop>
     <DotnetLangVersionMobile>latest</DotnetLangVersionMobile>
     <DotnetLangVersionWeb>latest</DotnetLangVersionWeb>
+    <DotnetVersionsNet7_AND_GREATER>net7.0</DotnetVersionsNet7_AND_GREATER>
+    <DotnetVersionsNet6_AND_GREATER>net6.0;$(DotnetVersionsNet7_AND_GREATER)</DotnetVersionsNet6_AND_GREATER>
+    <DotnetVersionsNetStandard2_1_AND_GREATER>netstandard2.1;$(DotnetVersionsNet6_AND_GREATER)</DotnetVersionsNetStandard2_1_AND_GREATER>
+    <DotnetVersionsNetStandard2_0_AND_GREATER>netstandard2.0;$(DotnetVersionsNetStandard2_1_AND_GREATER)</DotnetVersionsNetStandard2_0_AND_GREATER>
     <DotnetVersionLowerShared>net7.0</DotnetVersionLowerShared>    
     <DotnetVersionUpperShared>net7.0</DotnetVersionUpperShared>
     <DotnetVersionsShared Condition="$(DotnetVersionLowerShared) == $(DotnetVersionUpperShared)">

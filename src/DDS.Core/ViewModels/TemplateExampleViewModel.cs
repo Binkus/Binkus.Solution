@@ -46,12 +46,12 @@ public sealed partial class TemplateExampleViewModel : ViewModel
     
     protected override async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        await 1.Seconds();
+        await Task.Delay(1000, cancellationToken);
     }
 
     protected override async Task OnPrepareAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        await 1.Seconds();
+        await Task.Delay(1000, cancellationToken);
     }
 
     protected override Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)

@@ -125,7 +125,7 @@ public sealed partial class LoginViewModel : ViewModel
     public ReactiveCommand<Unit,Unit> TryLoginCommand { get; }
     public ReactiveCommand<Unit,Unit> TryRegisterCommand { get; }
     
-    private static Task TryLoginAsync() => Task.Delay(1.s());
+    private static Task TryLoginAsync() => Task.Delay(1000);
 
-    private static Task TryRegisterAsync() => Task.Delay(1.s());
+    private static Task TryRegisterAsync() => Task.Delay(1000);
 }

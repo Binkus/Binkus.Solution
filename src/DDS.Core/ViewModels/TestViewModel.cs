@@ -24,7 +24,7 @@ public partial class TestViewModel : ViewModel
 
     protected override async Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        await 1.s();
+        await Task.Delay(1000, cancellationToken);
     }
 }
 

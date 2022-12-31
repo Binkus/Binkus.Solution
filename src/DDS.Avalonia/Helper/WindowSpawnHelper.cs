@@ -29,7 +29,7 @@ public static class WindowSpawnHelper
         //     }, DispatcherPriority.Background);
         // });
         
-        RxApp.TaskpoolScheduler.Schedule(SpawnWindow, 4.Seconds(), (_, state)
+        RxApp.TaskpoolScheduler.Schedule(SpawnWindow, TimeSpan.FromSeconds(4), (_, state)
             => Observable.Start(state, RxApp.MainThreadScheduler).Subscribe());
 
         // RxApp.MainThreadScheduler.ScheduleRecurringAction(15.Seconds(), SpawnWindow);

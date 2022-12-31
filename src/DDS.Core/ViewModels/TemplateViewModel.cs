@@ -22,12 +22,12 @@ public sealed partial class TemplateViewModel : ViewModel
 
     protected override async Task InitializeAsync(CancellationToken cancellationToken)
     {
-        await 1.ms();
+        await Task.Delay(1, cancellationToken);
     }
 
     protected override async Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        await 1.ms();
+        await Task.Delay(1, cancellationToken);
     }
     
     protected override void OnDeactivation()

@@ -47,7 +47,7 @@ public sealed partial class MainViewModel : ViewModel
     {
         for (int i = 1; i <= 20; i++)
         {
-            await 500.ms();
+            await Task.Delay(500);
             Console.WriteLine($":M:{i}");
         }
     }

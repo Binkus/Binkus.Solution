@@ -63,7 +63,7 @@ public static class ProcessExtensions
                     while (!cancellationToken.Value.IsCancellationRequested)
                     {
                         await Task.Yield();
-                        await 4.Milliseconds();
+                        await Task.Delay(4);
                     }
                     try
                     {

@@ -102,7 +102,7 @@ public static class Startup
             Globals.ISetGlobalsOnlyOnceOnStartup.FinishGlobalsSetupByMakingGlobalsImmutable();
             
             var diTime = PerformanceLogger.TryGetResult<PerformanceLogger.DependencyInjectionPerformance>();
-            time.GetElapsedTime().Subtract(diTime ?? 0.Ticks()).LogTime<PerformanceLogger.AfterSetupPerformance>().Save();
+            time.GetElapsedTime().Subtract(diTime ?? TimeSpan.FromTicks(0)).LogTime<PerformanceLogger.AfterSetupPerformance>().Save();
         });
     
     private static IServiceProvider ConfigureAppServiceProvider(this IServiceCollection services)

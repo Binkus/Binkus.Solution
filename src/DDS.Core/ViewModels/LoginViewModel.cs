@@ -23,7 +23,7 @@ public sealed partial class LoginViewModel : ViewModel
         // JoinPrepareBeforeOnActivationFinished = true;
         // JoinActivationBeforeOnActivationFinished = true;
 
-        _loginService = loginService ?? GetService<ILoginService>();
+        _loginService = loginService ?? this.GetRequiredService<ILoginService>();
 
         IObservable<bool> canLogin = this.WhenAnyValue(
             x => x.LoginName, x => x.Password,

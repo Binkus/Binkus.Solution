@@ -23,7 +23,7 @@ public sealed partial class MainViewModel : ViewModel
     {
         // EnableAsyncInitPrepareActivate = false;
         
-        _avaloniaEssentials = GetService<IAvaloniaEssentials>();
+        _avaloniaEssentials = this.GetRequiredService<IAvaloniaEssentials>();
 
         GoLogin = NavigateReactiveCommand<LoginViewModel>();
         GoTest = NavigateReactiveCommand<TestViewModel>();
@@ -69,7 +69,7 @@ public sealed partial class MainViewModel : ViewModel
     [RelayCommand]
     private Task OpenDialogAsync()
     {
-        var dialog = GetService<IDialogAlertMessageBox>();
+        var dialog = this.GetRequiredService<IDialogAlertMessageBox>();
         return dialog.ShowAsync(x =>
         {
             x.Title = "Super important question about Navigation:";

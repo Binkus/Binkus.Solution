@@ -3,11 +3,13 @@
 using System.Reactive.Concurrency;
 using System.Reactive.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using Binkus.DependencyInjection;
 using Binkus.ReactiveMvvm;
 using CommunityToolkit.Mvvm.Messaging;
 using DDS.Core.Helper;
 using DDS.Core.Services;
 using DynamicData.Binding;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.VisualStudio.Threading;
 
 namespace DDS.Core.ViewModels;
@@ -39,7 +41,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     public virtual IScreen HostScreen
     {
         get => ReturnOrWhenNullAndSingletonThrowNotSupported(_lazyHostScreen)?.Value ?? this.RaiseAndSetIfChanged(
-            ref _lazyHostScreen, new Lazy<IScreen>(GetService<IScreen>()))!.Value;
+            ref _lazyHostScreen, new Lazy<IScreen>(this.GetRequiredService<IScreen>()))!.Value;
         protected init => this.RaiseAndSetIfChanged(ref _lazyHostScreen, new Lazy<IScreen>(value));
     }
 
@@ -50,7 +52,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     /// </summary>
     [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public INavigationViewModel Navigation => HostScreen as INavigationViewModel
-                                              ?? this as INavigationViewModel ?? GetService<INavigationViewModel>();
+                                              ?? this as INavigationViewModel ?? this.GetRequiredService<INavigationViewModel>();
 
     [IgnoreDataMember] public ViewModelActivator Activator { get; } = new();
 
@@ -324,7 +326,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     public ReactiveCommand<Unit, IRoutableViewModel> CreateNavigationReactiveCommandFromObservable<TViewModel>(
         Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>> navi, IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel
         => ReactiveCommand.CreateFromObservable(
-            () => navi.Value.Execute(GetService<TViewModel>()),
+            () => navi.Value.Execute(this.GetRequiredService<TViewModel>()),
             // todo make more lazy, can execute can load values, when returned cmd is e.g. used as bound cmd to view
             canExecute: canExecute ?? this.WhenAnyObservable(x => x.Navigation.Router.CurrentViewModel).Select(x => x is not TViewModel)
         );
@@ -344,7 +346,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     {
         if (viewModelType.IsAssignableTo(typeof(IRoutableViewModel)) is false) throw new InvalidOperationException();
         return ReactiveCommand.CreateFromObservable(
-            () => navi.Value.Execute((IRoutableViewModel)GetService(viewModelType)),
+            () => navi.Value.Execute((IRoutableViewModel)this.GetRequiredService(viewModelType)),
             // todo make more lazy, can execute can load values, when returned cmd is e.g. used as bound cmd to view
             canExecute: canExecute ?? this.WhenAnyObservable(x => x.Navigation.Router.CurrentViewModel)
                 .Select(x => !x?.GetType().IsAssignableTo(viewModelType) ?? true)

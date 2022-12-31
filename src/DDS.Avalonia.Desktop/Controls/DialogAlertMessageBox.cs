@@ -1,6 +1,7 @@
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Platform;
+using Binkus.DependencyInjection;
 using DDS.Avalonia.Services;
 using DDS.Avalonia.Views;
 using DDS.Core;
@@ -23,7 +24,7 @@ public class DialogAlertMessageBox : AbstractAsyncDialogAlertMessageBox, IDialog
         if (Globals.IsDesignMode) return;
         
         var vm = new DialogViewModel(Services, dialogConfig);
-        var topLevelWindow = await vm.GetService<TopLevelService>().CurrentWindow();
+        var topLevelWindow = await vm.GetRequiredService<TopLevelService>().CurrentWindow();
         // var dialogWindow = new DialogWindow(topLevelWindow) { DataContext = vm};
         var dialogWindow = new DialogWindow() { DataContext = vm};
 

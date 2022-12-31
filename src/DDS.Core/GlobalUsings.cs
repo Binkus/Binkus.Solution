@@ -7,8 +7,6 @@ global using System.Reactive.Linq;
 global using System.Runtime.Serialization;
 global using System.Threading.Tasks;
 global using NotNull = System.Diagnostics.CodeAnalysis.NotNullAttribute;
-// global using ViewModelBase = DDS.Core.ViewModels.ViewModelBase;
-// global using DDS.Core.ViewModels;
 global using Binkus.DependencyInjection;
 global using Binkus.Extensions;
 global using CommunityToolkit.Mvvm.ComponentModel;

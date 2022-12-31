@@ -1,18 +1,19 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{94B0B760-A75B-4862-BD14-266078329976}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+		src\global.json.orig = src\global.json.orig
+		src\.gitignore = src\.gitignore
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3DA99C4E-89E3-4049-9C22-0A7EC60D83D8}"
 	ProjectSection(SolutionItems) = preProject
-	    LICENSE.txt = LICENSE.txt
-	    README.md = README.md
-	    .gitignore = .gitignore
-	    #root_gitignore = .gitignore
-	    #src_gitignore = src\.gitignore
-		Directory.Build.props = src\Directory.Build.props		
-		global.json.orig = src\global.json.orig		
-		#global.json = global.json
-		#nuget.config = nuget.config
+					LICENSE.txt = LICENSE.txt
+					README.md = README.md
+					.gitignore = .gitignore
+					.cleansolution.sh = .cleansolution.sh
+		            src\Directory.Build.props = src\Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DDS.Core", "src\DDS.Core\DDS.Core.csproj", "{74C64E24-9494-4410-BC73-6EDD6791BC98}"

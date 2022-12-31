@@ -249,18 +249,21 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         => Task.CompletedTask;
     
     [SuppressMessage("Usage", "VSTHRD102:Implement internal logic asynchronously")]
+    [MethodImpl(MethodImplOptions.NoInlining)]
     // ReSharper disable once CognitiveComplexity
     private void JoinAsyncInitPrepareActivation(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
+        bool join = IsInitInitiated
+                    && (JoinInitBeforeOnActivationFinished
+                        || JoinPrepareBeforeOnActivationFinished
+                        || JoinActivationBeforeOnActivationFinished);
+        
+        if (!join) return;
+        
         // per default generally ignoring OperationCanceledExceptions, cause GUI App would crash unnecessarily
         CancellationToken token = default; // could be a token triggered when App closing
-        
-        bool join = IsInitInitiated
-                    && (JoinInitBeforeOnActivationFinished 
-                    || JoinPrepareBeforeOnActivationFinished 
-                    || JoinActivationBeforeOnActivationFinished);
 
-        JoinableTask? joinTask = !join ? null : JoinUiTaskFactory.RunAsync(async () =>
+        var joinTask = JoinUiTaskFactory.RunAsync(async () =>
         {
             Task? init = null, prepare = null, activation = null;
             
@@ -285,12 +288,10 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
             
             await tasks;
         });
-
-        if (!join) return;
         
         try
         {
-            joinTask?.Join(token);
+            joinTask.Join(token);
 
 
             // JoinUiTaskFactory.RunAsync(async () =>

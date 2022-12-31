@@ -1,4 +1,5 @@
 using System.Windows.Input;
+using Microsoft.VisualStudio.Threading;
 
 namespace DDS.Core.Helper;
 
@@ -50,4 +51,35 @@ public static class ObservableExtensions
             throw e.InnerException ?? e;
         }
     }
+    
+    //
+    
+    public static JoinableTask ExecuteIfExecutableAsync<TParam, TResult>
+        (this ReactiveCommand<TParam, TResult> cmd, TParam? executionParam = default, JoinableTaskFactory? taskFactory = null)
+    {
+        taskFactory ??= Globals.JoinUiTaskFactory;
+        var r = taskFactory.RunAsync(async () =>
+        {
+            await taskFactory.SwitchToMainThreadAsync();
+            try
+            {
+                bool result = false;
+                if (await cmd.CanExecute.FirstAsync().Where(can => can).Do(x => result = x))
+                    await cmd.Execute(executionParam!);
+                return result;
+            }
+            catch (ReactiveUI.UnhandledErrorException e)
+            {
+                Debug.WriteLine(e);
+                throw e.InnerException ?? e;
+            }
+        });
+        return r;
+    }
+
+    // public static IObservable<bool> ExecuteAsyncIfPossible<TParam, TResult>(this ReactiveCommand<TParam, TResult> cmd) =>
+    //      cmd.CanExecute.FirstAsync().Where(can => can).Do(async _ => await cmd.Execute());
+
+     // public static bool GetAsyncCanExecute<TParam, TResult>(this ReactiveCommand<TParam, TResult> cmd) =>
+     //     cmd.CanExecute.FirstAsync().Wait();
 }

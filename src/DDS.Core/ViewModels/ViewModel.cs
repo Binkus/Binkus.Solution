@@ -103,7 +103,10 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         return value;
     }
 
-    private bool _joinInit, _joinPrepare, _joinActivation; 
+    [DataMember] public bool RegisterAllMessagesOnActivation { get; init; } = true;
+    [DataMember] public bool EnableAsyncInitPrepareActivate { get; init; } = true;
+
+    private bool _joinInit, _joinPrepare, _joinActivation;
     [DataMember] public bool JoinInitBeforeOnActivationFinished { get => _joinInit;
         set => _joinInit = IsInitInitiated ? throw new InvalidOperationException() : value; }
     [DataMember] public bool JoinPrepareBeforeOnActivationFinished { get => _joinPrepare; 
@@ -112,7 +115,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         set => _joinInit = _joinPrepare = _joinActivation = IsInitInitiated
             ? throw new InvalidOperationException() : value; }
 
-    [IgnoreDataMember] private JoinableTaskFactory JoinUiTaskFactory { get; init; } = Globals.JoinUiTaskFactory;
+    [IgnoreDataMember] protected JoinableTaskFactory JoinUiTaskFactory { get; init; } = Globals.JoinUiTaskFactory;
         // new(new JoinableTaskContext(Thread.CurrentThread, SynchronizationContext.Current));
     [IgnoreDataMember] private CompositeDisposable PrepDisposables { get; set; } = new();
     [IgnoreDataMember] private CancellationTokenSource ActivationCancellationTokenSource { get; set; } = new();
@@ -213,7 +216,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     
     private async Task OnPrepareBaseAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        if (Init is { } init) await init.IgnoreExceptionAsync<OperationCanceledException>();
+        if (Init is { } init) await init.IgnoreExceptionAsync<Exception>();
         await OnPrepareAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
     }
 
@@ -222,8 +225,8 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     
     private async Task OnActivationBaseAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        if (Init is { } init) await init.IgnoreExceptionAsync<OperationCanceledException>();
-        if (Prepare is { } prepare) await prepare.IgnoreExceptionAsync<OperationCanceledException>();
+        if (Init is { } init) await init.IgnoreExceptionAsync<Exception>();
+        if (Prepare is { } prepare) await prepare.IgnoreExceptionAsync<Exception>();
         await OnActivationAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
         OnActivationFinishing(disposables, cancellationToken);
         TrySetActivated(disposables, cancellationToken);
@@ -234,7 +237,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     private void TrySetActivated(ICancelable cancelable, CancellationToken token = default) => IsActivated = 
         !((token.IsCancellationRequested || cancelable.IsDisposed || PrepDisposables.IsDisposed) && !IsActivated);
     
-    private void SetDeactivated() => IsActivated = false;
+    private void SetDeactivated() => IsActive = IsActivated = false;
 
     private bool _isActivated;
     [IgnoreDataMember] public bool IsActivated { get => _isActivated;

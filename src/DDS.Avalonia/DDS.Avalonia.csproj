@@ -29,6 +29,7 @@
         <PackageReference Include="XamlNameReferenceGenerator" Version="1.5.1" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="all" ExcludeAssets="runtime" />
     </ItemGroup>
     <ItemGroup>
+      <ProjectReference Include="..\Binkus.Extensions.Stopwatch\Binkus.Extensions.Stopwatch.csproj" />
       <ProjectReference Include="..\DDS.Core\DDS.Core.csproj" />
     </ItemGroup>
 </Project>

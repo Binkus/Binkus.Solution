@@ -321,41 +321,4 @@ public static class TimeSpanExtensions
     {
         return Task.Delay(delay.timeSpan, delay.token).ConfigureAwait(continueOnCapturedContext);
     }
-    
-    // Stopwatch
-    
-#if NET7_0_OR_GREATER
-
-    private static readonly double s_tickFrequency = 10_000_000.0 / Stopwatch.Frequency; // e.g. ~== 0.01 (depending on hardware&OS)
-    private static long GetTimestampCompatibleTicks(long ticks) => (long)(ticks / s_tickFrequency); // e.g. ~== ticks * 100L
-
-    public static long AddTimestamp(this int ticks) => Stopwatch.GetTimestamp() - GetTimestampCompatibleTicks(ticks);
-    public static long AddTimestamp(this long ticks) => Stopwatch.GetTimestamp() - GetTimestampCompatibleTicks(ticks);
-    public static long AddTimestamp(this TimeSpan timeSpan) => Stopwatch.GetTimestamp() - GetTimestampCompatibleTicks(timeSpan.Ticks);
-    
-    public static TimeSpan GetElapsedTime(this long startingTimestamp) => Stopwatch.GetElapsedTime(startingTimestamp);
-    public static TimeSpan GetElapsedTime(this long startingTimestamp, long endingTimestamp)
-        => Stopwatch.GetElapsedTime(startingTimestamp, endingTimestamp);
-    
-    public static double GetElapsedMicroseconds(this long startingTimestamp)
-        => Stopwatch.GetElapsedTime(startingTimestamp).TotalNanoseconds / 1_000d;
-    public static double GetElapsedMicroseconds(this long startingTimestamp, long endingTimestamp)
-        => Stopwatch.GetElapsedTime(startingTimestamp, endingTimestamp).TotalNanoseconds / 1_000d;
-    
-    public static double GetElapsedMilliseconds(this long startingTimestamp)
-        => Stopwatch.GetElapsedTime(startingTimestamp).TotalNanoseconds / 1_000_000d;
-    public static double GetElapsedMilliseconds(this long startingTimestamp, long endingTimestamp)
-        => Stopwatch.GetElapsedTime(startingTimestamp, endingTimestamp).TotalNanoseconds / 1_000_000d;
-    
-    public static double GetElapsedSeconds(this long startingTimestamp)
-        => startingTimestamp.GetElapsedMilliseconds() / 1_000d;
-    public static double GetElapsedSeconds(this long startingTimestamp, long endingTimestamp)
-        => startingTimestamp.GetElapsedMilliseconds(endingTimestamp) / 1_000d;
-    
-    public static double GetElapsedMinutes(this long startingTimestamp)
-        => startingTimestamp.GetElapsedSeconds() / 60d;
-    public static double GetElapsedMinutes(this long startingTimestamp, long endingTimestamp)
-        => startingTimestamp.GetElapsedSeconds(endingTimestamp) / 60d;
-
-#endif
 }

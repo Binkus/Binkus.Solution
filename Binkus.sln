@@ -56,6 +56,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Benchmarks", "tests\Benchma
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binkus.Extensions.Stopwatch", "src\Binkus.Extensions.Stopwatch\Binkus.Extensions.Stopwatch.csproj", "{6A313623-4849-4C22-8491-3BE76A7621E6}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binkus.Extensions.Logging", "src\Binkus.Extensions.Logging\Binkus.Extensions.Logging.csproj", "{C5B01428-4E0E-4B3F-BBE8-55B9146682CD}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binkus.Extensions.Logging.Performance", "src\Binkus.Extensions.Logging.Performance\Binkus.Extensions.Logging.Performance.csproj", "{77565B33-9135-44BA-9458-3A058EF534C7}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -124,6 +128,14 @@ Global
 		{6A313623-4849-4C22-8491-3BE76A7621E6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6A313623-4849-4C22-8491-3BE76A7621E6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6A313623-4849-4C22-8491-3BE76A7621E6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C5B01428-4E0E-4B3F-BBE8-55B9146682CD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C5B01428-4E0E-4B3F-BBE8-55B9146682CD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C5B01428-4E0E-4B3F-BBE8-55B9146682CD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C5B01428-4E0E-4B3F-BBE8-55B9146682CD}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77565B33-9135-44BA-9458-3A058EF534C7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77565B33-9135-44BA-9458-3A058EF534C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77565B33-9135-44BA-9458-3A058EF534C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77565B33-9135-44BA-9458-3A058EF534C7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2B4CCA97-7AE9-49A8-AFDB-2D8CB72F224B} = {CB4831B1-80FA-45B7-9485-45D471B8E7F4}
@@ -145,6 +157,8 @@ Global
 		{8E311FE4-AA54-4EAA-9BE8-17AB2DC12AA0} = {CB4831B1-80FA-45B7-9485-45D471B8E7F4}
 		{AF7512E0-9D2F-4685-9E5D-937174981D1A} = {AA47E30C-6C50-443A-88A5-FD9BFDA9C31C}
 		{6A313623-4849-4C22-8491-3BE76A7621E6} = {43D24F56-9266-4BE0-B7E4-257805E30324}
+		{C5B01428-4E0E-4B3F-BBE8-55B9146682CD} = {43D24F56-9266-4BE0-B7E4-257805E30324}
+		{77565B33-9135-44BA-9458-3A058EF534C7} = {43D24F56-9266-4BE0-B7E4-257805E30324}
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 								HideSolutionNode = FALSE

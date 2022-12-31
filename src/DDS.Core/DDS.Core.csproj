@@ -37,6 +37,7 @@
     </ItemGroup>
     
     <ItemGroup>
+      <ProjectReference Include="..\Binkus.Extensions.Logging.Performance\Binkus.Extensions.Logging.Performance.csproj" />
       <ProjectReference Include="..\Binkus.Extensions.Stopwatch\Binkus.Extensions.Stopwatch.csproj" />
 <!--      <ProjectReference Include="..\Binkus.Extensions.TimeSpan\Binkus.Extensions.TimeSpan.csproj" />-->
       <ProjectReference Include="..\Binkus.ReactiveMvvm\Binkus.ReactiveMvvm.csproj" />

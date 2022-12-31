@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net7.0</TargetFramework>
+        <LangVersion>$(DotnetLangVersionShared)</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <WarningsAsErrors>Nullable</WarningsAsErrors>
+        <RootNamespace>Binkus.Extensions</RootNamespace>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Binkus.Extensions.Logging\Binkus.Extensions.Logging.csproj" />
+      <ProjectReference Include="..\Binkus.Extensions.Stopwatch\Binkus.Extensions.Stopwatch.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -134,47 +134,64 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
 
         this.WhenActivated(disposables =>
         {
+            Disposable
+                .Create(OnDeactivationBase)
+                .DisposeWith(disposables);
+            
             Debug.WriteLine(UrlPathSegment + ":");
             
             bool isDisposed = PrepDisposables.IsDisposed;
             if (isDisposed)
-                ActivationCancellationTokenSource = new CancellationTokenSource();
-            
-            var token = ActivationCancellationTokenSource.Token;
-            
-            if (isDisposed)
             {
+                ActivationCancellationTokenSource = new CancellationTokenSource();
                 PrepDisposables = new CompositeDisposable();
-                Prepare = JoinUiTaskFactory.RunAsync(() => OnPrepareAsync(PrepDisposables, token));
-                
-                if (!JoinPrepareBeforeOnActivationFinished)
-                {
-                    // This ensures Exceptions get thrown
-                    RxApp.TaskpoolScheduler.Schedule(Prepare, (joinTask,_) => joinTask?.Join());
-                }
             }
             PrepDisposables.DisposeWith(disposables);
 
-            // todo FirstActivation with Initialization CancellationToken (not canceled through Deactivation)
-            // FirstActivation ??=
-            //     JoinUiTaskFactory.RunAsync(() => OnFirstActivationBaseAsync(disposables, CancellationToken.None));
-            
-            Activation = JoinUiTaskFactory.RunAsync(() => OnActivationBaseAsync(disposables, token));
-            
-            if (!JoinActivationBeforeOnActivationFinished)
-            {
-                // This ensures Exceptions get thrown
-                RxApp.TaskpoolScheduler.Schedule(Activation, (joinTask,_) => joinTask?.Join());
-            }
+            var token = ActivationCancellationTokenSource.Token;
 
-            JoinAsyncInitPrepareActivation(disposables, token);
+            IsActive = RegisterAllMessagesOnActivation;
             OnActivation(disposables, token);
-            Disposable
-                .Create(OnDeactivationBase)
-                .DisposeWith(disposables);
+
+            if (EnableAsyncInitPrepareActivate)
+            {
+                HandleAsyncActivation(disposables, isDisposed, token);
+                JoinAsyncInitPrepareActivation(disposables, token);
+                return;
+            } // else
+            // (when async activation enabled, TrySetActivated happens on async completion after OnActivationFinishing)
+            OnActivationFinishing(disposables, token);
+            TrySetActivated(disposables, token);
         });
         
         Debug.WriteLine("c:"+ViewModelName);
+    }
+
+    private void HandleAsyncActivation(CompositeDisposable disposables, bool isDisposed, CancellationToken token)
+    {
+        if (!IsInitInitiated) return;
+        
+        if (isDisposed)
+        {
+            Prepare = JoinUiTaskFactory.RunAsync(() => OnPrepareAsync(PrepDisposables, token));
+                
+            if (!JoinPrepareBeforeOnActivationFinished)
+            {
+                // This ensures Exceptions get thrown
+                RxApp.TaskpoolScheduler.Schedule(Prepare, (joinTask,_) => joinTask?.Join());
+            }
+        }
+        // todo FirstActivation with Initialization CancellationToken (not canceled through Deactivation)
+        // FirstActivation ??=
+        //     JoinUiTaskFactory.RunAsync(() => OnFirstActivationBaseAsync(disposables, CancellationToken.None));
+            
+        Activation = JoinUiTaskFactory.RunAsync(() => OnActivationBaseAsync(disposables, token));
+            
+        if (!JoinActivationBeforeOnActivationFinished)
+        {
+            // This ensures Exceptions get thrown
+            RxApp.TaskpoolScheduler.Schedule(Activation, (joinTask,_) => joinTask?.Join());
+        }
     }
 
     [IgnoreDataMember] protected JoinableTask? Init { get; private set; }
@@ -229,9 +246,12 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     {
         if (Init is { } init) await init.IgnoreExceptionAsync<Exception>();
         if (Prepare is { } prepare) await prepare.IgnoreExceptionAsync<Exception>();
-        await OnActivationAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
+        var e = await OnActivationAsync(disposables, cancellationToken)
+            .IgnoreExceptionAsync<OperationCanceledException>()
+            .TryAwaitAsync<Exception>();
         OnActivationFinishing(disposables, cancellationToken);
         TrySetActivated(disposables, cancellationToken);
+        e.ThrowWhenNotNull();
     }
     
     /// if !(token.IsCancellationRequested || cancelable.IsDisposed || PrepDisposables.IsDisposed) IsActivated = true;

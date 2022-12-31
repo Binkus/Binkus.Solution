@@ -432,10 +432,10 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     // /// <typeparam name="TService">The type of service object to get.</typeparam>
     // /// <returns>A service object of type <typeparamref name="TService"/> or null if there is no such service.</returns>
     // public TService? GetService<TService>() => Services.GetService<TService>();
-    
+    //
     // /// <inheritdoc cref="IProvideServices.GetService(Type)" />
-    // public void GetService(Type serviceType) => Services.GetRequiredService(serviceType);
-    
+    // public object? GetService(Type serviceType) => Services.GetService(serviceType);
+    //
     // /// <summary>
     // /// Get service of type <typeparamref name="TService"/> from the <see cref="IServiceProvider"/>.
     // /// </summary>
@@ -470,7 +470,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>> navi, IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel
         => ReactiveCommand.CreateFromObservable(
             () => navi.Value.Execute(this.GetRequiredService<TViewModel>()),
-            // todo make more lazy, can execute can load values, when returned cmd is e.g. used as bound cmd to view
+            // todo evaluate making even more lazy, can execute can load values, when returned cmd is e.g. used as bound cmd to view
             canExecute: canExecute ?? this.WhenAnyObservable(x => x.Navigation.Router.CurrentViewModel).Select(x => x is not TViewModel)
         );
     
@@ -490,7 +490,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         if (viewModelType.IsAssignableTo(typeof(IRoutableViewModel)) is false) throw new InvalidOperationException();
         return ReactiveCommand.CreateFromObservable(
             () => navi.Value.Execute((IRoutableViewModel)this.GetRequiredService(viewModelType)),
-            // todo make more lazy, can execute can load values, when returned cmd is e.g. used as bound cmd to view
+            // todo evaluate making even more lazy, can execute can load values, when returned cmd is e.g. used as bound cmd to view
             canExecute: canExecute ?? this.WhenAnyObservable(x => x.Navigation.Router.CurrentViewModel)
                 .Select(x => !x?.GetType().IsAssignableTo(viewModelType) ?? true)
         );

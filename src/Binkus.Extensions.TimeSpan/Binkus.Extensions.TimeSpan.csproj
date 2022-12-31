@@ -10,7 +10,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Binkus.IsExternalInit\Binkus.IsExternalInit.csproj" />
+        <ProjectReference Condition="$(TargetFramework) == 'netstandard2.0' Or $(TargetFramework) == 'netstandard2.1'"
+                          Include="..\Binkus.IsExternalInit\Binkus.IsExternalInit.csproj" />
     </ItemGroup>
 
 </Project>

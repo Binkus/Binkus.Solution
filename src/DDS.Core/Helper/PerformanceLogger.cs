@@ -1,10 +1,11 @@
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 
 // ReSharper disable HeuristicUnreachableCode
 // ReSharper disable MemberCanBePrivate.Global
 
-namespace DDS.Core.Helper;
+namespace Binkus.Extensions;
 
 public static class PerformanceLogger
 {
@@ -141,11 +142,9 @@ public static class PerformanceLogger
     public static TimeSpan GetNotFrameworkInitPerformance()
     {
         var types = NonFrameworkPerformanceTypes;
-        TimeSpan notAvaloniaTime = TimeSpan.Zero;
-        PerformanceLogs.Where(x => types.Contains(x.Key))
+        return PerformanceLogs.Where(x => types.Contains(x.Key))
             .Select(x => x.Value)
-            .ForEach(x => notAvaloniaTime = notAvaloniaTime.Add(x));
-        return notAvaloniaTime;
+            .Aggregate(TimeSpan.Zero, (current, x) => current.Add(x));
     }
     
     //

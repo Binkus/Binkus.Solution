@@ -20,11 +20,10 @@ public static class ProvideServicesExtensions
     // not required (for simpler access of those basic functions with just one using Binkus.DependencyInjection):
     
     /// <summary><inheritdoc cref="Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetService{T}"/></summary>
+    /// <typeparam name="TService">The type of service object to get.</typeparam>
     /// <param name="serviceProviderProvider">The <see cref="IProvideServices"/> to retrieve the
     /// <see cref="IServiceProvider"/> object from to retrieve the service object from.</param>
     /// <returns><inheritdoc cref="Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetService{T}"/></returns>
-    /// <exception cref="System.InvalidOperationException">
-    /// <inheritdoc cref="Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetService{T}"/></exception>
     public static TService? GetService<TService>(this IProvideServices serviceProviderProvider)
         => serviceProviderProvider.Services.GetService<TService>();
     
@@ -41,6 +40,7 @@ public static class ProvideServicesExtensions
         => serviceProviderProvider.Services.GetRequiredService(serviceType);
 
     /// <summary><inheritdoc cref="Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService{T}"/></summary>
+    /// <typeparam name="TService">The type of service object to get.</typeparam>
     /// <param name="serviceProviderProvider">The <see cref="IProvideServices"/> to retrieve the
     /// <see cref="IServiceProvider"/> object from to retrieve the service object from.</param>
     /// <returns><inheritdoc cref="Microsoft.Extensions.DependencyInjection.ServiceProviderServiceExtensions.GetRequiredService{T}"/></returns>

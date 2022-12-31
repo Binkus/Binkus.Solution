@@ -283,16 +283,15 @@ public abstract class ReactiveObservableValidator : ObservableValidator,
     
     // Validation
 
-    protected bool IsValidatingPropertiesOnPropertyChanged { get; init; } = true;
-    // protected bool IsValidatingPropertiesOnPropertyChangedReactiveAttribute { get; init; }
+    [UsedImplicitly] protected bool IsValidatingPropertiesOnPropertyChanged { get; init; } = true;
+    // [UsedImplicitly] protected bool IsValidatingPropertiesOnPropertyChangedReactiveAttribute { get; init; }
+    
+    [UsedImplicitly]
     protected void ValidateProperty([CallerMemberName]string propertyName = "", bool forceValidation = true)
     {
         if (!IsValidatingPropertiesOnPropertyChanged && !forceValidation) return;
 
         // this.ValidateAllProperties();
-        
-        // RaiseErrorsChanged(args.PropertyName ?? "");
-        // ((INotifyDataErrorInfo)this).GetErrors(args.PropertyName ?? "");
 
         try
         {
@@ -301,8 +300,6 @@ public abstract class ReactiveObservableValidator : ObservableValidator,
                     !Attribute.IsDefined(propertyInfo, typeof(NotifyDataErrorInfoProperty)) &&
                     !Attribute.IsDefined(GetType(), typeof(NotifyDataErrorInfoProperty)))) return;
             var value = propertyInfo.GetValue(this);
-            // var propertyType = propertyInfo.PropertyType;
-            // value ??= propertyType is { IsValueType: true } ? Activator.CreateInstance(propertyType) : null;
             ValidateProperty(value, propertyName);
         }
         catch (Exception e)
@@ -314,9 +311,5 @@ public abstract class ReactiveObservableValidator : ObservableValidator,
     [AttributeUsage(AttributeTargets.Property | AttributeTargets.Class, AllowMultiple = false, Inherited = false)]
     protected sealed class NotifyDataErrorInfoProperty : Attribute
     {
-        // public NotifyDataErrorInfoPropAttribute([CallerMemberName]string name = "")
-        // {
-        //     
-        // }
     }
 }

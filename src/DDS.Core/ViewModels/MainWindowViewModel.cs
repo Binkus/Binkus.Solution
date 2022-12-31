@@ -8,6 +8,7 @@ public sealed partial class MainWindowViewModel : ViewModel
     [ActivatorUtilitiesConstructor, UsedImplicitly]
     public MainWindowViewModel(IServiceProvider services, IViewFor<MainViewModel> mainView) : base(services)
     {
+        EnableAsyncInitPrepareActivate = false;
         MainView = mainView;
     }
 

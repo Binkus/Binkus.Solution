@@ -62,6 +62,8 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
 
     protected NavigationViewModelBase(IServiceProvider services) : base(services)
     {
+        EnableAsyncInitPrepareActivate = false;
+        
         this.WhenAnyValue(x => x.Router.NavigationStack.Count)
             .Subscribe(count =>
             {

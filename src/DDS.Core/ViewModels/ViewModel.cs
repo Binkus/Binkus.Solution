@@ -189,6 +189,8 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     
     void IInitializable.Initialize(CancellationToken cancellationToken)
     {
+        if (!EnableAsyncInitPrepareActivate || IsInitInitiated) return;
+        
         IsInitInitiated = true;
         
         Init = JoinUiTaskFactory.RunAsync(() => InitializeAsync(cancellationToken));
@@ -297,6 +299,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
 
     private void OnDeactivationBase()
     {
+        // todo join init elegantly - especially in regards to app closing, cancel init when base window closes
         ActivationCancellationTokenSource.Cancel();
         ActivationCancellationTokenSource.Dispose();
         SetDeactivated();
@@ -306,11 +309,43 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     
     //
     
-    [IgnoreDataMember] public IServiceProvider Services { get; protected init; }
-
-    public TService GetService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
+    /// For IMessenger, called automatically.
+    /// <inheritdoc />
+    protected sealed override void OnActivated() => base.OnActivated();
     
-    public object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
+    /// For IMessenger, called automatically.
+    /// <inheritdoc />
+    protected sealed override void OnDeactivated() => base.OnDeactivated();
+
+    //
+    
+    [IgnoreDataMember] public IServiceProvider Services { get; init; }
+
+    // /// <summary>
+    // /// Get service of type <typeparamref name="TService"/> from the <see cref="IServiceProvider"/> <see cref="Services"/>.
+    // /// </summary>
+    // /// <typeparam name="TService">The type of service object to get.</typeparam>
+    // /// <returns>A service object of type <typeparamref name="TService"/> or null if there is no such service.</returns>
+    // public TService? GetService<TService>() => Services.GetService<TService>();
+    
+    // /// <inheritdoc cref="IProvideServices.GetService(Type)" />
+    // public void GetService(Type serviceType) => Services.GetRequiredService(serviceType);
+    
+    // /// <summary>
+    // /// Get service of type <typeparamref name="TService"/> from the <see cref="IServiceProvider"/>.
+    // /// </summary>
+    // /// <typeparam name="TService">The type of service object to get.</typeparam>
+    // /// <returns>A service object of type <typeparamref name="TService"/>.</returns>
+    // /// <exception cref="System.InvalidOperationException">There is no service of type <typeparamref name="TService"/>.</exception>
+    // public TService GetRequiredService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
+    //
+    // /// <summary>
+    // /// Get service of type <paramref name="serviceType"/> from the <see cref="IServiceProvider"/>.
+    // /// </summary>
+    // /// <param name="serviceType">An object that specifies the type of service object to get.</param>
+    // /// <returns>A service object of type <paramref name="serviceType"/>.</returns>
+    // /// <exception cref="System.InvalidOperationException">There is no service of type <paramref name="serviceType"/>.</exception>
+    // public object GetRequiredService(Type serviceType) => Services.GetRequiredService(serviceType);
     
     //
     

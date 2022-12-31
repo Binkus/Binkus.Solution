@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
-using CommunityToolkit.Common;
 using DDS.Core.Helper;
 using DDS.Core.Services;
 using Microsoft.VisualStudio.Threading;
@@ -12,6 +11,12 @@ namespace DDS.Core.ViewModels;
 // [NotifyDataErrorInfoProperty]
 public sealed partial class LoginViewModel : ViewModel
 {
+    /// <summary>
+    /// Regular expression for matching an email address.
+    /// </summary>
+    /// <remarks>General Email Regex (RFC 5322 Official Standard) from https://emailregex.com.</remarks>
+    private const string EmailRegex = "(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])*\")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\\x01-\\x08\\x0b\\x0c\\x0e-\\x1f\\x21-\\x5a\\x53-\\x7f]|\\\\[\\x01-\\x09\\x0b\\x0c\\x0e-\\x7f])+)\\])";
+    
     private readonly ILoginService _loginService;
     public LoginViewModel() : this(Globals.Services) { }
 
@@ -49,7 +54,7 @@ public sealed partial class LoginViewModel : ViewModel
             "You must specify a valid value.");
         
         this.ValidationRule(x => x.LoginName, 
-            text => !string.IsNullOrWhiteSpace(text) && (text.Contains('@') ? text.IsEmail() : Regex.IsMatch(text, "^[A-Za-z0-9_-]+$")),
+            text => !string.IsNullOrWhiteSpace(text) && (text.Contains('@') ? Regex.IsMatch(text, EmailRegex) : Regex.IsMatch(text, "^[A-Za-z0-9_-]+$")),
             "You must specify a valid value.");
     }
 

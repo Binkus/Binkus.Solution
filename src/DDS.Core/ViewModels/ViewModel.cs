@@ -5,6 +5,7 @@ using System.Reactive.Threading.Tasks;
 using System.Runtime.CompilerServices;
 using Binkus.DependencyInjection;
 using Binkus.ReactiveMvvm;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using CommunityToolkit.Mvvm.Messaging;
 using DDS.Core.Helper;
 using DDS.Core.Services;
@@ -20,6 +21,13 @@ public abstract class ViewModel : ViewModel<IViewModel>
     protected ViewModel(IServiceProvider services, IScreen hostScreen) : base(services, hostScreen) { }
     protected ViewModel(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : base(services, lazyHostScreen) { }
     protected ViewModel(IServiceProvider services) : base(services) { }
+    protected ViewModel() : base(GetServicesOfCurrentScope) { }
+    protected ViewModel(IScreen hostScreen) : base(TryGetServicesFromOrFromCurrentScope(hostScreen), hostScreen) { }
+
+    private static IServiceProvider TryGetServicesFromOrFromCurrentScope(object obj) =>
+        (obj as IProvideServices)?.Services ?? obj as IServiceProvider ?? GetServicesOfCurrentScope; 
+    private static IServiceProvider GetServicesOfCurrentScope =>
+        Ioc.Default.GetRequiredService<ServiceScopeManager>().GetCurrentScope().ServiceProvider;
 }
 
 

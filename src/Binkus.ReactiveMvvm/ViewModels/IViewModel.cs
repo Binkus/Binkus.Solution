@@ -7,9 +7,15 @@ public interface IViewModel
         IInitializable
 {
     INavigationViewModel Navigation { get; }
-    string ViewModelName { get; }
-    string RawViewName { get; }
-    string CustomViewName { get; set; }
+    string ViewModelName => GetType().Name;
+    string CustomViewName => RawViewName;
+    string RawViewName => TryGetRawViewName(ViewModelName);
+    string IRoutableViewModel.UrlPathSegment => RawViewName.ToLowerInvariant();
+    
+    // removes "ViewModel" or e.g. "ViewModel'1" at the end if possible, "MainViewModel" => "Main"
+    public static string TryGetRawViewName(string viewModelName) =>
+        viewModelName.EndsWith("ViewModel") ? viewModelName[..^9]
+        : viewModelName[^11..^2] == "ViewModel" ? viewModelName[..^11] : viewModelName;
 }
 
 public interface IViewModelBase<T> : IViewModel

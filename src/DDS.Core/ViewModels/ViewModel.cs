@@ -29,8 +29,6 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     IViewModelBase,  IViewModelBase<TIViewModel>
     where TIViewModel : class, IViewModel
 {
-    [IgnoreDataMember] public virtual string UrlPathSegment => RawViewName.ToLowerInvariant();
-
     private Lazy<IScreen>? _lazyHostScreen;
     
     /// <summary>
@@ -57,13 +55,13 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     [IgnoreDataMember] public ViewModelActivator Activator { get; } = new();
 
     [IgnoreDataMember] public string ViewModelName => GetType().Name;
-    [IgnoreDataMember] public virtual string CustomViewName { get => RawViewName; set { } }
-    [IgnoreDataMember] public virtual string RawViewName => TryGetRawViewName(ViewModelName);
-
-    // removes "ViewModel" or e.g. "ViewModel'1" at the end if possible, "MainViewModel" => "Main"
-    public static string TryGetRawViewName(string viewModelName) =>
-        viewModelName.EndsWith("ViewModel") ? viewModelName[..^9]
-        : viewModelName[^11..^2] == "ViewModel" ? viewModelName[..^11] : viewModelName;
+    [IgnoreDataMember] public virtual string CustomViewName => RawViewName;
+    [IgnoreDataMember] public virtual string RawViewName => IViewModel.TryGetRawViewName(ViewModelName);
+    [IgnoreDataMember] public virtual string UrlPathSegment => RawViewName.ToLowerInvariant();
+    [IgnoreDataMember] string IViewModel.ViewModelName => ViewModelName;
+    [IgnoreDataMember] string IViewModel.CustomViewName => CustomViewName;
+    [IgnoreDataMember] string IViewModel.RawViewName => RawViewName;
+    [IgnoreDataMember] string IRoutableViewModel.UrlPathSegment => UrlPathSegment;
 
     private volatile bool _hasKnownLifetime = true;
     private ServiceLifetime? _lifetime;
@@ -415,32 +413,6 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     //
     
     [IgnoreDataMember] public IServiceProvider Services { get; init; }
-
-    // /// <summary>
-    // /// Get service of type <typeparamref name="TService"/> from the <see cref="IServiceProvider"/> <see cref="Services"/>.
-    // /// </summary>
-    // /// <typeparam name="TService">The type of service object to get.</typeparam>
-    // /// <returns>A service object of type <typeparamref name="TService"/> or null if there is no such service.</returns>
-    // public TService? GetService<TService>() => Services.GetService<TService>();
-    //
-    // /// <inheritdoc cref="IProvideServices.GetService(Type)" />
-    // public object? GetService(Type serviceType) => Services.GetService(serviceType);
-    //
-    // /// <summary>
-    // /// Get service of type <typeparamref name="TService"/> from the <see cref="IServiceProvider"/>.
-    // /// </summary>
-    // /// <typeparam name="TService">The type of service object to get.</typeparam>
-    // /// <returns>A service object of type <typeparamref name="TService"/>.</returns>
-    // /// <exception cref="System.InvalidOperationException">There is no service of type <typeparamref name="TService"/>.</exception>
-    // public TService GetRequiredService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
-    //
-    // /// <summary>
-    // /// Get service of type <paramref name="serviceType"/> from the <see cref="IServiceProvider"/>.
-    // /// </summary>
-    // /// <param name="serviceType">An object that specifies the type of service object to get.</param>
-    // /// <returns>A service object of type <paramref name="serviceType"/>.</returns>
-    // /// <exception cref="System.InvalidOperationException">There is no service of type <paramref name="serviceType"/>.</exception>
-    // public object GetRequiredService(Type serviceType) => Services.GetRequiredService(serviceType);
     
     //
 

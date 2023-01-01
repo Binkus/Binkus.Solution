@@ -56,8 +56,6 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
         Dispose(true);
     }
 
-    protected CompositeDisposable? ViewDisposables { get; private set; } = new();
-
     private IServiceProvider? _services;
     
     [DebuggerBrowsable(DebuggerBrowsableState.Never)]
@@ -68,10 +66,6 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
                                                                     + $"of {GetType().Name} is null.");
         protected init => _services = value;
     }
-    
-    public TService GetService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
-    
-    public object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
     
     public TopLevel GetTopLevel() => this.VisualRoot as TopLevel ?? throw new NullReferenceException("Invalid Owner");
     
@@ -85,8 +79,6 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
     {
         if (disposing)
         {
-            ViewDisposables?.Dispose();
-            ViewDisposables = null;
             base.ViewModel = null;
             base.DataContext = null;
         }

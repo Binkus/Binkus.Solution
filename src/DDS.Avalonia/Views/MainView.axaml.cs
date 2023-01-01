@@ -28,8 +28,9 @@ public sealed partial class MainView : BaseUserControl<MainViewModel>
 
     protected override void HandleActivation()
     {
-        GetService<TopLevelService>().SetCurrentTopLevel = GetTopLevel();
-        GetService<TopLevelService>().SetCurrentWindow = VisualRoot as Window;
+        var topLevelService = this.GetRequiredService<TopLevelService>();
+        topLevelService.SetCurrentTopLevel = GetTopLevel();
+        topLevelService.SetCurrentWindow = VisualRoot as Window;
         LoadSidebarAndHamburgerMenu();
     }
 

@@ -60,8 +60,6 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
         (DataContext as ViewModel)?.OnViewDisposal();
         Dispose(true);
     }
-    
-    protected CompositeDisposable? ViewDisposables { get; private set; } = new();
 
     private IServiceProvider? _services;
     
@@ -74,11 +72,6 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
         protected init => _services = value;
     }
     
-    public TService GetService<TService>() where TService : notnull => Services.GetRequiredService<TService>();
-    
-    public object GetService(Type serviceType) => Services.GetRequiredService(serviceType);
-    
-    // public Window GetWindow() => this.VisualRoot as Window ?? throw new NullReferenceException("Invalid Owner");
     public TopLevel GetTopLevel() => this.VisualRoot as TopLevel ?? throw new NullReferenceException("Invalid Owner");
     public IInputRoot GetInputRoot() => this.VisualRoot as IInputRoot 
                                                 ?? throw new NullReferenceException("Invalid Owner");
@@ -91,8 +84,6 @@ public abstract class BaseUserControl<TViewModel> : ReactiveUserControl<TViewMod
         Debug.WriteLine("Dv:"+ this.GetType().UnderlyingSystemType.Name+",disposing="+disposing);
         if (disposing)
         {
-            ViewDisposables?.Dispose();
-            ViewDisposables = null;
             base.ViewModel = null;
             base.DataContext = null;
         }

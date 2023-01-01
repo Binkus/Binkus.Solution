@@ -12,5 +12,4 @@ public interface ICoreViewFor<TViewModel> : ICoreView, IViewFor<TViewModel>
 public interface ICoreView : IViewFor, IProvideServices
 {
     bool DisposeWhenActivatedSubscription { get; set; }
-    Guid Id { get; }
 }

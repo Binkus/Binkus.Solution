@@ -15,8 +15,6 @@ public abstract class BaseWindow<TViewModel> : ReactiveWindow<TViewModel>, IReac
     public new TViewModel DataContext { get => (TViewModel)base.DataContext!; init => base.DataContext = value; }
     public new TViewModel ViewModel { get => base.ViewModel!; /*protected init => base.ViewModel = value;*/ }
     
-    public Guid Id { get; } = Guid.NewGuid();
-    
     public bool DisposeWhenActivatedSubscription { get; set; }
 
     public bool DisposeOnDeactivation { get; set; } = true;

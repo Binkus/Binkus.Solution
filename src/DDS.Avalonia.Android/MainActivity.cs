@@ -30,7 +30,7 @@ namespace DDS.Avalonia.Android
         public MainActivity()
         {
             CurrentMainActivity = this;
-            _navigation = new Lazy<INavigationViewModel>(() => Ioc.Default.GetRequiredService<ServiceScopeManager>().GetMainScope().GetRequiredService<INavigationViewModel>());
+            _navigation = new Lazy<INavigationViewModel>(() => Ioc.Default.GetRequiredService<IServiceScopeManager>().GetMainScope().GetRequiredService<INavigationViewModel>());
         }
 
         private int _backCounter;
@@ -67,7 +67,7 @@ namespace DDS.Avalonia.Android
                 c.Title = "Alert";
                 c.Message = "Close App?";
                 c.Button2Text = "Cancel";
-                c.Button1Action = () => Ioc.Default.GetRequiredService<ServiceScopeManager>().GetMainScope().GetRequiredService<ICloseAppService>().CloseApp();
+                c.Button1Action = () => Ioc.Default.GetRequiredService<IServiceScopeManager>().GetMainScope().GetRequiredService<ICloseAppService>().CloseApp();
             });
             
         }

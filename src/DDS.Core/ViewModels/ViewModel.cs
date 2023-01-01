@@ -27,7 +27,7 @@ public abstract class ViewModel : ViewModel<IViewModel>
     private static IServiceProvider TryGetServicesFromOrFromCurrentScope(object obj) =>
         (obj as IProvideServices)?.Services ?? obj as IServiceProvider ?? GetServicesOfCurrentScope; 
     private static IServiceProvider GetServicesOfCurrentScope =>
-        Ioc.Default.GetRequiredService<ServiceScopeManager>().GetCurrentScope().ServiceProvider;
+        Ioc.Default.GetRequiredService<IServiceScopeManager>().GetCurrentScope().ServiceProvider;
 }
 
 

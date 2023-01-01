@@ -4,6 +4,7 @@ using Avalonia.Data.Core;
 using Avalonia.Data.Core.Plugins;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using DDS.Avalonia.Helper;
 using DDS.Core;
 using DDS.Core.Helper;
@@ -36,11 +37,11 @@ public sealed partial class App : Application, IAppCore
         // Remove the DataAnnotations validator
         ExpressionObserver.DataValidators.RemoveAll(x => x is DataAnnotationsValidationPlugin);
         
-        var locator = Globals.Services.GetRequiredService<Controls.ViewLocator>();
-        DataContext = Globals.Services.GetRequiredService<ApplicationViewModel>();
+        var locator = Ioc.Default.GetRequiredService<Controls.ViewLocator>();
+        DataContext = Ioc.Default.GetRequiredService<ApplicationViewModel>();
         DataTemplates.Add(locator);
         
-        var scopeManager = Globals.Services.GetRequiredService<ServiceScopeManager>();
+        var scopeManager = Ioc.Default.GetRequiredService<IServiceScopeManager>();
         var scope = scopeManager.CreateScope();
         var services = scope.ServiceProvider;
         

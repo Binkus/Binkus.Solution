@@ -1,4 +1,5 @@
 using Avalonia.Threading;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using DDS.Core;
 using DDS.Core.Helper;
 using DDS.Core.Services;
@@ -37,7 +38,7 @@ public static class WindowSpawnHelper
 
     private static void SpawnWindow()
     {
-        var window2 = Globals.GetService<ServiceScopeManager>().CreateScope()
+        var window2 = Ioc.Default.GetRequiredService<IServiceScopeManager>().CreateScope()
             .GetRequiredService<MainWindow>();
         window2.Show();
                 

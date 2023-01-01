@@ -14,21 +14,10 @@ public static class ServiceScopeManagerExt
 {
     public static IServiceCollection AddServiceScopeManager(this IServiceCollection services)
     {
-        services
+        return services
             .AddScoped<ServiceScopeId>()
-            .AddSingleton<ServiceScopeManager>();
-
-        // MS EXT DI IServiceScopeFactory not able to decorate ServiceProviderEngineScope, not even with Scrutor,
-        // cause the ServiceProviderEngineScope on ctor adds a IServiceScopeFactory that seems to be not overridable
-        // and it would not be in IServiceCollection here, which would be necessary for Scrutor (cause Scrutor modifies
-        // the implementation factory), within normal implementation factory MS EXT DI does not allow requesting
-        // the same service that is about to register, so no decorating possible with that (would lead to StackOverflow).
-        // services.Decorate<IServiceScopeFactory, ServiceScopeManager>();
-        // services.AddSingleton<IServiceScopeFactory>(...);
-        // services.AddScoped<IServiceScopeFactory, ServiceScopeManager>();
-        // services.AddScoped<IServiceScopeFactory, ServiceScopeManager>(p => p.GetRequiredService<ServiceScopeManager>());
-
-        return services;
+            .AddScoped<IScopeDisposer, CancellationDisposableWrapper>()
+            .AddSingleton<IServiceScopeManager,ServiceScopeManager>();
     }
 
     public static ServiceScopeId GetServiceScopeId<TServiceScope>(this TServiceScope scope)
@@ -40,23 +29,43 @@ public static class ServiceScopeManagerExt
     
     public static AsyncServiceScope AddToScopeManager<TServiceScope>(this TServiceScope scope)
         where TServiceScope : IServiceScope
-        => scope.ServiceProvider.GetRequiredService<ServiceScopeManager>().AddScope(scope);
+        => scope.ServiceProvider.GetRequiredService<IServiceScopeManager>().AddScope(scope);
     
     public static AsyncServiceScope CreateScopeForScopeManager<TServiceScope>(this TServiceScope scope)
         where TServiceScope : IServiceScope
-        => scope.ServiceProvider.GetRequiredService<ServiceScopeManager>().CreateScope();
+        => scope.ServiceProvider.GetRequiredService<IServiceScopeManager>().CreateScope();
     public static AsyncServiceScope CreateScopeForScopeManager(this IServiceProvider provider) 
-        => provider.GetRequiredService<ServiceScopeManager>().CreateScope();
+        => provider.GetRequiredService<IServiceScopeManager>().CreateScope();
     
     public static AsyncServiceScope SetAsCurrentScope(this IServiceProvider provider)
-        => provider.GetRequiredService<ServiceScopeManager>().SetCurrentScope(provider);
+        => provider.GetRequiredService<IServiceScopeManager>().SetCurrentScope(provider);
     
     public static AsyncServiceScope SetAsCurrentScope<TServiceScope>(this TServiceScope scope)
         where TServiceScope : IServiceScope
-        => scope.ServiceProvider.GetRequiredService<ServiceScopeManager>().SetCurrentScope(scope.ServiceProvider);
+        => scope.ServiceProvider.GetRequiredService<IServiceScopeManager>().SetCurrentScope(scope.ServiceProvider);
 }
 
-public class ServiceScopeManager : IServiceScopeFactory
+public interface IServiceScopeManager : IServiceScopeFactory
+{
+    IServiceProvider RootServices { get; }
+    IServiceScopeFactory ScopeFactory { get; }
+    IReadOnlyDictionary<ServiceScopeId, AsyncServiceScope> Scopes { get; }
+    ServiceScopeId MainScopeId { get; }
+    ServiceScopeId CurrentScopeId { get; }
+    IServiceScope IServiceScopeFactory.CreateScope() => CreateScope();
+    new AsyncServiceScope CreateScope();
+    AsyncServiceScope? RemoveScope(ServiceScopeId serviceScopeId, bool dispose = true);
+    AsyncServiceScope AddScope<TScope>(TScope serviceScope) where TScope : IServiceScope;
+    AsyncServiceScope ReplaceMainScope(bool disposeOldMainScope = false, AsyncServiceScope? newScope = null);
+    AsyncServiceScope SetCurrentScope(IServiceProvider scopedServiceProvider);
+    AsyncServiceScope SetCurrentScope(ServiceScopeId serviceScopeId);
+    AsyncServiceScope GetScope(IServiceProvider provider);
+    AsyncServiceScope GetScope(ServiceScopeId id);
+    AsyncServiceScope GetMainScope();
+    AsyncServiceScope GetCurrentScope();
+}
+
+file sealed class ServiceScopeManager : IServiceScopeManager
 {
     public IServiceProvider RootServices { get; }
     public IServiceScopeFactory ScopeFactory { get; }
@@ -73,7 +82,6 @@ public class ServiceScopeManager : IServiceScopeFactory
     private readonly ConcurrentDictionary<ServiceScopeId, AsyncServiceScope> _scopes;
     public IReadOnlyDictionary<ServiceScopeId,AsyncServiceScope> Scopes { get; }
 
-    IServiceScope IServiceScopeFactory.CreateScope() => CreateScope();
     public AsyncServiceScope CreateScope()
     {
         // var scope = new AsyncScopeWrapper(RootServices.CreateAsyncScope());
@@ -84,8 +92,21 @@ public class ServiceScopeManager : IServiceScopeFactory
             // MainScopeId = CurrentScopeId = scope.Id;
             MainScopeId = CurrentScopeId = id;
         }
-        _scopes.TryAdd(id, scope);
+        TryAdd(id, scope);
         return scope;
+    }
+
+    private void TryAdd(ServiceScopeId id, AsyncServiceScope scope)
+    {
+        scope.ServiceProvider.GetRequiredService<IScopeDisposer>().CancellationDisposable.Token
+            .Register(() => RemoveScope(id, false), true);
+        _scopes.TryAdd(id, scope);
+    }
+
+    public AsyncServiceScope? RemoveScope(ServiceScopeId serviceScopeId, bool dispose = true)
+    {
+        if (dispose) GetScope(serviceScopeId).Dispose();
+        return _scopes.TryRemove(serviceScopeId, out var removedItem) ? removedItem : null;
     }
     
     public AsyncServiceScope AddScope<TScope>(TScope serviceScope) where TScope : IServiceScope
@@ -97,7 +118,7 @@ public class ServiceScopeManager : IServiceScopeFactory
             // MainScopeId = CurrentScopeId = scope.Id;
             MainScopeId = CurrentScopeId = id;
         }
-        _scopes.TryAdd(id, scope);
+        TryAdd(id, scope);
         return scope;
     }
     
@@ -109,12 +130,13 @@ public class ServiceScopeManager : IServiceScopeFactory
             mainScope.Dispose();
             // mainScope.DisposeAsync();
             // RxApp.TaskpoolScheduler.ScheduleAsync(mainScope, async (_, scope, _) => await scope.DisposeAsync());
+            // RxApp.MainThreadScheduler.ScheduleAsync(mainScope, async (_, scope, _) => await scope.DisposeAsync());
         var newMainScope = newScope ?? CreateScope();
         if (newScope.HasValue)
         {
             var newScopeId = newScope.Value.GetServiceScopeId();
             if(_scopes.Keys.All(x => x != newScopeId))
-                _scopes.TryAdd(newScopeId, newScope.Value);
+                TryAdd(newScopeId, newScope.Value);
         }
         MainScopeId = newMainScope.GetServiceScopeId();
         return newMainScope;
@@ -167,6 +189,26 @@ public class ServiceScopeManager : IServiceScopeFactory
     }
 }
 
+file interface IScopeDisposer : IAsyncDisposable, IDisposable { CancellationDisposable CancellationDisposable { get; } }
+file class CancellationDisposableWrapper : IScopeDisposer
+{
+    // private readonly JoinableTaskFactory _taskFactory;
+    public CancellationDisposable CancellationDisposable { get; } = new();
+
+    // public CancellationDisposableWrapper(JoinableTaskFactory taskFactory) => _taskFactory = taskFactory;
+
+    public void Dispose() => CancellationDisposable.Dispose();
+        // RxApp.TaskpoolScheduler.ScheduleAsync(this, async (_, @this, _) 
+        //     => await @this.DisposeAsync().ConfigureAwait(false));
+
+    public ValueTask DisposeAsync()
+    {
+        // await _taskFactory.SwitchToMainThreadAsync();
+        CancellationDisposable.Dispose();
+        return default;
+    }
+}
+
 [Obsolete]
 public readonly struct AsyncScopeWrapper : IServiceScope, IAsyncDisposable, IProvideServices
 {
@@ -174,20 +216,10 @@ public readonly struct AsyncScopeWrapper : IServiceScope, IAsyncDisposable, IPro
     public AsyncScopeWrapper(in AsyncServiceScope scope)
     {
         _scope = scope;
-        Id = Services.GetServiceScopeId();
     }
-    // public AsyncScopeWrapper() : this(Globals.Services.CreateAsyncScope()) { }
-
-    public ServiceScopeId Id { get; }
 
     IServiceProvider IServiceScope.ServiceProvider => _scope.ServiceProvider;
-    public IServiceProvider Services => _scope.ServiceProvider;
-    
-    object? IServiceProvider.GetService(Type serviceType) => _scope.ServiceProvider.GetService(serviceType);
-    public object? GetService(Type serviceType) => _scope.ServiceProvider.GetService(serviceType);
-    public TService? GetService<TService>() => _scope.ServiceProvider.GetService<TService>();
-    public TService GetRequiredService<TService>() where TService : notnull => _scope.ServiceProvider.GetRequiredService<TService>();
-    public object GetRequiredService(Type serviceType) => _scope.ServiceProvider.GetRequiredService(serviceType);
+    IServiceProvider IProvideServices.Services => _scope.ServiceProvider;
     
     public void Dispose() => _scope.Dispose();
     public ValueTask DisposeAsync() => _scope.DisposeAsync();

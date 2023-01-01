@@ -146,8 +146,6 @@ public static class Startup
     
     private static IServiceCollection ConfigureAppServices(this IServiceCollection services)
         => services
-            // .AddScoped<ServiceScopeId>(_ => Guid.NewGuid())
-            // .AddSingleton<ServiceScopeManager>()
             .AddServiceScopeManager()
             .AddLazyResolution()
             .AddScoped<IAvaloniaEssentials,AvaloniaEssentialsCommonService>()

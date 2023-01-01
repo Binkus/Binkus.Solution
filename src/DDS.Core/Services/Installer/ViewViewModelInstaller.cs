@@ -12,7 +12,10 @@ namespace DDS.Core.Services.Installer;
 
 public static class ViewViewModelInstaller
 {
-    public static IServiceCollection AddSingletonViewViewModel<TView, TViewModel>(this IServiceCollection services,
+    public static IServiceCollection AddSingletonViewViewModel<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TView, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TViewModel>(
+        this IServiceCollection services,
         Func<IServiceProvider, TView>? viewImplFactory = default,
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
         Action<IServiceProvider, TView>? postViewCreationAction = default,
@@ -26,7 +29,10 @@ public static class ViewViewModelInstaller
             postViewCreationAction, postViewModelCreationAction, setDataContext, viewModelTypeViewTypeDictionary,
             viewLifetime);
 
-    public static IServiceCollection AddScopedViewViewModel<TView, TViewModel>(this IServiceCollection services,
+    public static IServiceCollection AddScopedViewViewModel<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TView, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TViewModel>(
+        this IServiceCollection services,
         Func<IServiceProvider, TView>? viewImplFactory = default,
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
         Action<IServiceProvider, TView>? postViewCreationAction = default,
@@ -40,7 +46,10 @@ public static class ViewViewModelInstaller
             postViewCreationAction, postViewModelCreationAction, setDataContext, viewModelTypeViewTypeDictionary,
             viewLifetime);
 
-    public static IServiceCollection AddTransientViewViewModel<TView, TViewModel>(this IServiceCollection services,
+    public static IServiceCollection AddTransientViewViewModel<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TView, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TViewModel>(
+        this IServiceCollection services,
         Func<IServiceProvider, TView>? viewImplFactory = default,
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
         Action<IServiceProvider, TView>? postViewCreationAction = default,
@@ -75,7 +84,10 @@ public static class ViewViewModelInstaller
     /// <typeparam name="TViewModel">ViewModel type</typeparam>
     /// <returns><see cref="services"/></returns>
     /// <exception cref="NullReferenceException"></exception>
-    public static IServiceCollection AddViewViewModel<TView,TViewModel>(this IServiceCollection services,
+    public static IServiceCollection AddViewViewModel<
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TView, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TViewModel>(
+        this IServiceCollection services,
         ServiceLifetime lifetime = ServiceLifetime.Scoped,
         Func<IServiceProvider, TView>? viewImplFactory = default,
         Func<IServiceProvider, TViewModel>? viewModelImplFactory = default,
@@ -113,7 +125,9 @@ public static class ViewViewModelInstaller
     /// <typeparam name="TViewModelImpl"></typeparam>
     /// <returns><see cref="services"/></returns>
     /// <exception cref="NullReferenceException"></exception>
-    public static IServiceCollection AddViewViewModel<TView,TViewImpl,TViewModel,TViewModelImpl>(
+    public static IServiceCollection AddViewViewModel<
+        TView, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TViewImpl,
+        TViewModel, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TViewModelImpl>(
         this IServiceCollection services,
         ServiceLifetime lifetime = ServiceLifetime.Scoped,
         Func<IServiceProvider, TViewImpl>? viewImplFactory = default,
@@ -201,7 +215,9 @@ public static class ViewViewModelInstaller
     /// <param name="viewLifetime">ServiceLifetime of View - highly recommended to stay default transient.</param>
     /// <returns><see cref="services"/></returns>
     /// <exception cref="NullReferenceException"></exception>
-    public static IServiceCollection AddViewViewModel(this IServiceCollection services, Type viewType, Type viewModelType,
+    public static IServiceCollection AddViewViewModel(this IServiceCollection services, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type viewType, 
+        [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type viewModelType,
         ServiceLifetime lifetime = ServiceLifetime.Scoped,
         Func<IServiceProvider, object>? viewImplFactory = default,
         Func<IServiceProvider, object>? viewModelImplFactory = default,

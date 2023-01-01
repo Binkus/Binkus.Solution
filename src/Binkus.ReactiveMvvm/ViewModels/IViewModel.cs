@@ -6,7 +6,6 @@ public interface IViewModel
     : IRoutableViewModel, IActivatableViewModel, IProvideServices, IReactiveNotifyPropertyChanged<IReactiveObject>,
         IInitializable
 {
-    Guid InstanceId { get; }
     INavigationViewModel Navigation { get; }
     string ViewModelName { get; }
     string RawViewName { get; }

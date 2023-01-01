@@ -13,7 +13,7 @@ public partial class SecondTestViewModel : ViewModel
             .GetRequiredService<INavigationViewModel<SecondTestViewModel>>();
         
         // NavigateToTestViewModelCommand = SecondNavigation.NavigateReactiveCommand<ThirdTestViewModel>();
-        NavigateToTestViewModelCommand = SecondNavigation.NavigateReactiveCommand<MainViewModel>();
+        NavigateToTestViewModelCommand = NavigateReactiveCommand<MainViewModel>(SecondNavigation);
 
     }
     public ReactiveCommand<Unit, IRoutableViewModel> NavigateToTestViewModelCommand { get; } 

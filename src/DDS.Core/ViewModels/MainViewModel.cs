@@ -25,10 +25,10 @@ public sealed partial class MainViewModel : ViewModel
         
         _avaloniaEssentials = this.GetRequiredService<IAvaloniaEssentials>();
 
-        GoLogin = NavigateReactiveCommand<LoginViewModel>();
-        GoTest = NavigateReactiveCommand<TestViewModel>();
-        GoSecondTest = NavigateReactiveCommand<SecondTestViewModel>();
-        GoThirdTest = NavigateReactiveCommand<ThirdTestViewModel>();
+        GoLogin = NavigateReactiveCommand<LoginViewModel>(this);
+        GoTest = NavigateReactiveCommand<TestViewModel>(this);
+        GoSecondTest = NavigateReactiveCommand<SecondTestViewModel>(this);
+        GoThirdTest = NavigateReactiveCommand<ThirdTestViewModel>(this);
 
         // Navigation.BackCountOffset++;
         // Navigation.ResetTo<LoginViewModel>();

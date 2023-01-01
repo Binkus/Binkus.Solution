@@ -446,42 +446,42 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     
     #region Simplified Command Creation
 
-    public ReactiveCommand<Unit, IRoutableViewModel> NavigateReactiveCommand<TViewModel>(IObservable<bool>? canExecute = default)
+    public static ReactiveCommand<Unit, IRoutableViewModel> NavigateReactiveCommand<TViewModel>(IViewModel viewModel, IObservable<bool>? canExecute = default)
         where TViewModel : class, IRoutableViewModel 
-        => CreateNavigationReactiveCommandFromObservable<TViewModel>(
-            new Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>>(() => Navigation.Router.Navigate), canExecute);
+        => CreateNavigationReactiveCommandFromObservable<TViewModel>(viewModel,
+            new Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>>(() => viewModel.Navigation.Router.Navigate), canExecute);
     
-    public ReactiveCommand<Unit, IRoutableViewModel> NavigateAndResetReactiveCommand<TViewModel>(IObservable<bool>? canExecute = default)
+    public static ReactiveCommand<Unit, IRoutableViewModel> NavigateAndResetReactiveCommand<TViewModel>(IViewModel viewModel, IObservable<bool>? canExecute = default)
         where TViewModel : class, IRoutableViewModel 
-        => CreateNavigationReactiveCommandFromObservable<TViewModel>(
-            new Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>>(() => Navigation.Router.NavigateAndReset), canExecute);
+        => CreateNavigationReactiveCommandFromObservable<TViewModel>(viewModel,
+            new Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>>(() => viewModel.Navigation.Router.NavigateAndReset), canExecute);
 
-    public ReactiveCommand<Unit, IRoutableViewModel> CreateNavigationReactiveCommandFromObservable<TViewModel>(
+    public static ReactiveCommand<Unit, IRoutableViewModel> CreateNavigationReactiveCommandFromObservable<TViewModel>(IViewModel viewModel,
         Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>> navi, IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel
         => ReactiveCommand.CreateFromObservable(
-            () => navi.Value.Execute(this.GetRequiredService<TViewModel>()),
+            () => navi.Value.Execute(viewModel.GetRequiredService<TViewModel>()),
             // todo evaluate making even more lazy, can execute can load values, when returned cmd is e.g. used as bound cmd to view
-            canExecute: canExecute ?? this.WhenAnyObservable(x => x.Navigation.Router.CurrentViewModel).Select(x => x is not TViewModel)
+            canExecute: canExecute ?? viewModel.WhenAnyObservable(x => x.Navigation.Router.CurrentViewModel).Select(x => x is not TViewModel)
         );
     
     //
 
-    public ReactiveCommand<Unit, IRoutableViewModel> NavigateReactiveCommand(Type viewModelType, IObservable<bool>? canExecute = default)
-        => CreateNavigationReactiveCommandFromObservable(viewModelType, 
-            new Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>>(() => Navigation.Router.Navigate), canExecute);
+    public static ReactiveCommand<Unit, IRoutableViewModel> NavigateReactiveCommand(IViewModel viewModel, Type viewModelType, IObservable<bool>? canExecute = default)
+        => CreateNavigationReactiveCommandFromObservable(viewModel, viewModelType, 
+            new Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>>(() => viewModel.Navigation.Router.Navigate), canExecute);
     
-    public ReactiveCommand<Unit, IRoutableViewModel> NavigateAndResetReactiveCommand(Type viewModelType, IObservable<bool>? canExecute = default)
-        => CreateNavigationReactiveCommandFromObservable(viewModelType, 
-            new Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>>(() => Navigation.Router.NavigateAndReset),canExecute);
+    public static ReactiveCommand<Unit, IRoutableViewModel> NavigateAndResetReactiveCommand(IViewModel viewModel, Type viewModelType, IObservable<bool>? canExecute = default)
+        => CreateNavigationReactiveCommandFromObservable(viewModel, viewModelType, 
+            new Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>>(() => viewModel.Navigation.Router.NavigateAndReset),canExecute);
     
-    public ReactiveCommand<Unit, IRoutableViewModel> CreateNavigationReactiveCommandFromObservable(Type viewModelType,
+    public static ReactiveCommand<Unit, IRoutableViewModel> CreateNavigationReactiveCommandFromObservable(IViewModel viewModel, Type viewModelType,
         Lazy<ReactiveCommandBase<IRoutableViewModel, IRoutableViewModel>> navi, IObservable<bool>? canExecute = default)
     {
         if (viewModelType.IsAssignableTo(typeof(IRoutableViewModel)) is false) throw new InvalidOperationException();
         return ReactiveCommand.CreateFromObservable(
-            () => navi.Value.Execute((IRoutableViewModel)this.GetRequiredService(viewModelType)),
+            () => navi.Value.Execute((IRoutableViewModel)viewModel.GetRequiredService(viewModelType)),
             // todo evaluate making even more lazy, can execute can load values, when returned cmd is e.g. used as bound cmd to view
-            canExecute: canExecute ?? this.WhenAnyObservable(x => x.Navigation.Router.CurrentViewModel)
+            canExecute: canExecute ?? viewModel.WhenAnyObservable(x => x.Navigation.Router.CurrentViewModel)
                 .Select(x => !x?.GetType().IsAssignableTo(viewModelType) ?? true)
         );
     }

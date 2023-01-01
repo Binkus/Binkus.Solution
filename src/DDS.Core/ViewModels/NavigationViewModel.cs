@@ -100,13 +100,13 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
 
     public bool To<TViewModel>(IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel
     {
-        using var cmd = NavigateReactiveCommand<TViewModel>(canExecute);
+        using var cmd = NavigateReactiveCommand<TViewModel>(this,canExecute);
         return cmd.ExecuteIfExecutable();
     }
     
     public bool ResetTo<TViewModel>(IObservable<bool>? canExecute = default) where TViewModel : class, IRoutableViewModel
     {
-        using var cmd = NavigateAndResetReactiveCommand<TViewModel>(canExecute);
+        using var cmd = NavigateAndResetReactiveCommand<TViewModel>(this,canExecute);
         return cmd.ExecuteIfExecutable();
     }
     
@@ -114,13 +114,13 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
     
     public bool ResetTo(Type viewModelType, IObservable<bool>? canExecute = default)
     {
-        using var cmd = NavigateAndResetReactiveCommand(viewModelType, canExecute);
+        using var cmd = NavigateAndResetReactiveCommand(this,viewModelType, canExecute);
         return cmd.ExecuteIfExecutable();
     }
     
     public bool To(Type viewModelType, IObservable<bool>? canExecute = default)
     {
-        using var cmd = NavigateReactiveCommand(viewModelType, canExecute);
+        using var cmd = NavigateReactiveCommand(this,viewModelType, canExecute);
         return cmd.ExecuteIfExecutable();
     }
 }

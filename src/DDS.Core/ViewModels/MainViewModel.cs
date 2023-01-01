@@ -1,4 +1,5 @@
 using System.Reactive.Concurrency;
+using Binkus.ReactiveMvvm;
 using DDS.Core.Controls;
 using DDS.Core.Helper;
 using DDS.Core.Services;
@@ -25,10 +26,10 @@ public sealed partial class MainViewModel : ViewModel
         
         _avaloniaEssentials = this.GetRequiredService<IAvaloniaEssentials>();
 
-        GoLogin = NavigateReactiveCommand<LoginViewModel>(this);
-        GoTest = NavigateReactiveCommand<TestViewModel>(this);
-        GoSecondTest = NavigateReactiveCommand<SecondTestViewModel>(this);
-        GoThirdTest = NavigateReactiveCommand<ThirdTestViewModel>(this);
+        GoLogin = this.NavigateReactiveCommand<LoginViewModel>();
+        GoTest = this.NavigateReactiveCommand<TestViewModel>();
+        GoSecondTest = this.NavigateReactiveCommand<SecondTestViewModel>();
+        GoThirdTest = this.NavigateReactiveCommand<ThirdTestViewModel>();
 
         // Navigation.BackCountOffset++;
         // Navigation.ResetTo<LoginViewModel>();

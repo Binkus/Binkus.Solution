@@ -9,7 +9,7 @@ public partial class TestViewModel : ViewModel
     
     [ActivatorUtilitiesConstructor, UsedImplicitly]
     public TestViewModel(IServiceProvider services) : base(services, 
-        Globals.GetService<ServiceScopeManager>().GetMainScope().Services.GetRequiredService<IScreen>()) { }
+        Globals.GetService<ServiceScopeManager>().GetMainScope().GetRequiredService<IScreen>()) { }
     
     public string Greeting { get; set; } = $"Hello from Test VM Id:{Guid.NewGuid().ToString()[..8]}";
 

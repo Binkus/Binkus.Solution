@@ -3,7 +3,9 @@ using System.Windows.Input;
 using Android.App;
 using Android.Content.PM;
 using Avalonia.Android;
+using Binkus.DependencyInjection;
 using Binkus.ReactiveMvvm;
+using CommunityToolkit.Mvvm.DependencyInjection;
 using DDS.Avalonia.Android.Controls;
 using DDS.Avalonia.Services;
 using DDS.Core.ViewModels;
@@ -28,7 +30,7 @@ namespace DDS.Avalonia.Android
         public MainActivity()
         {
             CurrentMainActivity = this;
-            _navigation = new Lazy<INavigationViewModel>(() => Globals.GetService<ServiceScopeManager>().GetMainScope().GetService<INavigationViewModel>());
+            _navigation = new Lazy<INavigationViewModel>(() => Ioc.Default.GetRequiredService<ServiceScopeManager>().GetMainScope().GetRequiredService<INavigationViewModel>());
         }
 
         private int _backCounter;
@@ -60,12 +62,12 @@ namespace DDS.Avalonia.Android
 
         private static void KillApp()
         {
-            Globals.GetService<IDialogAlertMessageBox>().Show(c =>
+            Ioc.Default.GetRequiredService<IDialogAlertMessageBox>().Show(c =>
             {
                 c.Title = "Alert";
                 c.Message = "Close App?";
                 c.Button2Text = "Cancel";
-                c.Button1Action = () => Globals.GetService<ServiceScopeManager>().GetMainScope().GetService<ICloseAppService>().CloseApp();
+                c.Button1Action = () => Ioc.Default.GetRequiredService<ServiceScopeManager>().GetMainScope().GetRequiredService<ICloseAppService>().CloseApp();
             });
             
         }

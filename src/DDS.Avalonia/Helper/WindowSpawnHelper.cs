@@ -38,7 +38,7 @@ public static class WindowSpawnHelper
     private static void SpawnWindow()
     {
         var window2 = Globals.GetService<ServiceScopeManager>().CreateScope()
-            .ServiceProvider.GetRequiredService<MainWindow>();
+            .GetRequiredService<MainWindow>();
         window2.Show();
                 
         window2.Height = 960;

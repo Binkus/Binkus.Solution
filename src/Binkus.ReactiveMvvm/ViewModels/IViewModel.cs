@@ -6,7 +6,14 @@ public interface IViewModel
     : IRoutableViewModel, IActivatableViewModel, IProvideServices, IReactiveNotifyPropertyChanged<IReactiveObject>,
         IInitializable
 {
-    INavigationViewModel Navigation { get; }
+    // IScreen IRoutableViewModel.HostScreen => this.GetService<ServiceScopeManager>()?.GetMainScope().GetService<IScreen>()!;
+    /// <summary>
+    /// Used for Navigation / Routing
+    /// <p>NOT Supported for Singleton ViewModels, use Scoped ViewModel
+    /// if you want to use the Navigation from this ViewModel.</p>
+    /// </summary>
+    INavigationViewModel Navigation => HostScreen as INavigationViewModel
+                                       ?? this as INavigationViewModel ?? this.GetRequiredService<INavigationViewModel>();
     string ViewModelName => GetType().Name;
     string CustomViewName => RawViewName;
     string RawViewName => TryGetRawViewName(ViewModelName);

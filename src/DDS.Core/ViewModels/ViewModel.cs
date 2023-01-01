@@ -43,14 +43,11 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         protected init => this.RaiseAndSetIfChanged(ref _lazyHostScreen, new Lazy<IScreen>(value));
     }
 
-    /// <summary>
-    /// Used for Navigation / Routing
-    /// <p>NOT Supported for Singleton ViewModels, use Scoped ViewModel
-    /// if you want to use the Navigation from this ViewModel.</p>
-    /// </summary>
+    /// <inheritdoc cref="IViewModel.Navigation"/>
     [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)]
     public INavigationViewModel Navigation => HostScreen as INavigationViewModel
                                               ?? this as INavigationViewModel ?? this.GetRequiredService<INavigationViewModel>();
+    [IgnoreDataMember, DebuggerBrowsable(DebuggerBrowsableState.Never)] INavigationViewModel IViewModel.Navigation => Navigation;
 
     [IgnoreDataMember] public ViewModelActivator Activator { get; } = new();
 

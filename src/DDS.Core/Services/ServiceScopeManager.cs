@@ -5,6 +5,7 @@ namespace Binkus.DependencyInjection;
 public record ServiceScopeId(Guid Id)
 {
     public ServiceScopeId() : this(Guid.NewGuid()) { }
+    
     public static readonly ServiceScopeId Empty = new(Guid.Empty); 
     public static implicit operator ServiceScopeId(Guid id) => new(id);
     public static implicit operator Guid(ServiceScopeId id) => id.Id;
@@ -84,12 +85,10 @@ file sealed class ServiceScopeManager : IServiceScopeManager
 
     public AsyncServiceScope CreateScope()
     {
-        // var scope = new AsyncScopeWrapper(RootServices.CreateAsyncScope());
         var scope = ScopeFactory.CreateAsyncScope();
         var id = scope.GetServiceScopeId();
         if (_scopes.Count == 0)
         {
-            // MainScopeId = CurrentScopeId = scope.Id;
             MainScopeId = CurrentScopeId = id;
         }
         TryAdd(id, scope);
@@ -115,7 +114,6 @@ file sealed class ServiceScopeManager : IServiceScopeManager
         var id = scope.GetServiceScopeId();
         if (_scopes.Count == 0)
         {
-            // MainScopeId = CurrentScopeId = scope.Id;
             MainScopeId = CurrentScopeId = id;
         }
         TryAdd(id, scope);
@@ -128,9 +126,6 @@ file sealed class ServiceScopeManager : IServiceScopeManager
         _scopes.TryRemove(mainScope.GetServiceScopeId(), out _);
         if (disposeOldMainScope)
             mainScope.Dispose();
-            // mainScope.DisposeAsync();
-            // RxApp.TaskpoolScheduler.ScheduleAsync(mainScope, async (_, scope, _) => await scope.DisposeAsync());
-            // RxApp.MainThreadScheduler.ScheduleAsync(mainScope, async (_, scope, _) => await scope.DisposeAsync());
         var newMainScope = newScope ?? CreateScope();
         if (newScope.HasValue)
         {
@@ -144,14 +139,14 @@ file sealed class ServiceScopeManager : IServiceScopeManager
 
     public AsyncServiceScope SetCurrentScope(IServiceProvider scopedServiceProvider)
     {
-        if (ReferenceEquals(scopedServiceProvider, RootServices)) //return GetCurrentScope();
+        if (ReferenceEquals(scopedServiceProvider, RootServices))
             throw new InvalidOperationException("Don't provide root ServiceProvider. Invalid scope.");
         return SetCurrentScope(scopedServiceProvider.GetServiceScopeId());
     }
     
     public AsyncServiceScope SetCurrentScope(ServiceScopeId serviceScopeId)
     {
-        if (serviceScopeId == ServiceScopeId.Empty) // return GetCurrentScope();
+        if (serviceScopeId == ServiceScopeId.Empty)
             throw new InvalidOperationException("Invalid scope.");
         CurrentScopeId = serviceScopeId;
         return GetCurrentScope();
@@ -175,7 +170,6 @@ file sealed class ServiceScopeManager : IServiceScopeManager
     {
         var mainScopeId = _mainScopeId;
         lock (mainScopeId) return _scopes[mainScopeId];
-        // return _scopes.FirstOrDefault(x => x.Key == mainScopeId).Value;
     }
     
     private volatile ServiceScopeId _currentScopeId;
@@ -185,42 +179,19 @@ file sealed class ServiceScopeManager : IServiceScopeManager
     {
         var currentScopeId = _currentScopeId;
         lock (currentScopeId) return _scopes[currentScopeId];
-        // return _scopes.FirstOrDefault(x => x.Key == currentScopeId).Value;
     }
 }
 
 file interface IScopeDisposer : IAsyncDisposable, IDisposable { CancellationDisposable CancellationDisposable { get; } }
 file class CancellationDisposableWrapper : IScopeDisposer
 {
-    // private readonly JoinableTaskFactory _taskFactory;
     public CancellationDisposable CancellationDisposable { get; } = new();
 
-    // public CancellationDisposableWrapper(JoinableTaskFactory taskFactory) => _taskFactory = taskFactory;
-
     public void Dispose() => CancellationDisposable.Dispose();
-        // RxApp.TaskpoolScheduler.ScheduleAsync(this, async (_, @this, _) 
-        //     => await @this.DisposeAsync().ConfigureAwait(false));
 
     public ValueTask DisposeAsync()
     {
-        // await _taskFactory.SwitchToMainThreadAsync();
         CancellationDisposable.Dispose();
         return default;
     }
-}
-
-[Obsolete]
-public readonly struct AsyncScopeWrapper : IServiceScope, IAsyncDisposable, IProvideServices
-{
-    private readonly AsyncServiceScope _scope;
-    public AsyncScopeWrapper(in AsyncServiceScope scope)
-    {
-        _scope = scope;
-    }
-
-    IServiceProvider IServiceScope.ServiceProvider => _scope.ServiceProvider;
-    IServiceProvider IProvideServices.Services => _scope.ServiceProvider;
-    
-    public void Dispose() => _scope.Dispose();
-    public ValueTask DisposeAsync() => _scope.DisposeAsync();
 }

@@ -52,10 +52,11 @@ public sealed partial class LoginViewModel : ViewModel
         this.ValidationRule(x => x.TestValidationObservableProperty, 
             text => !string.IsNullOrWhiteSpace(text),
             "You must specify a valid value.");
-        
-        this.ValidationRule(x => x.LoginName, 
-            text => !string.IsNullOrWhiteSpace(text) && (text.Contains('@') ? Regex.IsMatch(text, EmailRegex) : Regex.IsMatch(text, "^[A-Za-z0-9_-]+$")),
-            "You must specify a valid value.");
+
+        this.ValidationRule(x => x.LoginName,
+            text => !string.IsNullOrWhiteSpace(text) && (text.Contains('@')
+                ? Regex.IsMatch(text, EmailRegex)
+                : Regex.IsMatch(text, "^[A-Za-z0-9_-]+$")), "You must specify a valid value.");
     }
 
 

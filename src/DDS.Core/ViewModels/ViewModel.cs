@@ -26,7 +26,7 @@ public abstract class ViewModel : ViewModel<IViewModel>
 [DataContract]
 [SuppressMessage("ReSharper", "StringLiteralTypo")]
 public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecipientValidator,
-    IViewModelBase,  IViewModelBase<TIViewModel>, IEquatable<ViewModel<TIViewModel>>
+    IViewModelBase,  IViewModelBase<TIViewModel>
     where TIViewModel : class, IViewModel
 {
     [IgnoreDataMember] public virtual string UrlPathSegment => RawViewName.ToLowerInvariant();
@@ -56,7 +56,6 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
 
     [IgnoreDataMember] public ViewModelActivator Activator { get; } = new();
 
-    [DataMember] public Guid InstanceId { get; } = Guid.NewGuid();
     [IgnoreDataMember] public string ViewModelName => GetType().Name;
     [IgnoreDataMember] public virtual string CustomViewName { get => RawViewName; set { } }
     [IgnoreDataMember] public virtual string RawViewName => TryGetRawViewName(ViewModelName);
@@ -495,39 +494,5 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     public virtual void OnViewDeactivation() { }
     public virtual void OnViewDisposal() { }
 
-    #endregion
-
-    #region Equality
-    
-    public bool Equals(ViewModel<TIViewModel>? other)
-    {
-        if (ReferenceEquals(null, other)) return false;
-        if (ReferenceEquals(this, other)) return true;
-        return InstanceId.Equals(other.InstanceId);
-    }
-
-    public override bool Equals(object? obj)
-    {
-        if (ReferenceEquals(null, obj)) return false;
-        if (ReferenceEquals(this, obj)) return true;
-        if (obj.GetType() != this.GetType()) return false;
-        return Equals((ViewModel<TIViewModel>)obj);
-    }
-
-    public override int GetHashCode()
-    {
-        return InstanceId.GetHashCode();
-    }
-
-    public static bool operator ==(ViewModel<TIViewModel>? left, ViewModel<TIViewModel>? right)
-    {
-        return Equals(left, right);
-    }
-
-    public static bool operator !=(ViewModel<TIViewModel>? left, ViewModel<TIViewModel>? right)
-    {
-        return !Equals(left, right);
-    }
-    
     #endregion
 }

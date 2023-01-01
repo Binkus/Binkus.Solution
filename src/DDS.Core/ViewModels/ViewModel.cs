@@ -18,7 +18,7 @@ namespace DDS.Core.ViewModels;
 public abstract class ViewModel : ViewModel<IViewModel>
 {
     protected ViewModel(IServiceProvider services, IScreen hostScreen) : base(services, hostScreen) { }
-    protected ViewModel(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : base(services, lazyHostScreen){}
+    protected ViewModel(IServiceProvider services, Lazy<IScreen> lazyHostScreen) : base(services, lazyHostScreen) { }
     protected ViewModel(IServiceProvider services) : base(services) { }
 }
 
@@ -29,7 +29,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     IViewModelBase,  IViewModelBase<TIViewModel>, IEquatable<ViewModel<TIViewModel>>
     where TIViewModel : class, IViewModel
 {
-    [DataMember] public string UrlPathSegment { get; }
+    [IgnoreDataMember] public virtual string UrlPathSegment => RawViewName.ToLowerInvariant();
 
     private Lazy<IScreen>? _lazyHostScreen;
     
@@ -57,18 +57,14 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     [IgnoreDataMember] public ViewModelActivator Activator { get; } = new();
 
     [DataMember] public Guid InstanceId { get; } = Guid.NewGuid();
-    [DataMember] public string ViewModelName { get; }
-    [DataMember] public string RawViewName { get; }
-    
-    [DataMember]
-    public string CustomViewName
-    {
-        // removes "ViewModel" or e.g. "ViewModel'1" at the end if possible, "MainViewModel" => "Main"
-        get => _customViewName ??= ViewModelName.EndsWith("ViewModel") ? ViewModelName[..^9]
-            : ViewModelName[^11..^2] == "ViewModel" ? ViewModelName[..^11] : ViewModelName;
-        set => this.RaiseAndSetIfChanged(ref _customViewName, value);
-    }
-    private string? _customViewName;
+    [IgnoreDataMember] public string ViewModelName => GetType().Name;
+    [IgnoreDataMember] public virtual string CustomViewName { get => RawViewName; set { } }
+    [IgnoreDataMember] public virtual string RawViewName => TryGetRawViewName(ViewModelName);
+
+    // removes "ViewModel" or e.g. "ViewModel'1" at the end if possible, "MainViewModel" => "Main"
+    public static string TryGetRawViewName(string viewModelName) =>
+        viewModelName.EndsWith("ViewModel") ? viewModelName[..^9]
+        : viewModelName[^11..^2] == "ViewModel" ? viewModelName[..^11] : viewModelName;
 
     private volatile bool _hasKnownLifetime = true;
     private ServiceLifetime? _lifetime;
@@ -115,8 +111,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         set => _joinInit = _joinPrepare = _joinActivation = IsInitInitiated
             ? throw new InvalidOperationException() : value; }
 
-    [IgnoreDataMember] protected JoinableTaskFactory JoinUiTaskFactory { get; init; } = Globals.JoinUiTaskFactory;
-        // new(new JoinableTaskContext(Thread.CurrentThread, SynchronizationContext.Current));
+    [IgnoreDataMember] protected JoinableTaskFactory JoinUiTaskFactory => this.GetRequiredService<JoinableTaskFactory>();
     [IgnoreDataMember] private CompositeDisposable PrepDisposables { get; set; } = new();
     [IgnoreDataMember] private CancellationTokenSource ActivationCancellationTokenSource { get; set; } = new();
 
@@ -127,10 +122,6 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     protected ViewModel(IServiceProvider services, IMessenger? messenger = null) : base(messenger, services)
     {
         Services = services;
-        var type = GetType().UnderlyingSystemType;
-        ViewModelName = type.Name;
-        RawViewName = CustomViewName;
-        UrlPathSegment = $"/{RawViewName.ToLowerInvariant()}?id={InstanceId}";
 
         this.WhenActivated(disposables =>
         {

@@ -13,12 +13,20 @@ public record ServiceScopeId(Guid Id)
 
 public static class ServiceScopeManagerExt
 {
-    public static IServiceCollection AddServiceScopeManager(this IServiceCollection services)
+    public static IServiceCollection AddServiceScopeManager(this IServiceCollection services, 
+        Func<IServiceProvider, Action<IServiceProvider, Action<ServiceScopeId>>, IServiceScopeManager>? serviceScopeManagerFactory = null)
     {
-        return services
+        services
             .AddScoped<ServiceScopeId>()
-            .AddScoped<IScopeDisposer, CancellationDisposableWrapper>()
-            .AddSingleton<IServiceScopeManager,ServiceScopeManager>();
+            .AddScoped<IScopeDisposer, CancellationDisposableWrapper>();
+
+        return serviceScopeManagerFactory is null
+            ? services.AddSingleton<IServiceScopeManager, ServiceScopeManager>()
+            : services.AddSingleton<IServiceScopeManager>(p => serviceScopeManagerFactory(p,
+                static (scopedProvider, onServiceScopeDisposal) => scopedProvider.GetRequiredService<IScopeDisposer>()
+                    .CancellationDisposable.Token
+                    .Register(() 
+                        => onServiceScopeDisposal(scopedProvider.GetServiceScopeId()), true)));
     }
 
     public static ServiceScopeId GetServiceScopeId<TServiceScope>(this TServiceScope scope)
@@ -83,18 +91,7 @@ file sealed class ServiceScopeManager : IServiceScopeManager
     private readonly ConcurrentDictionary<ServiceScopeId, AsyncServiceScope> _scopes;
     public IReadOnlyDictionary<ServiceScopeId,AsyncServiceScope> Scopes { get; }
 
-    public AsyncServiceScope CreateScope()
-    {
-        var scope = ScopeFactory.CreateAsyncScope();
-        var id = scope.GetServiceScopeId();
-        if (_scopes.Count == 0)
-        {
-            MainScopeId = CurrentScopeId = id;
-        }
-        TryAdd(id, scope);
-        return scope;
-    }
-
+    // private void TryAdd(AsyncServiceScope scope) => TryAdd(scope.GetServiceScopeId(), scope);
     private void TryAdd(ServiceScopeId id, AsyncServiceScope scope)
     {
         scope.ServiceProvider.GetRequiredService<IScopeDisposer>().CancellationDisposable.Token
@@ -108,6 +105,7 @@ file sealed class ServiceScopeManager : IServiceScopeManager
         return _scopes.TryRemove(serviceScopeId, out var removedItem) ? removedItem : null;
     }
     
+    public AsyncServiceScope CreateScope() => AddScope(ScopeFactory.CreateAsyncScope());
     public AsyncServiceScope AddScope<TScope>(TScope serviceScope) where TScope : IServiceScope
     {
         var scope = serviceScope is AsyncServiceScope asyncS ? asyncS : new AsyncServiceScope(serviceScope);

@@ -454,4 +454,88 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     public virtual void OnViewDisposal() { }
 
     #endregion
+
+    #region ICancelable IDisposable IAsyncDisposable
+    
+    // Optional base impl for Disposable interface, if inherited implements e.g. IDisposable
+    // (e.g. for collections of VMs, they all can call Dispose even when not implementing IDisposable)
+
+    /// <inheritdoc cref="ICancelable.IsDisposed" />
+    public bool IsDisposed { get; private set; }
+    
+    /// <summary>
+    /// Used for sync disposal, called by Dispose() with disposing set to true,
+    /// called by finalizer with disposing set to false.
+    /// <inheritdoc cref="System.IDisposable.Dispose"/>
+    /// </summary>
+    /// <param name="disposing"><inheritdoc cref="DisposeShared"/></param>
+    protected virtual void Dispose(bool disposing) { }
+
+    /// <summary>
+    /// Cancels Init, Prepare and Activation tasks, calls OnDeactivation(), Dispose(true) and DisposeShared(true).
+    /// Override DisposeAsync(bool) and Dispose(bool),
+    /// or just DisposeShared(bool) which is called by both Dispose and DisposeAsync.
+    /// <inheritdoc cref="System.IDisposable.Dispose"/>
+    /// </summary>
+    /// <inheritdoc cref="System.IDisposable.Dispose"/>
+    public void Dispose()
+    {
+        if (IsDisposed) return;
+        OnDeactivationBase();
+        DisposeShared(true);
+        Dispose(true);
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
+    }
+    
+    /// <summary>
+    /// Used for sync disposal, shared between Dispose() DisposeAsync() (both will supply true as param), finalizer
+    /// calls this with disposing = false.
+    /// </summary>
+    /// <param name="disposing">true when calling Dispose() or DisposeAsync() for releasing managed resources,
+    /// false if called by finalizer (GC) - for releasing unmanaged resources. Usually manged resources don't
+    /// have to be disposed, so this is primarily for unmanaged resources. But e.g. System.Reactive highly depends
+    /// on IDisposable interfaces, used to cancel e.g. subscriptions. It can be good practise to dispose them
+    /// to prevent potential memory leaks. Means: IDisposable can be used for more than just releasing unmanaged
+    /// resources. Use this to dispose subscriptions that may not get unsubscribed when GC runs, or that could
+    /// prevent GC from collecting. When false, you only have to release unmanaged resources, when true
+    /// release unmanaged resources and dispose e.g. subscriptions.</param>
+    protected virtual void DisposeShared(bool disposing) { }
+
+    /// <summary>
+    /// Used for async disposal, called by DisposeAsync().
+    /// <inheritdoc cref="System.IAsyncDisposable.DisposeAsync"/>
+    /// </summary>
+    /// <param name="disposing">dummy param</param>
+    /// <inheritdoc cref="System.IAsyncDisposable.DisposeAsync"/>
+    protected virtual ValueTask DisposeAsync(bool disposing) => default;
+
+    /// <summary>
+    /// Cancels Init, Prepare and Activation tasks, calls OnDeactivation(), DisposeShared(true) and DisposeAsync(true).
+    /// Override DisposeAsync(bool) and Dispose(bool),
+    /// or just DisposeShared(bool) which is called by both Dispose and DisposeAsync.
+    /// <inheritdoc cref="System.IAsyncDisposable.DisposeAsync"/>
+    /// </summary>
+    /// <inheritdoc cref="System.IAsyncDisposable.DisposeAsync"/>
+    public async ValueTask DisposeAsync()
+    {
+        if (IsDisposed) return;
+        OnDeactivationBase();
+        DisposeShared(true);
+        await DisposeAsync(true).ConfigureAwait(false);
+        IsDisposed = true;
+        GC.SuppressFinalize(this);
+    }
+
+    /// <summary>
+    /// Calls DisposeShared(false) and Dispose(false).
+    /// <inheritdoc />
+    /// </summary>
+    ~ViewModel()
+    {
+        DisposeShared(false);
+        Dispose(false);
+    }
+    
+    #endregion
 }

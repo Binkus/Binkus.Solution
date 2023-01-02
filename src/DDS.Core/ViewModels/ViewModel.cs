@@ -127,6 +127,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
 
         this.WhenActivated(disposables =>
         {
+            IsCurrentlyActivating = true;
             Disposable
                 .Create(OnDeactivationBase)
                 .DisposeWith(disposables);
@@ -155,6 +156,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
             // (when async activation enabled, TrySetActivated happens on async completion after OnActivationFinishing)
             OnActivationFinishing(disposables, token);
             TrySetActivated(disposables, token);
+            IsCurrentlyActivating = false;
         });
         
         Debug.WriteLine("c:"+ViewModelName);
@@ -244,6 +246,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
             .TryAwaitAsync<Exception>();
         OnActivationFinishing(disposables, cancellationToken);
         TrySetActivated(disposables, cancellationToken);
+        IsCurrentlyActivating = false;
         e.ThrowWhenNotNull();
     }
     
@@ -252,11 +255,18 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     private void TrySetActivated(ICancelable cancelable, CancellationToken token = default) => IsActivated = 
         !((token.IsCancellationRequested || cancelable.IsDisposed || PrepDisposables.IsDisposed) && !IsActivated);
     
-    private void SetDeactivated() => IsActive = IsActivated = false;
+    private void SetDeactivated()
+    {
+        IsCurrentlyActivating = false;
+        IsActivated = false;
+        IsActive = false;
+    }
 
-    private bool _isActivated;
+    private bool _isActivated, _isCurrentlyActivating;
     [IgnoreDataMember] public bool IsActivated { get => _isActivated;
         private set => this.RaiseAndSetIfChanged(ref _isActivated, value); }
+    [IgnoreDataMember] public bool IsCurrentlyActivating { get => _isCurrentlyActivating;
+        private set => this.RaiseAndSetIfChanged(ref _isCurrentlyActivating, value); }
 
     protected virtual Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
         => Task.CompletedTask;
@@ -398,6 +408,10 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     private void OnDeactivationBase()
     {
         // todo join init elegantly - especially in regards to app closing, cancel init when base window closes
+
+        var isActivated = IsActivated; // (currently) not needed up here
+        var isCurrentlyActivating = IsCurrentlyActivating; // needed up here
+        
         var tokenSource = ActivationCancellationTokenSource;
         var cancelled = tokenSource.Token.IsCancellationRequested;
         if (!cancelled) // when cancelled the following inner-if-block already ran
@@ -406,8 +420,15 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
             catch (Exception) { /* ignore */ }
             finally { JoinAsyncInitTasksAndDispose(tokenSource); }
         }
+        
+        if (!isCurrentlyActivating && !isActivated)
+        {
+            SetDeactivated();
+            return;
+        }
         SetDeactivated();
-        if (!cancelled)
+
+        if (!cancelled) // prevents running OnDeactivation twice while same Activation cycle
             OnDeactivation();
     }
 
@@ -481,6 +502,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     public void Dispose()
     {
         if (IsDisposed) return;
+        Activator.Dispose();
         OnDeactivationBase();
         DisposeShared(true);
         Dispose(true);
@@ -520,6 +542,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     public async ValueTask DisposeAsync()
     {
         if (IsDisposed) return;
+        Activator.Dispose();
         OnDeactivationBase();
         DisposeShared(true);
         await DisposeAsync(true).ConfigureAwait(false);

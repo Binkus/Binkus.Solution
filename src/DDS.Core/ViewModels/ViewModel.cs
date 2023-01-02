@@ -398,11 +398,37 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     private void OnDeactivationBase()
     {
         // todo join init elegantly - especially in regards to app closing, cancel init when base window closes
-        ActivationCancellationTokenSource.Cancel();
-        ActivationCancellationTokenSource.Dispose();
+        var tokenSource = ActivationCancellationTokenSource;
+        var cancelled = tokenSource.Token.IsCancellationRequested;
+        if (!cancelled) // when cancelled the following inner-if-block already ran
+        {
+            try { tokenSource.Cancel(); }
+            catch (Exception) { /* ignore */ }
+            finally { JoinAsyncInitTasksAndDispose(tokenSource); }
+        }
         SetDeactivated();
-        OnDeactivation();
+        if (!cancelled)
+            OnDeactivation();
     }
+
+    private void JoinAsyncInitTasksAndDispose(IDisposable disposable)
+    {
+        try
+        {
+            if (!IsInitInitiated) return;
+            JoinUiTaskFactory.Run(async () =>
+            {
+                if (Init is { } init) await init.IgnoreExceptionAsync<Exception>();
+                if (Prepare is { } prepare) await prepare.IgnoreExceptionAsync<Exception>();
+                if (Activation is { } activation) await activation.IgnoreExceptionAsync<Exception>();
+            });
+        }
+        finally
+        {
+            disposable.Dispose();
+        }
+    }
+    
     protected virtual void OnDeactivation() { }
     
     //

@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace Binkus.DependencyInjection;
 
@@ -24,8 +25,7 @@ public static class ServiceScopeManagerExt
             ? services.AddSingleton<IServiceScopeManager, ServiceScopeManager>()
             : services.AddSingleton<IServiceScopeManager>(p => serviceScopeManagerFactory(p,
                 static (scopedProvider, onServiceScopeDisposal) => scopedProvider.GetRequiredService<IScopeDisposer>()
-                    .CancellationDisposable.Token
-                    .Register(() 
+                    .Token.Register(() 
                         => onServiceScopeDisposal(scopedProvider.GetServiceScopeId()), true)));
     }
 
@@ -94,7 +94,7 @@ file sealed class ServiceScopeManager : IServiceScopeManager
     // private void TryAdd(AsyncServiceScope scope) => TryAdd(scope.GetServiceScopeId(), scope);
     private void TryAdd(ServiceScopeId id, AsyncServiceScope scope)
     {
-        scope.ServiceProvider.GetRequiredService<IScopeDisposer>().CancellationDisposable.Token
+        scope.ServiceProvider.GetRequiredService<IScopeDisposer>().Token
             .Register(() => RemoveScope(id, false), true);
         _scopes.TryAdd(id, scope);
     }
@@ -180,16 +180,24 @@ file sealed class ServiceScopeManager : IServiceScopeManager
     }
 }
 
-file interface IScopeDisposer : IAsyncDisposable, IDisposable { CancellationDisposable CancellationDisposable { get; } }
+file interface IScopeDisposer : IAsyncDisposable, IDisposable { CancellationToken Token { get; } }
 file class CancellationDisposableWrapper : IScopeDisposer
 {
-    public CancellationDisposable CancellationDisposable { get; } = new();
+    public CancellationToken Token => _tokenSource.Token;
+    private readonly CancellationTokenSource _tokenSource = new();
 
-    public void Dispose() => CancellationDisposable.Dispose();
+    public void Dispose()
+    {
+        // if (!IsDisposed)
+        _tokenSource.Cancel();
+    }
 
     public ValueTask DisposeAsync()
     {
-        CancellationDisposable.Dispose();
+        // if (!IsDisposed)
+        _tokenSource.Cancel();
         return default;
     }
+    
+    // public bool IsDisposed => _tokenSource.IsCancellationRequested;
 }

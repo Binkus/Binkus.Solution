@@ -59,40 +59,43 @@ public sealed partial class LoginViewModel : ViewModel
                 : Regex.IsMatch(text, "^[A-Za-z0-9_-]+$")), "You must specify a valid value.");
     }
 
+    public class MySecretInitException : Exception { public MySecretInitException(string message = "") : base(message) { } }
+    public class MySecretPrepareException : Exception { public MySecretPrepareException(string message = "") : base(message) { } }
+    public class MySecretActivationException : Exception { public MySecretActivationException(string message = "") : base(message) { } }
 
-    // protected override async Task InitializeAsync(CancellationToken cancellationToken)
-    // {
-    //     Console.WriteLine("s:Initialize Task");
-    //     await Task.Yield();
-    //     await Task.Delay(1000, cancellationToken);
-    //     await Task.Delay(2000, cancellationToken);
-    //     // throw new Exception("Evil Init");
-    //     // await Task.Delay(4000);
-    //     Console.WriteLine("_:Initialize Task done");
-    // }
-    //
-    // protected override async Task OnPrepareAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
-    // {
-    //     Console.WriteLine("s:Prepare Task");
-    //     await Task.Yield();
-    //     await Task.Delay(2000, cancellationToken);
-    //     // throw new Exception("Evil prepare");
-    //     Console.WriteLine("_:Prepare Task done");
-    // }
-    //
-    // protected override async Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
-    // {
-    //     Console.WriteLine("s:Login Activation Task");
-    //     await Task.Yield();
-    //     await Task.Delay(2000, cancellationToken);
-    //     // throw new Exception("Evil activation");
-    //     Console.WriteLine("_:Login Activation Task done");
-    //     if (_loginService.IsLoggedIn)
-    //     {
-    //         // Navigation.To<TestViewModel>();
-    //     }
-    //     // return Task.CompletedTask;
-    // }
+    protected override async Task InitializeAsync(CancellationToken cancellationToken)
+    {
+        Console.WriteLine("s:Initialize Task");
+        await Task.Yield();
+        await Task.Delay(1000, cancellationToken);
+        await Task.Delay(2000, cancellationToken);
+        // throw new MySecretInitException("Evil Init");
+        // await Task.Delay(4000);
+        Console.WriteLine("_:Initialize Task done");
+    }
+    
+    protected override async Task OnPrepareAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        Console.WriteLine("s:Prepare Task");
+        await Task.Yield();
+        await Task.Delay(2000, cancellationToken);
+        // throw new MySecretPrepareException("Evil prepare");
+        Console.WriteLine("_:Prepare Task done");
+    }
+    
+    protected override async Task OnActivationAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        Console.WriteLine("s:Login Activation Task");
+        await Task.Yield();
+        await Task.Delay(2000, cancellationToken);
+        // throw new MySecretActivationException("Evil activation");
+        Console.WriteLine("_:Login Activation Task done");
+        if (_loginService.IsLoggedIn)
+        {
+            // Navigation.To<TestViewModel>();
+        }
+        // return Task.CompletedTask;
+    }
 
     protected override void OnActivation(CompositeDisposable disposables, CancellationToken cancellationToken)
     {

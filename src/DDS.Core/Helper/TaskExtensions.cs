@@ -1,23 +1,40 @@
+using System.Runtime.ExceptionServices;
 using Microsoft.VisualStudio.Threading;
 
 namespace DDS.Core.Helper;
 
 public static class TaskExtensions
 {
-    public static async Task<TException?> TryAwaitAsync<TException>(this Task task) where TException : Exception
+    public static async Task<ExceptionDispatchInfo?> TryAwaitAsync(this Task task, bool logToDebug = false)
     {
         try
         {
             await task;
             return null;
         }
-        catch (TException e)
+        catch (Exception e)
         {
-            return e;
+            if (logToDebug) Debug.WriteLine(e);
+            return ExceptionDispatchInfo.Capture(e);
         }
     }
     
-    public static async Task<TException?> TryAwaitAsync<TException>(this JoinableTask task) where TException : Exception
+    public static async Task<ExceptionDispatchInfo?> TryAwaitAsync(this JoinableTask task, bool logToDebug = false)
+    {
+        try
+        {
+            await task;
+            return null;
+        }
+        catch (Exception e)
+        {
+            if (logToDebug) Debug.WriteLine(e);
+            return ExceptionDispatchInfo.Capture(e);
+        }
+    }
+    
+    public static async Task<ExceptionDispatchInfo?> TryAwaitAsync<TException>(this Task task, bool logToDebug = false)
+        where TException : Exception
     {
         try
         {
@@ -26,13 +43,30 @@ public static class TaskExtensions
         }
         catch (TException e)
         {
-            return e;
+            if (logToDebug) Debug.WriteLine(e);
+            return ExceptionDispatchInfo.Capture(e);
+        }
+    }
+    
+    public static async Task<ExceptionDispatchInfo?> TryAwaitAsync<TException>(this JoinableTask task, bool logToDebug = false)
+        where TException : Exception
+    {
+        try
+        {
+            await task;
+            return null;
+        }
+        catch (TException e)
+        {
+            if (logToDebug) Debug.WriteLine(e);
+            return ExceptionDispatchInfo.Capture(e);
         }
     }
     
     //
     
-    public static async Task IgnoreExceptionAsync<TException>(this Task task) where TException : Exception
+    public static async Task IgnoreExceptionAsync<TException>(this Task task, bool logToDebug = false)
+        where TException : Exception
     {
         try
         {
@@ -40,11 +74,12 @@ public static class TaskExtensions
         }
         catch (TException e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
     }
     
-    public static async Task IgnoreExceptionAsync<TException>(this JoinableTask task) where TException : Exception
+    public static async Task IgnoreExceptionAsync<TException>(this JoinableTask task, bool logToDebug = false)
+        where TException : Exception
     {
         try
         {
@@ -52,11 +87,11 @@ public static class TaskExtensions
         }
         catch (TException e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
     }
     
-    public static async Task IgnoreExceptionAsync<TException1, TException2>(this Task task) 
+    public static async Task IgnoreExceptionAsync<TException1, TException2>(this Task task, bool logToDebug = false) 
         where TException1 : Exception where TException2 : Exception
     {
         try
@@ -65,15 +100,15 @@ public static class TaskExtensions
         }
         catch (TException1 e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
         catch (TException2 e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
     }
     
-    public static async Task IgnoreExceptionAsync<TException1, TException2>(this JoinableTask task) 
+    public static async Task IgnoreExceptionAsync<TException1, TException2>(this JoinableTask task, bool logToDebug = false) 
         where TException1 : Exception where TException2 : Exception
     {
         try
@@ -82,15 +117,15 @@ public static class TaskExtensions
         }
         catch (TException1 e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
         catch (TException2 e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
     }
     
-    public static async Task IgnoreExceptionAsync<TException1, TException2, TException3>(this Task task) 
+    public static async Task IgnoreExceptionAsync<TException1, TException2, TException3>(this Task task, bool logToDebug = false) 
         where TException1 : Exception where TException2 : Exception where TException3 : Exception
     {
         try
@@ -99,19 +134,19 @@ public static class TaskExtensions
         }
         catch (TException1 e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
         catch (TException2 e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
         catch (TException3 e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
     }
     
-    public static async Task IgnoreExceptionAsync<TException1, TException2, TException3>(this JoinableTask task) 
+    public static async Task IgnoreExceptionAsync<TException1, TException2, TException3>(this JoinableTask task, bool logToDebug = false) 
         where TException1 : Exception where TException2 : Exception where TException3 : Exception
     {
         try
@@ -120,15 +155,15 @@ public static class TaskExtensions
         }
         catch (TException1 e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
         catch (TException2 e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
         catch (TException3 e)
         {
-            Debug.WriteLine(e);
+            if (logToDebug) Debug.WriteLine(e);
         }
     }
     

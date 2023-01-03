@@ -274,15 +274,19 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         // t0.LogTime("XInitPrepareActivationX+"+ViewModelName);
     }
 
-    [IgnoreDataMember] protected JoinableTask? Init { get; private set; }
+    [IgnoreDataMember] private JoinableTask? Init { get; set; }
     
-    [IgnoreDataMember] protected JoinableTask? Prepare { get; private set; }
+    [IgnoreDataMember] private JoinableTask? Prepare { get; set; }
     
-    [IgnoreDataMember] protected JoinableTask? Activation { get; private set; }
+    [IgnoreDataMember] private JoinableTask? Activation { get; set; }
     
     // [IgnoreDataMember] protected JoinableTask? InitPrepareActivation { get; private set; }
 
     [IgnoreDataMember] public bool IsInitInitiated { get; private set; }
+
+    public async Task InitTaskAsync() { if (Init is { } init) await init; }
+    public async Task PrepareTaskAsync() { if (Prepare is { } prepare) await prepare; }
+    public async Task ActivationTaskAsync() { if (Activation is { } activation) await activation; }
     
     void IInitializable.Initialize(CancellationToken cancellationToken)
     {

@@ -176,9 +176,6 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
                 RxApp.TaskpoolScheduler.Schedule(Prepare, (joinTask,_) => joinTask?.Join());
             }
         }
-        // todo FirstActivation with Initialization CancellationToken (not canceled through Deactivation)
-        // FirstActivation ??=
-        //     JoinUiTaskFactory.RunAsync(() => OnFirstActivationBaseAsync(disposables, CancellationToken.None));
             
         Activation = JoinUiTaskFactory.RunAsync(() => OnActivationBaseAsync(disposables, token));
             
@@ -192,8 +189,6 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     [IgnoreDataMember] protected JoinableTask? Init { get; private set; }
     
     [IgnoreDataMember] protected JoinableTask? Prepare { get; private set; }
-
-    // [IgnoreDataMember] protected JoinableTask? FirstActivation { get; private set; }
     
     [IgnoreDataMember] protected JoinableTask? Activation { get; private set; }
 
@@ -250,7 +245,6 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         e.ThrowWhenNotNull();
     }
     
-    /// if !(token.IsCancellationRequested || cancelable.IsDisposed || PrepDisposables.IsDisposed) IsActivated = true;
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void TrySetActivated(ICancelable cancelable, CancellationToken token = default) => IsActivated = 
         !((token.IsCancellationRequested || cancelable.IsDisposed || PrepDisposables.IsDisposed) && !IsActivated);

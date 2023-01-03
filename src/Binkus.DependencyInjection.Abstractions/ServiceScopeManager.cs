@@ -186,18 +186,11 @@ file class CancellationDisposableWrapper : IScopeDisposer
     public CancellationToken Token => _tokenSource.Token;
     private readonly CancellationTokenSource _tokenSource = new();
 
-    public void Dispose()
-    {
-        // if (!IsDisposed)
-        _tokenSource.Cancel();
-    }
+    public void Dispose() => _tokenSource.Cancel();
 
     public ValueTask DisposeAsync()
     {
-        // if (!IsDisposed)
         _tokenSource.Cancel();
         return default;
     }
-    
-    // public bool IsDisposed => _tokenSource.IsCancellationRequested;
 }

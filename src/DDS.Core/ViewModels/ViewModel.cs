@@ -16,6 +16,9 @@ using Microsoft.VisualStudio.Threading;
 
 namespace DDS.Core.ViewModels;
 
+/// <summary>
+/// <inheritdoc cref="ViewModel{TIViewModel}"/>
+/// </summary>
 [DataContract]
 public abstract class ViewModel : ViewModel<IViewModel>
 {
@@ -31,7 +34,71 @@ public abstract class ViewModel : ViewModel<IViewModel>
         Ioc.Default.GetRequiredService<IServiceScopeManager>().GetCurrentScope().ServiceProvider;
 }
 
-
+/// <summary>
+/// Base ViewModel supporting MVVM of ReactiveUI and of CommunityToolkit.Mvvm, like a base class that inherits from
+/// ReactiveValidationObject, ObservableRecipient and ObservableValidator, and implements IRoutableViewModel
+/// for Navigation, as well as owning a Navigation property. If the ViewModel is a singleton, ignore the Navigation
+/// / HostScreen property, they will throw a NotSupportedException as long as you don't provide your own HostScreen
+/// during construction. The HostScreen / Navigation property is supposed to be a reference to the NavigationViewModel
+/// / NavigationService that implements IScreen, it should be the IScreen which is used to navigate to your ViewModel.
+/// By default, if it is not a singleton, it will get the NavigationViewModel of the same ServiceScope.
+/// By default a Window is a ServiceScope. So, ViewModels registered with ServiceLifetime.Scoped are basically a
+/// Singleton per Window, or per your own scopes. This only works if you provide the Scoped IServiceProvider, which
+/// can simply be get during construction by having the IServiceProvider in the constructor of your inherited ViewModel,
+/// then pass it to this base class.
+/// Additionally it supports asynchronous initialization, override <see cref="InitializeAsync"/> for it to be executed during
+/// implementation factory from IoC, right after initialization, the <see cref="OnPrepareAsync"/> method
+/// is getting executed.
+/// The <see cref="InitializeAsync"/> is only executed once, <see cref="OnPrepareAsync"/> directly after
+/// <see cref="InitializeAsync"/> (no activation required),
+/// and on each Activation through <see cref="Activator"/>, except for the first one
+/// (cause already executed after first Init). Then there is an
+/// <see cref="OnActivationAsync"/> method waiting to be overriden that executes always after
+/// <see cref="OnPrepareAsync"/> and executes on every Activation through <see cref="Activator"/>.
+/// Basically someIServiceProvider.GetRequiredService(typeof(YourViewModel)) or injecting that VM through
+/// a constructor that gets resolved by DI, this will asynchronously execute <see cref="InitializeAsync"/> before e.g.
+/// that GetRequiredService returns the ViewModel. PrepareAsync will await the Initialization Task, and ActivateAsync
+/// will await the Prepare Task; as long as the asynchronous Initialization (and Prepare/Activate) is running,
+/// the IsActivated property is false. This can be used e.g. by the RoutedViewHost, to disable the controls during
+/// activation. The Initialize, Prepare and Activation Task are truly asynchronous as long as the properties
+/// <see cref="JoinInitBeforeOnActivationFinished"/> / <see cref="JoinPrepareBeforeOnActivationFinished"/>
+/// / <see cref="JoinActivationBeforeOnActivationFinished"/>
+/// stay set to false. The Initialize Task and (the first) Prepare Task are truly asynchronous even with
+/// Join*BeforeOnActivationFinished until the ViewModel gets activated, activation will then join these Tasks,
+/// which basically means synchronously awaiting it. These tasks are all created with a <see cref="JoinableTaskFactory"/>
+/// to not cause any deadlocks. All of these Tasks are running/initiated on the Main/UI Thread.
+/// If you want to lift of sth. within e.g. <see cref="InitializeAsync"/> to a ThreadPoolThread, use usual TPL, e.g.
+/// await Task.Run(...), or awaiting any Task from any Lib, or wrapping those Tasks in a Task.Run.
+/// As you know by default most of TPL is about asynchronousity not about parallelism, parallelism comes with e.g. that
+/// mentioned special function Task.Run which can be asynchronously awaited which captures the SynchronizationContext
+/// as long as you don't use someTask.ConfigureAwait(false). Do not use someTask.ConfigureAwait(false) within
+/// any of the Initialize methods, or know what you are doing by e.g. not manipulating any UI related properties after
+/// running *.ConfigureAwait(false). Without *.ConfigureAwait(false) you are guaranteed to be on Main UI Thread after
+/// each await (of a Task). As you know, Tasks that get awaited can internally do stuff on any thread, which you do not
+/// have to care about, because after the returned result it will automatically restore your SynchronizationContext
+/// (switch back to UI thread).
+/// <seealso cref="ReactiveValidationObservableRecipientValidator"/>
+/// <seealso cref="ReactiveObservableObject"/>
+/// <seealso cref="ObservableObject"/>
+/// <seealso cref="ObservableValidator"/>
+/// <seealso cref="ReactiveObject"/>
+/// <seealso cref="ReactiveUI.Validation.Helpers.ReactiveValidationObject"/>
+/// <seealso cref="Activator"/>
+/// <seealso cref="ViewModelActivator"/>
+/// <seealso cref="ViewForMixins.WhenActivated(ReactiveUI.IActivatableViewModel,Action{CompositeDisposable})"/>
+/// <seealso cref="ViewForMixins.WhenActivated(ReactiveUI.IActivatableViewModel,System.Func{System.Collections.Generic.IEnumerable{System.IDisposable}})"/>
+/// <seealso cref="JoinableTaskFactory"/>
+/// <seealso cref="JoinableTask"/>
+/// <seealso cref="InitializeAsync"/> 
+/// <seealso cref="OnPrepareAsync"/>
+/// <seealso cref="OnActivation"/>
+/// <seealso cref="OnActivationAsync"/>
+/// <seealso cref="OnActivationFinishing"/>
+/// <seealso cref="OnDeactivation"/>
+/// <seealso cref="RegisterAllMessagesOnActivation"/>
+/// <seealso cref="EnableAsyncInitPrepareActivate"/>
+/// </summary>
+/// <typeparam name="TIViewModel">Ignore: Not used yet. Inherit from ViewModel without generic param instead.</typeparam>
 [DataContract]
 [SuppressMessage("ReSharper", "StringLiteralTypo")]
 public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecipientValidator,

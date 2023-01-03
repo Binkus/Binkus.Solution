@@ -23,7 +23,7 @@ public static class Extensions
         return item;
     }
     
-    public static TItem IfNotNullAddTo<TItem, TCollection>(this TItem item, TCollection collection, Action<TItem>? actionBeforeAdd = null)
+    public static TItem? IfNotNullAddTo<TItem, TCollection>(this TItem? item, TCollection collection, Action<TItem?>? actionBeforeAdd = null)
         where TCollection : ICollection<TItem>
     {
         actionBeforeAdd?.Invoke(item);
@@ -31,7 +31,7 @@ public static class Extensions
         return item;
     }
     
-    // public static TItem IfNotNullAddTo<TItem, TCollection>(this TItem item, TCollection collection, Func<TItem,TItem> funcBeforeAdd)
+    // public static TItem IfNotNullAddTo<TItem, TCollection>(this TItem? item, TCollection collection, Func<TItem?,TItem> funcBeforeAdd)
     //     where TCollection : ICollection<TItem>
     // {
     //     var itemToAdd = funcBeforeAdd.Invoke(item);
@@ -39,11 +39,12 @@ public static class Extensions
     //     return itemToAdd;
     // }
     
-    public static TItemToAdd IfNotNullAddTo<TItem, TItemToAdd, TCollection>(this TItem item, TCollection collection, Func<TItem,TItemToAdd> funcBeforeAdd)
+    public static TItemToAdd IfNotNullAddTo<TItem, TItemToAdd, TCollection>(this TItem? item, TCollection collection, Func<TItem?,TItemToAdd> funcBeforeAdd)
         where TCollection : ICollection<TItemToAdd>
+        where TItemToAdd : notnull
     {
         var itemToAdd = funcBeforeAdd.Invoke(item);
-        if (itemToAdd is not null) collection.Add(itemToAdd);
+        collection.Add(itemToAdd);
         return itemToAdd;
     }
 

@@ -3,6 +3,7 @@
 using System.Reactive.Concurrency;
 using System.Reactive.Threading.Tasks;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using Binkus.DependencyInjection;
 using Binkus.ReactiveMvvm;
 using CommunityToolkit.Mvvm.DependencyInjection;
@@ -169,21 +170,41 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         if (isDisposed)
         {
             Prepare = JoinUiTaskFactory.RunAsync(() => OnPrepareAsync(PrepDisposables, token));
-                
-            if (!JoinPrepareBeforeOnActivationFinished)
-            {
-                // This ensures Exceptions get thrown
-                RxApp.TaskpoolScheduler.Schedule(Prepare, (joinTask,_) => joinTask?.Join());
-            }
+            
+            // todo rm
+            // if (!JoinPrepareBeforeOnActivationFinished)
+            // {
+            //     // This ensures Exceptions get thrown
+            //     RxApp.TaskpoolScheduler.Schedule(Prepare, (joinTask,_) => joinTask?.Join());
+            // }
         }
             
         Activation = JoinUiTaskFactory.RunAsync(() => OnActivationBaseAsync(disposables, token));
-            
-        if (!JoinActivationBeforeOnActivationFinished)
-        {
-            // This ensures Exceptions get thrown
-            RxApp.TaskpoolScheduler.Schedule(Activation, (joinTask,_) => joinTask?.Join());
-        }
+        
+        // todo rm
+        // if (!JoinActivationBeforeOnActivationFinished)
+        // {
+        //     // This ensures Exceptions get thrown
+        //     RxApp.TaskpoolScheduler.Schedule(Activation, (joinTask,_) => joinTask?.Join());
+        // }
+
+        //
+        
+        // var t0 = 0.AddTimestamp();
+        // InitPrepareActivation = JoinUiTaskFactory.RunAsync(async () =>
+        // {
+        //     var t = 0.AddTimestamp();
+        //     var initEx = await Init!.IgnoreExceptionAsync<OperationCanceledException>().TryAwaitAsync<Exception>();
+        //     var prepEx = await Prepare!.IgnoreExceptionAsync<OperationCanceledException>().TryAwaitAsync<Exception>();
+        //     var activeEx = await Activation!.IgnoreExceptionAsync<OperationCanceledException>().TryAwaitAsync<Exception>();
+        //     List<ExceptionDispatchInfo> exceptions = new(3);
+        //     initEx.IfNotNullAddTo(exceptions);
+        //     prepEx.IfNotNullAddTo(exceptions);
+        //     activeEx.IfNotNullAddTo(exceptions);
+        //     if (exceptions.Count > 0) throw new AggregateException(exceptions.Select(x => x.SourceException));
+        //     t.LogTime("InitPrepareActivation:"+ViewModelName);
+        // });
+        // t0.LogTime("XInitPrepareActivationX+"+ViewModelName);
     }
 
     [IgnoreDataMember] protected JoinableTask? Init { get; private set; }
@@ -191,6 +212,8 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     [IgnoreDataMember] protected JoinableTask? Prepare { get; private set; }
     
     [IgnoreDataMember] protected JoinableTask? Activation { get; private set; }
+    
+    // [IgnoreDataMember] protected JoinableTask? InitPrepareActivation { get; private set; }
 
     [IgnoreDataMember] public bool IsInitInitiated { get; private set; }
     
@@ -200,13 +223,31 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         
         IsInitInitiated = true;
         
-        Init = JoinUiTaskFactory.RunAsync(() => InitializeAsync(cancellationToken));
-        
-        if (!JoinInitBeforeOnActivationFinished)
+        Init = JoinUiTaskFactory.RunAsync(async () =>
         {
-            // This ensures Exceptions get thrown
-            RxApp.TaskpoolScheduler.Schedule(Init, (joinTask,_) => joinTask?.Join());
-        }
+            await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
+            await InitializeAsync(cancellationToken);
+        });
+        
+        // todo rm
+        // if (!JoinInitBeforeOnActivationFinished)
+        // {
+        //     // This ensures Exceptions get thrown
+        //     RxApp.TaskpoolScheduler.Schedule(Init, (joinTask,_) =>
+        //     {
+        //         joinTask?.Join();
+        //         // try
+        //         // {
+        //         //     joinTask?.Join();
+        //         // }
+        //         // catch (Exception e)
+        //         // {
+        //         //     var ex = ExceptionDispatchInfo.Capture(e);
+        //         //     RxApp.MainThreadScheduler.Schedule(Unit.Default, (_, _) => ex.Throw());//new Exception(e.StackTrace, e));
+        //         //     // throw;
+        //         // }
+        //     });
+        // }
         
         // var handle = cancellationToken.WaitHandle;
         // todo ActivationCancellationTokenSource.Cancel() when cancellationToken gets canceled
@@ -214,18 +255,20 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         Prepare = JoinUiTaskFactory.RunAsync(() =>
             OnPrepareBaseAsync(PrepDisposables, ActivationCancellationTokenSource.Token));
         
-        if (!JoinPrepareBeforeOnActivationFinished)
-        {
-            // This ensures Exceptions get thrown
-            RxApp.TaskpoolScheduler.Schedule(Prepare, (joinTask,_) => joinTask?.Join());
-        }
+        // todo rm
+        // if (!JoinPrepareBeforeOnActivationFinished)
+        // {
+        //     // This ensures Exceptions get thrown
+        //     RxApp.TaskpoolScheduler.Schedule(Prepare, (joinTask,_) => joinTask?.Join());
+        // }
     }
 
     protected virtual Task InitializeAsync(CancellationToken cancellationToken) => Task.CompletedTask;
     
     private async Task OnPrepareBaseAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        if (Init is { } init) await init.IgnoreExceptionAsync<Exception>();
+        if (Init is { } init) await init;//.IgnoreExceptionAsync<Exception>();
+        await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
         await OnPrepareAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
     }
 
@@ -234,15 +277,60 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     
     private async Task OnActivationBaseAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        if (Init is { } init) await init.IgnoreExceptionAsync<Exception>();
-        if (Prepare is { } prepare) await prepare.IgnoreExceptionAsync<Exception>();
-        var e = await OnActivationAsync(disposables, cancellationToken)
-            .IgnoreExceptionAsync<OperationCanceledException>()
-            .TryAwaitAsync<Exception>();
-        OnActivationFinishing(disposables, cancellationToken);
-        TrySetActivated(disposables, cancellationToken);
-        IsCurrentlyActivating = false;
-        e.ThrowWhenNotNull();
+        ExceptionDispatchInfo? exceptionDispatchInfo = null;
+        try
+        {
+            if (Init is { } init) await init; //.IgnoreExceptionAsync<Exception>();
+            if (Prepare is { } prepare) await prepare; //.IgnoreExceptionAsync<Exception>();
+            
+            await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
+
+            await OnActivationAsync(disposables, cancellationToken);
+            // await OnActivationAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
+
+            // var e = await OnActivationAsync(disposables, cancellationToken)
+            //     .IgnoreExceptionAsync<OperationCanceledException>()
+            //     .TryAwaitAsync<Exception>();
+            // e?.Throw();
+        }
+        catch (OperationCanceledException) { /* ignored */ }
+        catch (Exception e)
+        {
+            exceptionDispatchInfo = ExceptionDispatchInfo.Capture(e);
+            await JoinUiTaskFactory.SwitchToMainThreadAsync();
+            
+            // todo Evaluate awaiting some safe AppShutdown task, e.g. for safely closing Db connection and so on.
+            
+            // Crashing app with correct StackTrace with first exception:
+            ThreadPool.QueueUserWorkItem(_ => exceptionDispatchInfo.Throw());
+            await RxApp.MainThreadScheduler.Yield();
+        }
+        finally
+        {
+            if (exceptionDispatchInfo is not null)
+            {
+                // ThreadPool.QueueUserWorkItem above will crash the app, we are intentionally waiting for the it, cause
+                // the Async-Init API consumer forgot catching her/*/his errors while e.g. overriding InitializeAsync:
+                await RxApp.MainThreadScheduler.Yield();
+                await RxApp.TaskpoolScheduler.Yield();
+                await RxApp.MainThreadScheduler.Yield();
+                Environment.FailFast(
+                    #if DEBUG
+                    exceptionDispatchInfo.SourceException.StackTrace,
+                    #else
+                    exceptionDispatchInfo.SourceException.Message,
+                    #endif
+                    exceptionDispatchInfo.SourceException);
+                exceptionDispatchInfo.Throw(); // should never be hit
+            }
+            
+            await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
+            OnActivationFinishing(disposables, cancellationToken);
+            TrySetActivated(disposables, cancellationToken);
+            IsCurrentlyActivating = false;
+            
+            // e?.Throw();
+        }
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -372,6 +460,19 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     
     protected virtual void OnActivation(CompositeDisposable disposables, CancellationToken cancellationToken){}
     protected virtual void OnActivationFinishing(CompositeDisposable disposables, CancellationToken cancellationToken){}
+    
+    // private void OnActivationFinishingBase(CompositeDisposable disposables, CancellationToken cancellationToken)
+    // {
+    //     // per default generally ignoring OperationCanceledExceptions, cause GUI App would crash unnecessarily
+    //     CancellationToken token = default; // could be a token triggered when App closing
+    //
+    //     // RxApp.MainThreadScheduler.ScheduleAsync(InitPrepareActivation, async (a, b, c) =>
+    //     // {
+    //     //     await b!;
+    //     // });
+    //     
+    //     OnActivationFinishing(disposables, cancellationToken);
+    // }
 
     // private void OnActivationFinishingBase(CompositeDisposable disposables, CancellationToken cancellationToken)
     // {
@@ -431,12 +532,18 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         try
         {
             if (!IsInitInitiated) return;
-            JoinUiTaskFactory.Run(async () =>
-            {
-                if (Init is { } init) await init.IgnoreExceptionAsync<Exception>();
-                if (Prepare is { } prepare) await prepare.IgnoreExceptionAsync<Exception>();
-                if (Activation is { } activation) await activation.IgnoreExceptionAsync<Exception>();
-            });
+            // JoinUiTaskFactory.Run(async () =>
+            // {
+            //     // await InitPrepareActivation!;
+            //     
+            //     // if (Init is { } init) await init.IgnoreExceptionAsync<Exception>();
+            //     // if (Prepare is { } prepare) await prepare.IgnoreExceptionAsync<Exception>();
+            //     // if (Activation is { } activation) await activation.IgnoreExceptionAsync<Exception>();
+            // });
+            
+            // todo evaluate adding potential application CancellationToken (e.g. triggered OnAppShutdown / window close)
+            // InitPrepareActivation?.Join();
+            Activation?.Join();
         }
         finally
         {

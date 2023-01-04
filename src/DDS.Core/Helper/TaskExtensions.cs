@@ -252,6 +252,43 @@ public static class TaskExtensions
     }
     
     //
+
+    public static async ValueTask IfNotNullAwaitAsync(this JoinableTask? task)
+    {
+        if (task is not null) await task;
+    }
+    
+    public static async ValueTask IfNotNullAwaitAsync(this Task? task)
+    {
+        if (task is not null) await task.ConfigureAwait(false);
+    }
+    
+    public static async ValueTask IfNotNullAwaitAsync(this ValueTask? task)
+    {
+        if (task.HasValue) await task.Value.ConfigureAwait(false);
+    }
+    
+    //
+    
+    public static async ValueTask<TResult?> IfNotNullAwaitAsync<TResult>(this JoinableTask<TResult>? task)
+    {
+        if (task is not null) return await task;
+        return default;
+    }
+    
+    public static async ValueTask<TResult?> IfNotNullAwaitAsync<TResult>(this Task<TResult>? task)
+    {
+        if (task is not null) return await task.ConfigureAwait(false);
+        return default;
+    }
+    
+    public static async ValueTask<TResult?> IfNotNullAwaitAsync<TResult>(this ValueTask<TResult>? task)
+    {
+        if (task.HasValue) return await task.Value.ConfigureAwait(false);
+        return default;
+    }
+    
+    //
     
     public static void AwaitSync(this Task task) => task.GetAwaiter().GetResult();
     public static T AwaitSync<T>(this Task<T> task) => task.GetAwaiter().GetResult();

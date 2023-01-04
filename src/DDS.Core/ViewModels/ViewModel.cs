@@ -143,16 +143,28 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     {
         get
         {
-            // todo check potentially registered interface
             if (_lifetime is not null) return _lifetime;
             if (_hasKnownLifetime is false) return null;
             var lifetime = !Globals.IsDesignMode && ReferenceEquals(Services, Globals.Services) 
                 ? ServiceLifetime.Singleton 
                 : ((IKnowMyLifetime?)Services.GetService(typeof(LifetimeOf<>).MakeGenericType(GetType())))?.Lifetime;
+            IServiceCollection? serviceCollection = null;
+            lifetime ??= (serviceCollection = this.GetService<IServiceCollection>())
+                ?.FirstOrDefault(x => x.ServiceType == GetType())?.Lifetime
+                ?? serviceCollection?.FirstOrDefault(x => x.ImplementationType == GetType())?.Lifetime;
             if (lifetime.HasValue) return _lifetime = lifetime;
-            lifetime = this.GetService<IServiceCollection>()?.FirstOrDefault(x => x.ServiceType == GetType())?.Lifetime;
-            if (lifetime.HasValue) return _lifetime = lifetime;
+            var ivmType = GetType().GetInterface('I' + GetType().Name);
+            if (ivmType is not null)
+            {
+                lifetime = serviceCollection?.FirstOrDefault(x => x.ServiceType == ivmType)?.Lifetime
+                           ?? ((IKnowMyLifetime?)Services.GetService(typeof(LifetimeOf<>).MakeGenericType(ivmType)))
+                           ?.Lifetime;
+                if (lifetime.HasValue) return _lifetime = lifetime;                
+            }
             _hasKnownLifetime = false;
+            Debug.WriteLine($"{GetType().FullName}'s ServiceLifetime is unknown. Are IServiceCollection" +
+                            $"or LifetimeOf<{GetType().FullName}> not registered? Did you register the ViewModel" +
+                            $"not as {GetType().FullName} or as I{GetType().Name}?");
             return null;
         }
     }
@@ -448,11 +460,11 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     
     //
     
-    /// For IMessenger, called automatically.
+    /// For IMessenger, called automatically. Do not call this manually.
     /// <inheritdoc />
     protected sealed override void OnActivated() => base.OnActivated();
     
-    /// For IMessenger, called automatically.
+    /// For IMessenger, called automatically. Do not call this manually.
     /// <inheritdoc />
     protected sealed override void OnDeactivated() => base.OnDeactivated();
 

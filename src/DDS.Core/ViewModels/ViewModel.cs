@@ -293,50 +293,59 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
 
     protected virtual Task OnPrepareAsync(CompositeDisposable disposables, CancellationToken cancellationToken) =>
         Task.CompletedTask;
-    
+
+    protected virtual ValueTask OnOperationCanceledExceptionAsync(ExceptionDispatchInfo operationCanceledExceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+    protected virtual async ValueTask OnExceptionAsync(ExceptionDispatchInfo exceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        // SetDeactivated();
+            
+        // todo Evaluate awaiting some safe AppShutdown task, e.g. for safely closing Db connection and so on.
+            
+        // Crashing app with correct StackTrace with first exception:
+        ThreadPool.QueueUserWorkItem(_ => exceptionDispatchInfo.Throw());
+        
+        // ThreadPool.QueueUserWorkItem above will crash the app, we are intentionally waiting for the it, cause
+        // the Async-Init API consumer forgot catching her/*/his errors while e.g. overriding InitializeAsync:
+        await RxApp.MainThreadScheduler.Yield();
+        await RxApp.TaskpoolScheduler.Yield();
+        await RxApp.MainThreadScheduler.Yield();
+        Environment.FailFast(
+        #if DEBUG
+            exceptionDispatchInfo.SourceException.StackTrace,
+        #else
+            exceptionDispatchInfo.SourceException.Message,
+        #endif
+            exceptionDispatchInfo.SourceException);
+        exceptionDispatchInfo.Throw(); // should never be hit
+    }
+
     private async Task OnActivationBaseAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        ExceptionDispatchInfo? exceptionDispatchInfo = null;
         try
         {
             if (Init is { } init) await init;
             if (Prepare is { } prepare) await prepare;
-            
+
             await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
 
             await OnActivationAsync(disposables, cancellationToken);
         }
-        catch (OperationCanceledException) { /* ignored */ }
+        catch (OperationCanceledException e)
+        {
+            var exceptionDispatchInfo = ExceptionDispatchInfo.Capture(e);
+            await JoinUiTaskFactory.SwitchToMainThreadAsync();
+            await OnOperationCanceledExceptionAsync(exceptionDispatchInfo, disposables, cancellationToken);
+        }
         catch (Exception e)
         {
-            exceptionDispatchInfo = ExceptionDispatchInfo.Capture(e);
+            var exceptionDispatchInfo = ExceptionDispatchInfo.Capture(e);
             await JoinUiTaskFactory.SwitchToMainThreadAsync();
-            
-            // todo Evaluate awaiting some safe AppShutdown task, e.g. for safely closing Db connection and so on.
-            
-            // Crashing app with correct StackTrace with first exception:
-            ThreadPool.QueueUserWorkItem(_ => exceptionDispatchInfo.Throw());
+            await OnExceptionAsync(exceptionDispatchInfo, disposables, cancellationToken);
             await RxApp.MainThreadScheduler.Yield();
+            await RxApp.TaskpoolScheduler.Yield();
         }
         finally
         {
-            if (exceptionDispatchInfo is not null)
-            {
-                // ThreadPool.QueueUserWorkItem above will crash the app, we are intentionally waiting for the it, cause
-                // the Async-Init API consumer forgot catching her/*/his errors while e.g. overriding InitializeAsync:
-                await RxApp.MainThreadScheduler.Yield();
-                await RxApp.TaskpoolScheduler.Yield();
-                await RxApp.MainThreadScheduler.Yield();
-                Environment.FailFast(
-                    #if DEBUG
-                    exceptionDispatchInfo.SourceException.StackTrace,
-                    #else
-                    exceptionDispatchInfo.SourceException.Message,
-                    #endif
-                    exceptionDispatchInfo.SourceException);
-                exceptionDispatchInfo.Throw(); // should never be hit
-            }
-            
             await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
             OnActivationFinishing(disposables, cancellationToken);
             TrySetActivated(disposables, cancellationToken);

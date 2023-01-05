@@ -295,7 +295,34 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         Task.CompletedTask;
 
     protected virtual ValueTask OnOperationCanceledExceptionAsync(ExceptionDispatchInfo operationCanceledExceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken) => ValueTask.CompletedTask;
-    protected virtual async ValueTask OnExceptionAsync(ExceptionDispatchInfo exceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken)
+    protected virtual ValueTask OnExceptionAsync(ExceptionDispatchInfo exceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        // SetDeactivated();
+            
+        // todo Evaluate awaiting some safe AppShutdown task, e.g. for safely closing Db connection and so on.
+
+        return CrashAppAsync(exceptionDispatchInfo);
+    }
+    
+    private async ValueTask OnExceptionBaseAsync(ExceptionDispatchInfo exceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken)
+    {
+        // SetDeactivated();
+            
+        // todo Evaluate awaiting some safe AppShutdown task, e.g. for safely closing Db connection and so on.
+
+        try
+        {
+            await JoinUiTaskFactory.SwitchToMainThreadAsync();
+            await OnExceptionAsync(exceptionDispatchInfo, disposables, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            await CrashAppAsync(ExceptionDispatchInfo.Capture(e));
+        }
+    }
+    
+    [DoesNotReturn]
+    private static async ValueTask CrashAppAsync(ExceptionDispatchInfo exceptionDispatchInfo)
     {
         // SetDeactivated();
             
@@ -306,15 +333,19 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         
         // ThreadPool.QueueUserWorkItem above will crash the app, we are intentionally waiting for the it, cause
         // the Async-Init API consumer forgot catching her/*/his errors while e.g. overriding InitializeAsync:
-        await RxApp.MainThreadScheduler.Yield();
+        await RxApp.MainThreadScheduler.Yield(); // should crash already before continuing after this line
         await RxApp.TaskpoolScheduler.Yield();
         await RxApp.MainThreadScheduler.Yield();
+        await Task.Delay(42);
+        await RxApp.TaskpoolScheduler.Yield();
+        await RxApp.MainThreadScheduler.Yield();
+        await Task.Delay(42);
         Environment.FailFast(
-        #if DEBUG
+#if DEBUG
             exceptionDispatchInfo.SourceException.StackTrace,
-        #else
+#else
             exceptionDispatchInfo.SourceException.Message,
-        #endif
+#endif
             exceptionDispatchInfo.SourceException);
         exceptionDispatchInfo.Throw(); // should never be hit
     }
@@ -334,21 +365,14 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         }
         catch (OperationCanceledException e)
         {
-            var exceptionDispatchInfo = ExceptionDispatchInfo.Capture(e);
-            await JoinUiTaskFactory.SwitchToMainThreadAsync();
-            await OnOperationCanceledExceptionAsync(exceptionDispatchInfo, disposables, cancellationToken);
+            await OnOperationCanceledExceptionAsync(ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
         }
         catch (Exception e)
         {
-            var exceptionDispatchInfo = ExceptionDispatchInfo.Capture(e);
-            await JoinUiTaskFactory.SwitchToMainThreadAsync();
-            await OnExceptionAsync(exceptionDispatchInfo, disposables, cancellationToken);
-            await RxApp.MainThreadScheduler.Yield();
-            await RxApp.TaskpoolScheduler.Yield();
+            await OnExceptionBaseAsync(ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
         }
         finally
         {
-            await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
             TrySetActivated(disposables, cancellationToken);
             IsCurrentlyActivating = false;
         }

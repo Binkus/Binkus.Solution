@@ -253,41 +253,26 @@ public static class TaskExtensions
     
     //
 
-    public static async ValueTask IfNotNullAwaitAsync(this JoinableTask? task)
-    {
-        if (task is not null) await task;
-    }
+    public static async Task IfNotNullAwaitAsync(this JoinableTask? task) { if (task is not null) await task; }
     
-    public static async ValueTask IfNotNullAwaitAsync(this Task? task)
-    {
-        if (task is not null) await task.ConfigureAwait(false);
-    }
-    
-    public static async ValueTask IfNotNullAwaitAsync(this ValueTask? task)
-    {
-        if (task.HasValue) await task.Value.ConfigureAwait(false);
-    }
-    
+    public static Task IfNotNullAwaitAsync(this Task? task) => task ?? Task.CompletedTask;
+
+    public static ValueTask IfNotNullAwaitAsync(this ValueTask? task) => task ?? ValueTask.CompletedTask;
+
     //
     
-    public static async ValueTask<TResult?> IfNotNullAwaitAsync<TResult>(this JoinableTask<TResult>? task)
+    public static async Task<TResult?> IfNotNullAwaitAsync<TResult>(this JoinableTask<TResult>? task)
     {
         if (task is not null) return await task;
         return default;
     }
-    
-    public static async ValueTask<TResult?> IfNotNullAwaitAsync<TResult>(this Task<TResult>? task)
-    {
-        if (task is not null) return await task.ConfigureAwait(false);
-        return default;
-    }
-    
-    public static async ValueTask<TResult?> IfNotNullAwaitAsync<TResult>(this ValueTask<TResult>? task)
-    {
-        if (task.HasValue) return await task.Value.ConfigureAwait(false);
-        return default;
-    }
-    
+
+    public static Task<TResult?> IfNotNullAwaitAsync<TResult>(this Task<TResult>? task)
+        => task as Task<TResult?> ?? Task.FromResult<TResult?>(default);
+
+    public static ValueTask<TResult?> IfNotNullAwaitAsync<TResult>(this ValueTask<TResult>? task)
+        => task as ValueTask<TResult?>? ?? default;
+
     //
     
     public static void AwaitSync(this Task task) => task.GetAwaiter().GetResult();

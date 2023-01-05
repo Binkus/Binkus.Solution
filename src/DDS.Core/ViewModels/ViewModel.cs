@@ -329,6 +329,8 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
             await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
 
             await OnActivationAsync(disposables, cancellationToken);
+            
+            OnActivationFinishing(disposables, cancellationToken);
         }
         catch (OperationCanceledException e)
         {
@@ -347,7 +349,6 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         finally
         {
             await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
-            OnActivationFinishing(disposables, cancellationToken);
             TrySetActivated(disposables, cancellationToken);
             IsCurrentlyActivating = false;
         }

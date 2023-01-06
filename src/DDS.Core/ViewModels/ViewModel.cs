@@ -338,15 +338,12 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         await JoinUiTaskFactory.SwitchToMainThreadAsync();
         var mainThread = Thread.CurrentThread;
         
-#pragma warning disable VSTHRD105
-        // Crashing app with correct StackTrace with first exception:
+        // Crashing app with correct StackTrace of the first exception, cause
+        // the Async-Init API consumer forgot catching her/*/his errors while e.g. overriding InitializeAsync
+        // and OnExceptionAsync as not been overriden (or calls base.*), OnExceptionAsync by default calls this method.
+        
         await Task.Run(async () =>
         {
-            // if (Debugger.IsAttached)
-            // {
-            //     Debugger.Break();
-            // }
-            
             var dueTme = mainThread == Thread.CurrentThread ? TimeSpan.FromMilliseconds(1) : TimeSpan.Zero;
             
             try
@@ -375,13 +372,9 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
                 await RxApp.TaskpoolScheduler.Yield();
             }
             catch (Exception) { /* ignored intentionally */ }
-        });//.ContinueWith(_ => { /* ignored, won't be executed */ },
-            //     TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.PreferFairness)
-            // .ConfigureAwait(false);
-#pragma warning restore VSTHRD105#pragma warning restore VSTHRD105
+        });
 
-        // ThreadPool.QueueUserWorkItem above will crash the app, we are intentionally waiting for the it, cause
-        // the Async-Init API consumer forgot catching her/*/his errors while e.g. overriding InitializeAsync:
+        // The code above should crash the app, if not, the following is the backup plan:
         Environment.FailFast(
 #if DEBUG
             exceptionDispatchInfo.SourceException.StackTrace,

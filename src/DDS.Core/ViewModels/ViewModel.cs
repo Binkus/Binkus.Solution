@@ -80,6 +80,7 @@ public abstract class ViewModel : ViewModel<IViewModel>
 /// <seealso cref="ReactiveValidationObservableRecipientValidator"/>
 /// <seealso cref="ReactiveObservableObject"/>
 /// <seealso cref="ObservableObject"/>
+/// <seealso cref="ObservableRecipient"/>
 /// <seealso cref="ObservableValidator"/>
 /// <seealso cref="ReactiveObject"/>
 /// <seealso cref="ReactiveUI.Validation.Helpers.ReactiveValidationObject"/>
@@ -304,6 +305,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         return CrashAppAsync(exceptionDispatchInfo);
     }
     
+    [StackTraceHidden]
     private async ValueTask OnExceptionBaseAsync(ExceptionDispatchInfo exceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken)
     {
         // SetDeactivated();
@@ -315,6 +317,10 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
             await JoinUiTaskFactory.SwitchToMainThreadAsync();
             await OnExceptionAsync(exceptionDispatchInfo, disposables, cancellationToken);
         }
+        catch (OperationCanceledException e)
+        {
+            await OnOperationCanceledExceptionAsync(ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
+        }
         catch (Exception e)
         {
             await CrashAppAsync(ExceptionDispatchInfo.Capture(e));
@@ -322,24 +328,60 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     }
     
     [DoesNotReturn]
-    private static async ValueTask CrashAppAsync(ExceptionDispatchInfo exceptionDispatchInfo)
+    [StackTraceHidden]
+    protected virtual async ValueTask CrashAppAsync(ExceptionDispatchInfo exceptionDispatchInfo)
     {
         // SetDeactivated();
             
         // todo Evaluate awaiting some safe AppShutdown task, e.g. for safely closing Db connection and so on.
-            
-        // Crashing app with correct StackTrace with first exception:
-        ThreadPool.QueueUserWorkItem(_ => exceptionDispatchInfo.Throw());
         
+        await JoinUiTaskFactory.SwitchToMainThreadAsync();
+        var mainThread = Thread.CurrentThread;
+        
+#pragma warning disable VSTHRD105
+        // Crashing app with correct StackTrace with first exception:
+        await Task.Run(async () =>
+        {
+            // if (Debugger.IsAttached)
+            // {
+            //     Debugger.Break();
+            // }
+            
+            var dueTme = mainThread == Thread.CurrentThread ? TimeSpan.FromMilliseconds(1) : TimeSpan.Zero;
+            
+            try
+            {
+                TaskCompletionSource source = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                RxApp.MainThreadScheduler.Schedule(dueTme, exceptionDispatchInfo.Throw);
+                RxApp.MainThreadScheduler.Schedule(dueTme * 2, () => source.TrySetResult());
+                await source.Task.ConfigureAwait(false);
+                await RxApp.MainThreadScheduler.Yield();
+            }
+            catch (Exception) { /* ignored intentionally */ }
+
+            try
+            {
+                TaskCompletionSource source2 = new(TaskCreationOptions.RunContinuationsAsynchronously);
+                RxApp.MainThreadScheduler.Schedule(dueTme * 4, () =>
+                {
+                    ThreadPool.QueueUserWorkItem(_ =>
+                    {
+                        source2.TrySetResult();
+                        exceptionDispatchInfo.Throw();
+                    });
+                });
+                await source2.Task.ConfigureAwait(false);
+                await RxApp.MainThreadScheduler.Yield();
+                await RxApp.TaskpoolScheduler.Yield();
+            }
+            catch (Exception) { /* ignored intentionally */ }
+        });//.ContinueWith(_ => { /* ignored, won't be executed */ },
+            //     TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.PreferFairness)
+            // .ConfigureAwait(false);
+#pragma warning restore VSTHRD105#pragma warning restore VSTHRD105
+
         // ThreadPool.QueueUserWorkItem above will crash the app, we are intentionally waiting for the it, cause
         // the Async-Init API consumer forgot catching her/*/his errors while e.g. overriding InitializeAsync:
-        await RxApp.MainThreadScheduler.Yield(); // should crash already before continuing after this line
-        await RxApp.TaskpoolScheduler.Yield();
-        await RxApp.MainThreadScheduler.Yield();
-        await Task.Delay(42);
-        await RxApp.TaskpoolScheduler.Yield();
-        await RxApp.MainThreadScheduler.Yield();
-        await Task.Delay(42);
         Environment.FailFast(
 #if DEBUG
             exceptionDispatchInfo.SourceException.StackTrace,

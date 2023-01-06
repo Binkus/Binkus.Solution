@@ -295,7 +295,37 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     protected virtual Task OnPrepareAsync(CompositeDisposable disposables, CancellationToken cancellationToken) =>
         Task.CompletedTask;
 
-    protected virtual ValueTask OnOperationCanceledExceptionAsync(ExceptionDispatchInfo operationCanceledExceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken) => ValueTask.CompletedTask;
+    //
+    
+    [StackTraceHidden]
+    private async ValueTask OnOperationCanceledExceptionBaseAsync(
+        ExceptionDispatchInfo operationCanceledExceptionDispatchInfo, CompositeDisposable disposables,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            await JoinUiTaskFactory.SwitchToMainThreadAsync();
+            await OnOperationCanceledExceptionAsync(operationCanceledExceptionDispatchInfo, disposables, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            await CrashAppAsync(ExceptionDispatchInfo.Capture(e));
+        }
+    }
+    
+    protected virtual ValueTask OnOperationCanceledExceptionAsync(ExceptionDispatchInfo operationCanceledExceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken)
+        => ValueTask.CompletedTask;
+    
+    /// <summary>
+    /// Fires when exception(s) happen in InitializeAsync, OnPrepareAsync or OnActivationAsync.
+    /// By default, or when base <see cref="OnExceptionAsync"/> is called, <see cref="CrashAppAsync"/> is getting
+    /// executed which - when not overridden - crashes the app. 
+    /// <p>(Excluding OperationCanceledException.)</p>
+    /// </summary>
+    /// <param name="exceptionDispatchInfo"></param>
+    /// <param name="disposables"></param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
     protected virtual ValueTask OnExceptionAsync(ExceptionDispatchInfo exceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken)
     {
         // SetDeactivated();
@@ -319,7 +349,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         }
         catch (OperationCanceledException e)
         {
-            await OnOperationCanceledExceptionAsync(ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
+            await OnOperationCanceledExceptionBaseAsync(ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
         }
         catch (Exception e)
         {
@@ -400,7 +430,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         }
         catch (OperationCanceledException e)
         {
-            await OnOperationCanceledExceptionAsync(ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
+            await OnOperationCanceledExceptionBaseAsync(ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
         }
         catch (Exception e)
         {

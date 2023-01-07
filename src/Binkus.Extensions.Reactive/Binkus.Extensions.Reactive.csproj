@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(DotnetVersionsNetStandard2_0_AND_GREATER);</TargetFrameworks>
+        <LangVersion>$(DotnetLangVersionShared)</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <WarningsAsErrors>Nullable</WarningsAsErrors>
+        <RootNamespace>Binkus.Extensions</RootNamespace>
+        <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="System.Reactive" Version="5.0.0" />
+    </ItemGroup>
+
+</Project>

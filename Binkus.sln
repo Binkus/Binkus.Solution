@@ -60,6 +60,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binkus.Extensions.Logging",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binkus.Extensions.Logging.Performance", "src\Binkus.Extensions.Logging.Performance\Binkus.Extensions.Logging.Performance.csproj", "{77565B33-9135-44BA-9458-3A058EF534C7}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Binkus.Extensions.Reactive", "src\Binkus.Extensions.Reactive\Binkus.Extensions.Reactive.csproj", "{F18473E4-9BB4-4482-9467-289E42355F5D}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -136,6 +138,10 @@ Global
 		{77565B33-9135-44BA-9458-3A058EF534C7}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{77565B33-9135-44BA-9458-3A058EF534C7}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{77565B33-9135-44BA-9458-3A058EF534C7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F18473E4-9BB4-4482-9467-289E42355F5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F18473E4-9BB4-4482-9467-289E42355F5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F18473E4-9BB4-4482-9467-289E42355F5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F18473E4-9BB4-4482-9467-289E42355F5D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{2B4CCA97-7AE9-49A8-AFDB-2D8CB72F224B} = {CB4831B1-80FA-45B7-9485-45D471B8E7F4}
@@ -159,6 +165,7 @@ Global
 		{6A313623-4849-4C22-8491-3BE76A7621E6} = {43D24F56-9266-4BE0-B7E4-257805E30324}
 		{C5B01428-4E0E-4B3F-BBE8-55B9146682CD} = {43D24F56-9266-4BE0-B7E4-257805E30324}
 		{77565B33-9135-44BA-9458-3A058EF534C7} = {43D24F56-9266-4BE0-B7E4-257805E30324}
+		{F18473E4-9BB4-4482-9467-289E42355F5D} = {43D24F56-9266-4BE0-B7E4-257805E30324}
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 								HideSolutionNode = FALSE

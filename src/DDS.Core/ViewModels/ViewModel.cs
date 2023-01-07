@@ -200,8 +200,10 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
 
     // [IgnoreDataMember] public CompositeDisposable Disposables { get; } = new();
 
-    protected ViewModel(IServiceProvider services, IScreen hostScreen, IMessenger? messenger = null) : this(services, messenger) => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
-    protected ViewModel(IServiceProvider services, Lazy<IScreen> lazyHostScreen, IMessenger? messenger = null) : this(services, messenger) => _lazyHostScreen = lazyHostScreen;
+    protected ViewModel(IServiceProvider services, IScreen hostScreen, IMessenger? messenger = null)
+        : this(services, messenger) => _lazyHostScreen = new Lazy<IScreen>(hostScreen);
+    protected ViewModel(IServiceProvider services, Lazy<IScreen> lazyHostScreen, IMessenger? messenger = null)
+        : this(services, messenger) => _lazyHostScreen = lazyHostScreen;
     protected ViewModel(IServiceProvider services, IMessenger? messenger = null) : base(messenger, services)
     {
         Services = services;
@@ -234,7 +236,7 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
                 JoinAsyncInitPrepareActivation(disposables, token);
                 return;
             } // else
-            // (when async activation enabled, TrySetActivated happens on async completion after OnActivationFinishing)
+            // (when async activation enabled, TrySetActivated happens on async completion after OnActivationFinishing)            
             OnActivationFinishing(disposables, token);
             TrySetActivated(disposables, token);
             IsCurrentlyActivating = false;
@@ -263,7 +265,8 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     public async Task InitTaskAsync() { if (Init is { } init) await init; }
     public async Task PrepareTaskAsync() { if (Prepare is { } prepare) await prepare; }
     public async Task ActivationTaskAsync() { if (Activation is { } activation) await activation; }
-    
+
+    [StackTraceHidden]
     void IInitializable.Initialize(CancellationToken cancellationToken)
     {
         if (!EnableAsyncInitPrepareActivate || IsInitInitiated) return;
@@ -273,7 +276,20 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         Init = JoinUiTaskFactory.RunAsync(async () =>
         {
             await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
-            await InitializeAsync(cancellationToken);
+            try
+            {
+                await InitializeAsync(cancellationToken);
+            }
+            catch (OperationCanceledException e)
+            {
+                await OnOperationCanceledExceptionBaseAsync(InitializableExceptionSource.InitializeAsync,
+                    ExceptionDispatchInfo.Capture(e), null, cancellationToken);
+            }
+            catch (Exception e)
+            {
+                await OnExceptionBaseAsync(InitializableExceptionSource.InitializeAsync,
+                    ExceptionDispatchInfo.Capture(e), null, cancellationToken);
+            }
         });
         
         // var handle = cancellationToken.WaitHandle;
@@ -287,9 +303,22 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     
     private async Task OnPrepareBaseAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
-        if (Init is { } init) await init;//.IgnoreExceptionAsync<Exception>();
+        if (Init is { } init) await init;
         await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
-        await OnPrepareAsync(disposables, cancellationToken).IgnoreExceptionAsync<OperationCanceledException>();
+        try
+        {
+            await OnPrepareAsync(disposables, cancellationToken);
+        }
+        catch (OperationCanceledException e)
+        {
+            await OnOperationCanceledExceptionBaseAsync(InitializableExceptionSource.OnPrepareAsync,
+                ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            await OnExceptionBaseAsync(InitializableExceptionSource.OnPrepareAsync,
+                ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
+        }
     }
 
     protected virtual Task OnPrepareAsync(CompositeDisposable disposables, CancellationToken cancellationToken) =>
@@ -298,45 +327,57 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
     //
     
     [StackTraceHidden]
-    private async ValueTask OnOperationCanceledExceptionBaseAsync(
-        ExceptionDispatchInfo operationCanceledExceptionDispatchInfo, CompositeDisposable disposables,
+    private async Task OnOperationCanceledExceptionBaseAsync(
+        InitializableExceptionSource initializableExceptionSource,
+        ExceptionDispatchInfo operationCanceledExceptionDispatchInfo, CompositeDisposable? disposables,
         CancellationToken cancellationToken)
     {
         try
         {
             await JoinUiTaskFactory.SwitchToMainThreadAsync();
-            await OnOperationCanceledExceptionAsync(operationCanceledExceptionDispatchInfo, disposables, cancellationToken);
+            await OnOperationCanceledExceptionAsync(initializableExceptionSource,
+                operationCanceledExceptionDispatchInfo, disposables, cancellationToken);
         }
         catch (Exception e)
         {
-            await CrashAppAsync(ExceptionDispatchInfo.Capture(e));
+            await OnUnhandledExceptionCrashAppAsync(initializableExceptionSource, ExceptionDispatchInfo.Capture(e));
         }
     }
     
-    protected virtual ValueTask OnOperationCanceledExceptionAsync(ExceptionDispatchInfo operationCanceledExceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken)
-        => ValueTask.CompletedTask;
-    
+    protected virtual Task OnOperationCanceledExceptionAsync(
+        InitializableExceptionSource initializableExceptionSource,
+        ExceptionDispatchInfo operationCanceledExceptionDispatchInfo,
+        CompositeDisposable? disposables, CancellationToken cancellationToken)
+        => Task.CompletedTask;
+
     /// <summary>
-    /// Fires when exception(s) happen in InitializeAsync, OnPrepareAsync or OnActivationAsync.
-    /// By default, or when base <see cref="OnExceptionAsync"/> is called, <see cref="CrashAppAsync"/> is getting
+    /// Fires when exception(s) happen in InitializeAsync, OnPrepareAsync or OnActivationAsync,
+    /// or OnActivationFinishing when <see cref="EnableAsyncInitPrepareActivate"/> is set to true.
+    /// By default, or when base <see cref="OnExceptionAsync"/> is called,
+    /// <see cref="OnUnhandledExceptionCrashAppAsync"/> is getting
     /// executed which - when not overridden - crashes the app. 
     /// <p>(Excluding OperationCanceledException.)</p>
     /// </summary>
+    /// <param name="initializableExceptionSource"></param>
     /// <param name="exceptionDispatchInfo"></param>
     /// <param name="disposables"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    protected virtual ValueTask OnExceptionAsync(ExceptionDispatchInfo exceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken)
+    protected virtual Task OnExceptionAsync(
+        InitializableExceptionSource initializableExceptionSource, ExceptionDispatchInfo exceptionDispatchInfo, 
+        CompositeDisposable? disposables, CancellationToken cancellationToken)
     {
         // SetDeactivated();
             
         // todo Evaluate awaiting some safe AppShutdown task, e.g. for safely closing Db connection and so on.
 
-        return CrashAppAsync(exceptionDispatchInfo);
+        return OnUnhandledExceptionCrashAppAsync(initializableExceptionSource, exceptionDispatchInfo);
     }
     
     [StackTraceHidden]
-    private async ValueTask OnExceptionBaseAsync(ExceptionDispatchInfo exceptionDispatchInfo, CompositeDisposable disposables, CancellationToken cancellationToken)
+    private async Task OnExceptionBaseAsync(
+        InitializableExceptionSource initializableExceptionSource, ExceptionDispatchInfo exceptionDispatchInfo, 
+        CompositeDisposable? disposables, CancellationToken cancellationToken)
     {
         // SetDeactivated();
             
@@ -345,33 +386,52 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
         try
         {
             await JoinUiTaskFactory.SwitchToMainThreadAsync();
-            await OnExceptionAsync(exceptionDispatchInfo, disposables, cancellationToken);
+            await OnExceptionAsync(initializableExceptionSource, exceptionDispatchInfo, disposables, cancellationToken);
         }
         catch (OperationCanceledException e)
         {
-            await OnOperationCanceledExceptionBaseAsync(ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
+            await OnOperationCanceledExceptionBaseAsync(initializableExceptionSource, ExceptionDispatchInfo.Capture(e),
+                disposables, cancellationToken);
         }
         catch (Exception e)
         {
-            await CrashAppAsync(ExceptionDispatchInfo.Capture(e));
+            await OnUnhandledExceptionCrashAppAsync(initializableExceptionSource, ExceptionDispatchInfo.Capture(e));
         }
     }
     
+    /// <summary>
+    /// Do not call manually. For overriding only (e.g. for skipping crashing the app onError).
+    /// Trying to call manually probably deadlocks. If you have to call manually, try .ToObservable().ObserveOn(RxApp.MainThreadScheduler).Subscribe().
+    /// Calling from synchronous context otherwise will likely deadlock.
+    /// </summary>
+    /// <param name="initializableExceptionSource"></param>
+    /// <param name="exceptionDispatchInfo"></param>
     [DoesNotReturn]
     [StackTraceHidden]
-    protected virtual async ValueTask CrashAppAsync(ExceptionDispatchInfo exceptionDispatchInfo)
+    protected virtual async Task OnUnhandledExceptionCrashAppAsync(
+        InitializableExceptionSource initializableExceptionSource, ExceptionDispatchInfo exceptionDispatchInfo)
     {
         // SetDeactivated();
             
         // todo Evaluate awaiting some safe AppShutdown task, e.g. for safely closing Db connection and so on.
         
-        await JoinUiTaskFactory.SwitchToMainThreadAsync();
-        var mainThread = Thread.CurrentThread;
         
         // Crashing app with correct StackTrace of the first exception, cause
         // the Async-Init API consumer forgot catching her/*/his errors while e.g. overriding InitializeAsync
         // and OnExceptionAsync as not been overriden (or calls base.*), OnExceptionAsync by default calls this method.
-        
+
+        bool done = false;
+        var deadlockBackup = Task.Run(async () =>
+        {
+            await Task.Delay(420);
+            if (done) return;
+            ThreadPool.QueueUserWorkItem(_ => exceptionDispatchInfo.Throw());
+            await Task.Delay(420);
+            if (done) return;
+            EnvironmentFailFast();
+        });
+        await JoinUiTaskFactory.SwitchToMainThreadAsync();
+        var mainThread = Thread.CurrentThread;
         await Task.Run(async () =>
         {
             var dueTme = mainThread == Thread.CurrentThread ? TimeSpan.FromMilliseconds(1) : TimeSpan.Zero;
@@ -402,45 +462,69 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
                 await RxApp.TaskpoolScheduler.Yield();
             }
             catch (Exception) { /* ignored intentionally */ }
-        });
+
+            done = true;
+        }).ConfigureAwait(false);
+        await deadlockBackup.ConfigureAwait(false);
+        EnvironmentFailFast();
 
         // The code above should crash the app, if not, the following is the backup plan:
-        Environment.FailFast(
+        void EnvironmentFailFast()
+        {
+            Environment.FailFast(
 #if DEBUG
-            exceptionDispatchInfo.SourceException.StackTrace,
+                exceptionDispatchInfo.SourceException.StackTrace,
 #else
-            exceptionDispatchInfo.SourceException.Message,
+                exceptionDispatchInfo.SourceException.Message,
 #endif
-            exceptionDispatchInfo.SourceException);
+                exceptionDispatchInfo.SourceException);
+        }
         exceptionDispatchInfo.Throw(); // should never be hit
     }
 
     private async Task OnActivationBaseAsync(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
+        if (Init is { } init) await init;
+        if (Prepare is { } prepare) await prepare;
+
+        await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
+        
         try
         {
-            if (Init is { } init) await init;
-            if (Prepare is { } prepare) await prepare;
-
-            await JoinUiTaskFactory.SwitchToMainThreadAsync(true);
-
             await OnActivationAsync(disposables, cancellationToken);
-            
+        }
+        catch (OperationCanceledException e)
+        {
+            await OnOperationCanceledExceptionBaseAsync(InitializableExceptionSource.OnActivationAsync,
+                ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
+        }
+        catch (Exception e)
+        {
+            await OnExceptionBaseAsync(InitializableExceptionSource.OnActivationAsync, ExceptionDispatchInfo.Capture(e),
+                disposables, cancellationToken);
+        }
+        
+        try
+        {
             OnActivationFinishing(disposables, cancellationToken);
         }
         catch (OperationCanceledException e)
         {
-            await OnOperationCanceledExceptionBaseAsync(ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
+            await OnOperationCanceledExceptionBaseAsync(
+                InitializableExceptionSource.OnActivationFinishingWhenEnableAsyncInitPrepareActivate,
+                ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
         }
         catch (Exception e)
         {
-            await OnExceptionBaseAsync(ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
+            await OnExceptionBaseAsync(
+                InitializableExceptionSource.OnActivationFinishingWhenEnableAsyncInitPrepareActivate,
+                ExceptionDispatchInfo.Capture(e), disposables, cancellationToken);
         }
-        finally
-        {
-            TrySetActivated(disposables, cancellationToken);
-            IsCurrentlyActivating = false;
-        }
+        // finally
+        // {
+        TrySetActivated(disposables, cancellationToken);
+        IsCurrentlyActivating = false;
+        // }
     }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -547,6 +631,8 @@ public abstract class ViewModel<TIViewModel> : ReactiveValidationObservableRecip
             if (!IsInitInitiated) return;
             
             // todo evaluate adding potential application CancellationToken (e.g. triggered OnAppShutdown / window close)
+            // Init?.Join();
+            // Prepare?.Join();
             Activation?.Join();
         }
         finally

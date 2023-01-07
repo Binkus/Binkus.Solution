@@ -39,3 +39,16 @@ public interface IInitializable
     protected void Initialize(CancellationToken cancellationToken);
     public sealed void InitializeOnceAfterCreation(CancellationToken cancellationToken) => Initialize(cancellationToken);
 }
+
+public enum InitializableExceptionSource
+{
+    Undefined = 0,
+    InitializeAsync,
+    OnPrepareAsync,
+    // OnActivation,
+    OnActivationAsync,
+    OnActivationFinishingWhenEnableAsyncInitPrepareActivate,
+    // CrashAppAsync,
+    // OnException,
+    // OnOperationCanceledException,
+}

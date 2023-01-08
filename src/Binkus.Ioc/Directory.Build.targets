@@ -1,0 +1,6 @@
+<Project>
+    <PropertyGroup>
+<!--        <DefineConstants>$(DefineConstants);USE_MEDI</DefineConstants>-->
+        <DefineConstants Condition="'$(USE_MEDI)'=='true' Or '$(USE_MEDI)'=='1'">$(DefineConstants);USE_MEDI</DefineConstants>
+    </PropertyGroup>
+</Project>

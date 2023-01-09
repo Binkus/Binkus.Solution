@@ -88,8 +88,8 @@ internal static class IocUtilities
 
         if (instanceType.IsAbstract)
         {
-            // todo throw new InvalidOperationException(SR.CannotCreateAbstractClasses);
-            throw new InvalidOperationException();
+            // done _todo throw new InvalidOperationException(SR.CannotCreateAbstractClasses);
+            throw new InvalidOperationException("Instances of abstract classes cannot be created.");
         }
 
         // todo
@@ -144,8 +144,10 @@ internal static class IocUtilities
             {
                 if (multipleBestLengthFound)
                 {
-                    // todo throw new InvalidOperationException(SR.Format(SR.MultipleCtorsFoundWithBestLength, instanceType, bestLength));
-                    throw new InvalidOperationException();
+                    // done _todo throw new InvalidOperationException(SR.Format(SR.MultipleCtorsFoundWithBestLength, instanceType, bestLength));
+                    // throw new InvalidOperationException();
+                    string message = $"A suitable constructor for type '{instanceType}' could not be located. Ensure the type is concrete and all parameters of a public constructor are either registered as services or passed as arguments. Also ensure no extraneous arguments are provided.";
+                    throw new InvalidOperationException(message);
                 }
 
                 return bestMatcher.CreateInstance(provider);
@@ -270,8 +272,10 @@ internal static class IocUtilities
         object? service = sp.GetService(type);
         if (service == null && !isDefaultParameterRequired)
         {
-            // todo throw new InvalidOperationException(SR.Format(SR.UnableToResolveService, type, requiredBy));
-            throw new InvalidOperationException();
+            // done _todo throw new InvalidOperationException(SR.Format(SR.UnableToResolveService, type, requiredBy));
+            // throw new InvalidOperationException();
+            string message = $"Unable to resolve service for type '{type}' while attempting to activate '{requiredBy}'.";
+            throw new InvalidOperationException(message);
         }
         return service;
     }
@@ -330,8 +334,10 @@ internal static class IocUtilities
         if (!TryFindPreferredConstructor(instanceType, argumentTypes, ref constructorInfo, ref parameterMap) &&
             !TryFindMatchingConstructor(instanceType, argumentTypes, ref constructorInfo, ref parameterMap))
         {
-            // todo throw new InvalidOperationException(SR.Format(SR.CtorNotLocated, instanceType));
-            throw new InvalidOperationException();
+            // done _todo throw new InvalidOperationException(SR.Format(SR.CtorNotLocated, instanceType));
+            // throw new InvalidOperationException();
+            string message = $"A suitable constructor for type '{instanceType}' could not be located. Ensure the type is concrete and all parameters of a public constructor are either registered as services or passed as arguments. Also ensure no extraneous arguments are provided.";
+            throw new InvalidOperationException(message);
         }
 
         matchingConstructor = constructorInfo;
@@ -351,8 +357,9 @@ internal static class IocUtilities
             {
                 if (matchingConstructor != null)
                 {
-                    // todo throw new InvalidOperationException(SR.Format(SR.MultipleCtorsFound, instanceType));
-                    throw new InvalidOperationException();
+                    // done _todo throw new InvalidOperationException(SR.Format(SR.MultipleCtorsFound, instanceType));
+                    // throw new InvalidOperationException();
+                    throw new InvalidOperationException($"Multiple constructors accepting all given argument types have been found in type '{instanceType}'. There should only be one applicable constructor.");
                 }
 
                 matchingConstructor = constructor;
@@ -509,8 +516,9 @@ internal static class IocUtilities
                 {
                     if (!ParameterDefaultValue.TryGetDefaultValue(_parameters[index], out object? defaultValue))
                     {
-                        // todo throw new InvalidOperationException(SR.Format(SR.UnableToResolveService, _parameters[index].ParameterType, _constructor.DeclaringType));
-                        throw new InvalidOperationException();
+                        // done _todo throw new InvalidOperationException(SR.Format(SR.UnableToResolveService, _parameters[index].ParameterType, _constructor.DeclaringType));
+                        // throw new InvalidOperationException();
+                        throw new InvalidOperationException($"Unable to resolve service for type '{_parameters[index].ParameterType}' while attempting to activate '{_constructor.DeclaringType}'.");
                     }
 
                     _parameterValues[index] = defaultValue;
@@ -551,14 +559,16 @@ internal static class IocUtilities
 
     private static void ThrowMultipleCtorsMarkedWithAttributeException()
     {
-        // todo throw new InvalidOperationException(SR.Format(SR.MultipleCtorsMarkedWithAttribute, nameof(ActivatorUtilitiesConstructorAttribute)));
-        throw new InvalidOperationException();
+        // done _todo throw new InvalidOperationException(SR.Format(SR.MultipleCtorsMarkedWithAttribute, nameof(ActivatorUtilitiesConstructorAttribute)));
+        // throw new InvalidOperationException();
+        throw new InvalidOperationException($"Multiple constructors were marked with {nameof(IocUtilitiesConstructorAttribute)}.");
     }
 
     private static void ThrowMarkedCtorDoesNotTakeAllProvidedArguments()
     {
-        // todo throw new InvalidOperationException(SR.Format(SR.MarkedCtorMissingArgumentTypes, nameof(ActivatorUtilitiesConstructorAttribute)));
-        throw new InvalidOperationException();
+        // done _todo throw new InvalidOperationException(SR.Format(SR.MarkedCtorMissingArgumentTypes, nameof(ActivatorUtilitiesConstructorAttribute)));
+        // throw new InvalidOperationException();
+        throw new InvalidOperationException($"Constructor marked with {nameof(IocUtilitiesConstructorAttribute)} does not accept all given argument types.");
     }
 }
 

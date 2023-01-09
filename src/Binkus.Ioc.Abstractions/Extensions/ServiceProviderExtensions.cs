@@ -1,4 +1,4 @@
-namespace Binkus.Ioc.Extensions;
+namespace Binkus.DependencyInjection.Extensions;
 
 public static class ServiceProviderExtensions
 {

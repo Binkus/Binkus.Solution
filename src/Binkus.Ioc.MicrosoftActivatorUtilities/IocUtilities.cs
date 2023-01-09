@@ -35,6 +35,7 @@ using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Linq.Expressions;
 using System.Reflection;
+using Binkus.DependencyInjection.Extensions;
 
 // ReSharper disable CognitiveComplexity
 // ReSharper disable SuggestVarOrType_SimpleTypes

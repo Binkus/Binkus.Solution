@@ -8,7 +8,19 @@
         <WarningsAsErrors>Nullable</WarningsAsErrors>
         <RootNamespace>Binkus.DependencyInjection</RootNamespace>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
+
+        <USE_MEDI>true</USE_MEDI>
+        <USE_MEDI>false</USE_MEDI>
     </PropertyGroup>
+
+    <PropertyGroup>
+        <!--        <DefineConstants>$(DefineConstants);USE_MEDI</DefineConstants>-->
+        <DefineConstants Condition="'$(USE_MEDI)'=='true' Or '$(USE_MEDI)'=='1'">$(DefineConstants);USE_MEDI</DefineConstants>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Condition="'$(USE_MEDI)'=='true' Or '$(USE_MEDI)'=='1'" Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" PrivateAssets="all" ExcludeAssets="runtime" />
+    </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Binkus.Ioc.Abstractions\Binkus.Ioc.Abstractions.csproj" />

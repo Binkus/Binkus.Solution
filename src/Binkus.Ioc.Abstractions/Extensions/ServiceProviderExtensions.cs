@@ -1,6 +1,6 @@
-namespace Binkus.DependencyInjection;
+namespace Binkus.Ioc.Extensions;
 
-public static class ServiceProviderExt
+public static class ServiceProviderExtensions
 {
     public static T? GetService<T>(this IServiceProvider services) => (T?)services.GetService(typeof(T));
     

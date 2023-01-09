@@ -10,8 +10,4 @@
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
 
-    <ItemGroup>
-      <ProjectReference Include="..\Binkus.Ioc.Abstractions\Binkus.Ioc.Abstractions.csproj" />
-    </ItemGroup>
-
 </Project>

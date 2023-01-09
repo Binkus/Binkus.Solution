@@ -1,6 +1,0 @@
-<!--build/*-->
-<Project>
-    <PropertyGroup>
-        <DefineConstants>$(DefineConstants);USE_MEDI</DefineConstants>
-    </PropertyGroup>
-</Project>

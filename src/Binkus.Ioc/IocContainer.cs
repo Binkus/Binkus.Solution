@@ -1,51 +1,38 @@
+using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 
+// ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace Binkus.DependencyInjection;
 
-// ReSharper disable once ClassNeverInstantiated.Global
-public sealed class IocContainer : IServiceProvider
+public sealed class IocContainer : IServiceProvider, IIocContainerBuilder
 {
-    public bool IsReadOnly { get; init; }
-
-    // public IocContainer(
-    //     IEnumerable<
-    //             (IocLifetime Lifetime, Type ServiceType,Type? ImplType, object? Implementation, ServiceFactory? Factory)
-    //         > services, bool readOnly = true)
-    //     : this(services.Select(d => 
-    //         new IocDescriptor
-    //         {
-    //             Lifetime = d.Lifetime,
-    //             ServiceType = d.ServiceType,
-    //             ImplType = d.ImplType,
-    //             Implementation = d.Implementation,
-    //             Factory = d.Factory
-    //         }),
-    //         readOnly) { }
-
     private static IEnumerable<KeyValuePair<Type, IocDescriptor>> ToKeyValuePair(IEnumerable<IocDescriptor> services) 
         => services.Select(d => new KeyValuePair<Type, IocDescriptor>(d.ServiceType, d));
-
-    public IocContainer(IEnumerable<IocDescriptor> services, bool readOnly = true) : this(readOnly)
-    {
-        ContainerProvider = readOnly
-            ? new FrozenConcurrentIocContainerProvider(this,
+    
+    private IIocContainerProvider CreateContainerProvider(IEnumerable<IocDescriptor> services) 
+        => IsReadOnly
+            ? new FrozenConcurrentIocContainerProvider(
                 new ConcurrentDictionary<Type, IocDescriptor>(
                     ToKeyValuePair(services)))
-            : new MutableConcurrentIocContainerProvider(this,
+            : new MutableConcurrentIocContainerProvider(
                 new ConcurrentDictionary<Type, IocDescriptor>(
-                    ToKeyValuePair(services)));
-        RootScope = new IocContainerScope(ContainerProvider, true);
-    }
+                    ToKeyValuePair(services))); 
 
-    public IocContainer() : this(false)
+    public IocContainer(IEnumerable<IocDescriptor> services, bool readOnly = true) : this(services, null, readOnly) { }
+    public IocContainer(IEnumerable<IocDescriptor> services, ServiceScopeId? id, bool readOnly = true) : this(readOnly)
     {
-        ContainerProvider =
-            new MutableConcurrentIocContainerProvider(this,
+        var rootContainerProvider = CreateContainerProvider(services);
+        RootContainerScope = new IocContainerScope(rootContainerProvider, id);
+    }
+    public IocContainer(ServiceScopeId? id = null) : this(false)
+    {
+        var rootContainerProvider =
+            new MutableConcurrentIocContainerProvider(
                 new ConcurrentDictionary<Type, IocDescriptor>());
-        RootScope = new IocContainerScope(ContainerProvider, true);
+        RootContainerScope = new IocContainerScope(rootContainerProvider, id);
     }
 
 #nullable disable
@@ -55,81 +42,218 @@ public sealed class IocContainer : IServiceProvider
     }
 #nullable enable
 
-    internal IIocContainerProvider ContainerProvider { get; }
-    public IocContainerScope RootScope { get; }
+    public bool IsReadOnly { get; init; }
+    // internal IIocContainerProvider RootContainerProvider { get; }
+    public IocContainerScope RootContainerScope { get; }
 
-    public object? GetService(Type serviceType) => ContainerProvider.GetService(serviceType);
+    public ConcurrentDictionary<ServiceScopeId, IocContainerScope> Scopes { get; } = new();
 
-    public interface IIocContainerProvider : IServiceProvider
+    public object? GetService(Type serviceType) => RootContainerScope.RootContainerScope.ContainerProvider.GetService(serviceType);
+
+    public IocContainerScope CreateScope(IocContainerScope root, IocContainerScope parent)
     {
-        internal IReadOnlyDictionary<Type, IocDescriptor> Descriptors { get; }
-
-        public ReadOnlyDictionary<Type, IocDescriptor> GetDescriptorsCopy => new((IDictionary<Type, IocDescriptor>)Descriptors);
+        // todo cache
+        var scopedDescriptors = RootContainerScope.RootContainerScope.ContainerProvider.Descriptors.Values.Where(d => d.Lifetime is IocLifetime.Scoped);
+        var container = CreateContainerProvider(scopedDescriptors);
+        var scope = new IocContainerScope(root, parent, container);
+        Scopes.TryAdd(scope.Id, scope);
+        return scope;
     }
-    
-    private sealed record FrozenConcurrentIocContainerProvider(IocContainer Container, IReadOnlyDictionary<Type, IocDescriptor> Descriptors)
-        : IIocContainerProvider
+
+    public IIocContainerBuilder Add(IocDescriptor descriptor)
     {
-        public object? GetService(Type serviceType) 
-            => Descriptors.TryGetValue(serviceType, out var descriptor) ? Container.RootScope.GetServiceForDescriptor(descriptor) : null;
+        var descriptors = RootContainerScope.RootContainerScope.ContainerProvider.Descriptors as ConcurrentDictionary<Type, IocDescriptor>;
+        if (descriptors is not null) Add(descriptors, descriptor);
+        if (descriptor.Lifetime is not IocLifetime.Scoped) return this;
+        foreach (var iocContainerScope in Scopes.Values)
+        {
+            descriptors = iocContainerScope.ContainerProvider.Descriptors as ConcurrentDictionary<Type, IocDescriptor>;
+            if (descriptors is null) continue;
+            Add(descriptors, descriptor.CreateForScope());
+        }
+        return this;
     }
 
-    private sealed record MutableConcurrentIocContainerProvider(IocContainer Container, ConcurrentDictionary<Type, IocDescriptor> Descriptors)
-        : IIocContainerProvider
+    private void Add(ConcurrentDictionary<Type, IocDescriptor> descriptors, IocDescriptor descriptorItemToAdd, IocDescriptor? prev = null)
     {
-        IReadOnlyDictionary<Type, IocDescriptor> IIocContainerProvider.Descriptors => Descriptors;
+        if(prev is null) descriptors.TryGetValue(descriptorItemToAdd.ServiceType, out prev);
+        while (prev?.Next is not null)
+        {
+            Add(descriptors, descriptorItemToAdd, prev.Next);
+        }
+        if (!descriptors.TryAdd(descriptorItemToAdd.ServiceType, descriptorItemToAdd))
+        {
+            prev!.Next = descriptorItemToAdd;
+        }
         
-        public object? GetService(Type serviceType) 
-            => Descriptors.TryGetValue(serviceType, out var descriptor) ? Container.RootScope.GetServiceForDescriptor(descriptor) : null;
     }
 
-    public IocContainerScope CreateScope()
+    public IocContainer Build() => new(RootContainerScope.ContainerProvider.Descriptors.Values);
+
+    // public IocContainer MarkAsReadOnly() => IsReadOnly = true;
+}
+
+public interface IIocContainerBuilder
+{
+    IIocContainerBuilder Add(IocDescriptor descriptor);
+    IocContainer Build();
+}
+
+// IIocContainerProvider
+
+public interface IIocContainerProvider : IServiceProvider
+{
+    public IocContainerScope ContainerScope { get; internal set; }
+    internal IReadOnlyDictionary<Type, IocDescriptor> Descriptors { get; }
+
+    public ReadOnlyDictionary<Type, IocDescriptor> GetDescriptorsCopy => new((IDictionary<Type, IocDescriptor>)Descriptors);
+
+    protected object? GetSpecialService(Type serviceType)
     {
-        return new IocContainerScope(ContainerProvider);
+        Type[]? generics;
+        if (serviceType.ContainsGenericParameters && (generics = serviceType.GetGenericArguments()).Length == 1)
+        {
+            if (serviceType == typeof(IEnumerable<>).MakeGenericType(generics))
+            {
+                
+            }
+            else if (serviceType == typeof(Lazy<>).MakeGenericType(generics))
+            {
+                
+            }
+        }
+
+        return null;
+    }
+}
+    
+internal sealed record FrozenConcurrentIocContainerProvider(IReadOnlyDictionary<Type, IocDescriptor> Descriptors)
+    : IIocContainerProvider
+{
+    IocContainerScope IIocContainerProvider.ContainerScope { get; set; } = null!;
+    public IocContainerScope ContainerScope => ((IIocContainerProvider)this).ContainerScope; 
+    
+    public object? GetService(Type serviceType)
+    {
+        if (ContainerScope.RootContainerScope.ContainerProvider.Descriptors
+            .TryGetValue(serviceType, out var descriptor))
+        {
+            if (descriptor.Lifetime is IocLifetime.Scoped)
+                return Descriptors.TryGetValue(serviceType, out var scopedDescriptor)
+                    ? ContainerScope.GetServiceForDescriptor(scopedDescriptor)
+                    : null;
+            return ContainerScope.GetServiceForDescriptor(descriptor);
+        }
+        return null;
     }
 }
 
-public sealed record IocContainerScope(IocContainer.IIocContainerProvider ContainerProvider, ServiceScopeId Id, bool IsRootScope) : IDisposable, IAsyncDisposable
+internal sealed record MutableConcurrentIocContainerProvider(ConcurrentDictionary<Type, IocDescriptor> Descriptors)
+    : IIocContainerProvider
 {
-    internal IocContainerScope(IocContainer.IIocContainerProvider containerProvider, bool isRootScope = false) : this(containerProvider, new ServiceScopeId(), isRootScope) {}
-    internal IocContainerScope(IocContainer.IIocContainerProvider containerProvider, ServiceScopeId? id) : this(containerProvider, id ?? new ServiceScopeId(), false) {}
+    IReadOnlyDictionary<Type, IocDescriptor> IIocContainerProvider.Descriptors => Descriptors;
+
+    IocContainerScope IIocContainerProvider.ContainerScope { get; set; } = null!;
+    public IocContainerScope ContainerScope => ((IIocContainerProvider)this).ContainerScope; 
+        
+    public object? GetService(Type serviceType)
+    {
+        if (ContainerScope.RootContainerScope.ContainerProvider.Descriptors
+            .TryGetValue(serviceType, out var descriptor))
+        {
+            if (descriptor.Lifetime is IocLifetime.Scoped)
+                return Descriptors.TryGetValue(serviceType, out var scopedDescriptor)
+                    ? ContainerScope.GetServiceForDescriptor(scopedDescriptor)
+                    : null;
+            return ContainerScope.GetServiceForDescriptor(descriptor);
+        }
+        return null;
+    }
+}
+
+// Scope Engine
+
+public sealed record IocContainerScope : IDisposable, IAsyncDisposable, IServiceProvider
+{
+    public IocContainerScope RootContainerScope { get; init; }
+    public IocContainerScope ParentContainerScope { get; init; }
+    public IIocContainerProvider ContainerProvider { get; init; }
+    public ServiceScopeId Id { get; init; }
+    public bool IsRootContainerScope { get; init; }
+
+    internal IocContainerScope(IIocContainerProvider containerProvider, ServiceScopeId? id = null)
+    {
+        RootContainerScope = this;
+        ParentContainerScope = this;
+        ContainerProvider = containerProvider;
+        ContainerProvider.ContainerScope = this;
+        Id = id ?? new ServiceScopeId();
+        IsRootContainerScope = true;
+    }
     
-    public object? GetServiceForDescriptor(IocDescriptor descriptor)
+    internal IocContainerScope(IocContainerScope rootContainerScope, IocContainerScope parentContainerScope, IIocContainerProvider containerProvider, ServiceScopeId? id = null)
+    {
+        RootContainerScope = rootContainerScope;
+        ParentContainerScope = parentContainerScope;
+        ContainerProvider = containerProvider;
+        ContainerProvider.ContainerScope = this;
+        Id = id ?? new ServiceScopeId();
+        IsRootContainerScope = false;
+    }
+    
+    public object? GetService(Type serviceType) => ContainerProvider.GetService(serviceType);
+
+    internal object? GetServiceForDescriptor(IocDescriptor descriptor)
+    {
+        while (descriptor.Next is not null)
+        {
+            return GetServiceForDescriptor(descriptor);
+        }
+        return GetServiceForDescriptor2(descriptor);
+    }
+    
+    private object? GetServiceForDescriptor2(IocDescriptor descriptor)
         => descriptor.Lifetime switch
         {
             IocLifetime.Singleton => GetSingletonService(descriptor),
             IocLifetime.Scoped => GetScopedService(descriptor),
             IocLifetime.Transient => GetTransientService(descriptor),
             _ => null
-        };
+        } ?? GetServiceForDescriptor3(descriptor);
 
-    public object? GetSingletonService(IocDescriptor descriptor)
+    private object? GetServiceForDescriptor3(IocDescriptor descriptor)
+    {
+        
+        
+        return null;
+    }
+
+    internal object? GetSingletonService(IocDescriptor descriptor)
     {
         if (descriptor.Implementation is { }) return descriptor.Implementation;
         if (descriptor.Factory?.Invoke(ContainerProvider) is { } serviceImpl) return serviceImpl;
         lock (descriptor)
         {
-            return descriptor.Implementation ??= TryCreateService(descriptor);    
+            return descriptor.Implementation ??= TryCreateService(ContainerProvider, descriptor);    
         }
     }
-    
-    public object? GetScopedService(IocDescriptor descriptor)
-    {
-        if (descriptor.Implementation is { }) return descriptor.Implementation;
-        if (descriptor.Factory?.Invoke(ContainerProvider) is { } serviceImpl) return serviceImpl;
-        lock (descriptor)
-        {
-            return descriptor.Implementation ??= TryCreateService(descriptor);    
-        }
-    }
-    
-    public static object? GetTransientService(IocDescriptor descriptor) => TryCreateService(descriptor);
 
-    public static object? TryCreateService(IocDescriptor descriptor)
+    internal object? GetScopedService(IocDescriptor descriptor) => GetSingletonService(descriptor); // it is scoped already
+    
+    public object? GetTransientService(IocDescriptor descriptor)
+    {
+        if (descriptor.Factory?.Invoke(ContainerProvider) is { } serviceImpl) return serviceImpl;
+        return TryCreateService(ContainerProvider, descriptor);
+    }
+
+    public static object? TryCreateService(IServiceProvider provider, IocDescriptor descriptor)
     {
         var type = descriptor.ImplType ?? descriptor.ServiceType;
         if (type.IsAbstract) return null;
-        return Activator.CreateInstance(type);
+
+        return IocUtilities.CreateInstance(provider, type);
+
+        // return Activator.CreateInstance(type);
     }
     
     //
@@ -147,7 +271,8 @@ public sealed record IocContainerScope(IocContainer.IIocContainerProvider Contai
         IEnumerable<IocDescriptor> descriptors = ContainerProvider.Descriptors.Values;
         foreach (var descriptor in descriptors)
         {
-            if (!IsRootScope && descriptor.Lifetime is not IocLifetime.Scoped) continue;
+            if (!IsRootContainerScope && descriptor.Lifetime is not IocLifetime.Scoped) continue;
+            // only scoped services get disposed as well as singletons if this represents the root IoC Container:
             switch (descriptor.Implementation)
             {
                 case null:
@@ -176,7 +301,8 @@ public sealed record IocContainerScope(IocContainer.IIocContainerProvider Contai
         IEnumerable<IocDescriptor> descriptors = ContainerProvider.Descriptors.Values;
         foreach (var descriptor in descriptors)
         {
-            if (!IsRootScope && descriptor.Lifetime is not IocLifetime.Scoped) continue;
+            if (!IsRootContainerScope && descriptor.Lifetime is not IocLifetime.Scoped) continue;
+            // only scoped services get disposed as well as singletons if this represents the root IoC Container:
             switch (descriptor.Implementation)
             {
                 case null:

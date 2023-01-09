@@ -8,8 +8,6 @@ public delegate object ServiceFactory(IServiceProvider services);
 
 public sealed class IocDescriptor : IEquatable<IocDescriptor>
 {
-    
-
     [SetsRequiredMembers]
     public IocDescriptor(
         IocLifetime lifetime,
@@ -50,11 +48,13 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
         ServiceType = descriptor.ServiceType;
         ImplType = descriptor.ImplType;
         Lifetime = descriptor.Lifetime;
-        _implFactory = descriptor.ImplFactory;
-        Factory = descriptor.Factory;
+        ImplFactory = descriptor.ImplFactory;
+        // Factory = descriptor.Factory; // don't cause descriptor.Factory captures property Implementation of param. descriptor 
     }
 
     internal IocDescriptor() { }
+
+    internal IocDescriptor CreateForScope() => new(this);
 
     public required IocLifetime Lifetime { get; init; }
     public required Type ServiceType { get; init; }
@@ -82,6 +82,8 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     }
 
     internal ServiceFactory? Factory { get; init; }
+    
+    internal IocDescriptor? Next { get; set; }
     
     // Equality: (x is equal to y when every field (except ignored Implementation) is equal)
     // Implementation is ignored, because the Descriptor of root container shall be equivalent

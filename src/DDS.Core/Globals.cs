@@ -38,6 +38,7 @@ public static class Globals
 
         [UsedImplicitly] static void FinishGlobalsSetupByMakingGlobalsImmutable()
         {
+            DiConfig.SetMsDiActivatorUtilitiesForIocUtilitiesDelegation();
             if (ServiceProvider is null || (!IsDesignMode && (ApplicationLifetime is null || ApplicationLifetimeWrapped is null)) || _instanceNullable is null || DbMigrationTask is null || JoinUiTaskFactory is null)
             {
                 throw new NullReferenceException("Globals setup has not been done correctly");

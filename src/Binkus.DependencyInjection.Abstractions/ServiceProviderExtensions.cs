@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.DependencyInjection;
+using Binkus.DependencyInjection.Extensions;
+// using Microsoft.Extensions.DependencyInjection;
 
 namespace Binkus.DependencyInjection;
 
@@ -12,7 +13,7 @@ public static class ServiceProviderServiceExtensions
         if (type is null || !type.IsAssignableTo(typeof(TServiceToBeAssignableTo))) return default;
         
         if (!type.IsAbstract) 
-            return (TServiceToBeAssignableTo?)ActivatorUtilities.GetServiceOrCreateInstance(services, type);
+            return (TServiceToBeAssignableTo?)IocUtilitiesDelegation.Default.GetServiceOrCreateInstance(services, type);
         
         return (TServiceToBeAssignableTo?)services.GetService(type);
     }
@@ -23,7 +24,7 @@ public static class ServiceProviderServiceExtensions
         (this IServiceProvider services) where TServiceToGetOrCreate : TServiceToBeAssignableTo
     {
         return !typeof(TServiceToGetOrCreate).IsAbstract
-            ? ActivatorUtilities.GetServiceOrCreateInstance<TServiceToGetOrCreate>(services)
+            ? IocUtilitiesDelegation.Default.GetServiceOrCreateInstance<TServiceToGetOrCreate>(services)
             : services.GetService<TServiceToGetOrCreate>();
     }
 
@@ -32,7 +33,7 @@ public static class ServiceProviderServiceExtensions
         (this IServiceProvider services)
     {
         return !typeof(TService).IsAbstract
-            ? ActivatorUtilities.GetServiceOrCreateInstance<TService>(services)
+            ? IocUtilitiesDelegation.Default.GetServiceOrCreateInstance<TService>(services)
             : services.GetService<TService>();
     }
     
@@ -45,7 +46,7 @@ public static class ServiceProviderServiceExtensions
         if (type is null || !type.IsAssignableTo(serviceTypeToBeAssignableTo)) return default;
 
         return !type.IsAbstract
-            ? ActivatorUtilities.GetServiceOrCreateInstance(services, type)
+            ? IocUtilitiesDelegation.Default.GetServiceOrCreateInstance(services, type)
             : services.GetService(type);
     }
     
@@ -55,7 +56,7 @@ public static class ServiceProviderServiceExtensions
         if (type is null ) return default;
 
         return !type.IsAbstract
-            ? ActivatorUtilities.GetServiceOrCreateInstance(services, type)
+            ? IocUtilitiesDelegation.Default.GetServiceOrCreateInstance(services, type)
             : services.GetService(type);
     }
     
@@ -68,7 +69,7 @@ public static class ServiceProviderServiceExtensions
         if (type is null || !type.IsAssignableTo(serviceTypeToBeAssignableTo)) return default;
 
         return !type.IsAbstract
-            ? ActivatorUtilities.CreateInstance(services, type, parameters)
+            ? IocUtilitiesDelegation.Default.CreateInstance(services, type, parameters)
             : default;
     }
     
@@ -79,7 +80,7 @@ public static class ServiceProviderServiceExtensions
         if (type is null ) return default;
 
         return !type.IsAbstract
-            ? ActivatorUtilities.CreateInstance(services, type, parameters)
+            ? IocUtilitiesDelegation.Default.CreateInstance(services, type, parameters)
             : default;
     }
     

@@ -2,22 +2,15 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace Binkus.DependencyInjection;
 
-
 public delegate object GetServiceOrCreateInstance(IServiceProvider provider,
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] 
     Type type);
-
-// public delegate T GetServiceOrCreateInstance<
-//     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(IServiceProvider provider);
 
 public delegate object CreateInstance(
     IServiceProvider provider,
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     Type instanceType,
     params object[] parameters);
-
-// public delegate T CreateInstance<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] T>(
-//     IServiceProvider provider, params object[] parameters);
 
 public sealed class IocUtilitiesDelegation
 {

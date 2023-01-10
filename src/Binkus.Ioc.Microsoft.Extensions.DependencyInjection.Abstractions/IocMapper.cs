@@ -56,12 +56,6 @@ public static class IocMapper
             serviceCollection.Add(d.ToDescriptor());
         }
         return serviceCollection;
-
-        // return descriptors.Aggregate(new ServiceCollection(), (services, descriptor) =>
-        // {
-        //     services.Add(descriptor.ToDescriptor());
-        //     return services;
-        // });
     }
     
     public static List<IocDescriptor> ToServiceCollection(this IEnumerable<ServiceDescriptor> descriptors)

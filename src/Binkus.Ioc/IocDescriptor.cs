@@ -63,7 +63,7 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     
     internal IocDescriptor Copy() => new(this);
 
-    internal IocDescriptor() { }
+    public IocDescriptor() { }
 
     internal void ThrowIfImplTypeIsNotAssignableToServiceType()
     {
@@ -72,14 +72,14 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
                 $"{Implementation}'s Type {ImplType} can't be assigned to {ServiceType}");
     }
     
-    internal void ThrowOnInvalidity()
+    public IocDescriptor ThrowOnInvalidity()
     {
-        ThrowOnInvalidLifetime(Lifetime);
-        ArgumentNullException.ThrowIfNull(ServiceType);
-        if (ImplType is null && Factory is null && Implementation is null)
+        if (ServiceType is null || (ImplType is null && Factory is null && Implementation is null))
             throw new InvalidOperationException($"Invalid {nameof(IocDescriptor)}");
         
         ThrowIfImplTypeIsNotAssignableToServiceType();
+        
+        return this;
     }
     
     private static IocLifetime ThrowOnInvalidLifetime(IocLifetime lifetime)
@@ -100,8 +100,8 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     
     [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)]
     public Type? ImplType { get; init; }
-    internal object? Implementation { get; init; }
-    internal Func<IServiceProvider, object>? Factory { get; init; }
+    public object? Implementation { get; init; }
+    public Func<IServiceProvider, object>? Factory { get; init; }
     
     // Equality
 

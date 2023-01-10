@@ -22,4 +22,8 @@
         <PackageReference Condition="'$(USE_MEDI)'=='true' Or '$(USE_MEDI)'=='1'" Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="7.0.0" PrivateAssets="all" ExcludeAssets="runtime" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Binkus.Ioc\Binkus.Ioc.csproj" />
+    </ItemGroup>
+
 </Project>

@@ -1,5 +1,11 @@
 namespace Binkus.DependencyInjection.Extensions;
 
+// in separate namespace on purpose to prevent potential ambiguity when using together
+// with Microsoft.Extensions.DependencyInjection
+
+/// <summary>
+/// Basic extension methods for IServiceProvider
+/// </summary>
 public static class ServiceProviderExtensions
 {
     public static T? GetService<T>(this IServiceProvider services) => (T?)services.GetService(typeof(T));

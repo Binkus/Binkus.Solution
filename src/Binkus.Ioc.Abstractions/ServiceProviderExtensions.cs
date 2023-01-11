@@ -1,9 +1,11 @@
 using System.Diagnostics.CodeAnalysis;
 using Binkus.DependencyInjection.Extensions;
-// using Microsoft.Extensions.DependencyInjection;
 
 namespace Binkus.DependencyInjection;
 
+/// <summary>
+/// Additional extension methods for IServiceProvider
+/// </summary>
 public static class ServiceProviderServiceExtensions
 {
     public static TServiceToBeAssignableTo? TryGetServiceOrCreateInstance<TServiceToBeAssignableTo>

@@ -154,6 +154,13 @@ public static class TimeSpanExtensions
     
     // Abbreviations
     
+#if NET7_0_OR_GREATER
+    /// <inheritdoc cref="Microseconds(int)"/>
+    public static TimeSpan µs(this int microseconds) => Microseconds(microseconds);
+    /// <inheritdoc cref="Microseconds(double)"/>
+    public static TimeSpan µs(this double microseconds) => Microseconds(microseconds);
+#endif
+    
     /// <inheritdoc cref="Milliseconds(int)"/>
     public static TimeSpan ms(this int milliseconds) => Milliseconds(milliseconds);
     /// <inheritdoc cref="Milliseconds(double)"/>
@@ -205,14 +212,21 @@ public static class TimeSpanExtensions
     
     // Abbreviations
     
-    /// <inheritdoc cref="Milliseconds(int)"/>
+#if NET7_0_OR_GREATER
+    /// <inheritdoc cref="Microseconds(int, CancellationToken)"/>
+    public static TimeSpanCancellationToken µs(this int microseconds, CancellationToken cancellationToken) => Microseconds(microseconds).ToTimeSpanCancellationToken(cancellationToken);
+    /// <inheritdoc cref="Microseconds(double, CancellationToken)"/>
+    public static TimeSpanCancellationToken µs(this double microseconds, CancellationToken cancellationToken) => Microseconds(microseconds).ToTimeSpanCancellationToken(cancellationToken);
+#endif
+    
+    /// <inheritdoc cref="Milliseconds(int, CancellationToken)"/>
     public static TimeSpanCancellationToken ms(this int milliseconds, CancellationToken cancellationToken) => Milliseconds(milliseconds).ToTimeSpanCancellationToken(cancellationToken);
-    /// <inheritdoc cref="Milliseconds(double)"/>
+    /// <inheritdoc cref="Milliseconds(double, CancellationToken)"/>
     public static TimeSpanCancellationToken ms(this double milliseconds, CancellationToken cancellationToken) => Milliseconds(milliseconds).ToTimeSpanCancellationToken(cancellationToken);
     
-    /// <inheritdoc cref="Seconds(int)"/>
+    /// <inheritdoc cref="Seconds(int, CancellationToken)"/>
     public static TimeSpanCancellationToken s(this int seconds, CancellationToken cancellationToken) => Seconds(seconds).ToTimeSpanCancellationToken(cancellationToken);
-    /// <inheritdoc cref="Seconds(double)"/>
+    /// <inheritdoc cref="Seconds(double, CancellationToken)"/>
     public static TimeSpanCancellationToken s(this double seconds, CancellationToken cancellationToken) => Seconds(seconds).ToTimeSpanCancellationToken(cancellationToken);
     
     //

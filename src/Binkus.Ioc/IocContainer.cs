@@ -1,13 +1,14 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using Binkus.DependencyInjection.Extensions;
 
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable MemberCanBePrivate.Global
 
 namespace Binkus.DependencyInjection;
 
-public sealed class IocContainer //: IServiceProvider
+public sealed class IocContainer // : IServiceProvider
 {
     private static IEnumerable<KeyValuePair<Type, IocDescriptor>> ToKeyValuePair(IEnumerable<IocDescriptor> services) 
         => services.Select(d => new KeyValuePair<Type, IocDescriptor>(d.ServiceType, d));
@@ -36,61 +37,16 @@ public sealed class IocContainer //: IServiceProvider
     public IocContainerScope ContainerScope { get; set; }
 }
 
-internal record ServiceImpls : IEnumerable<ServiceImpls>
+public interface IContainerScopeFactory
 {
-    // // ReSharper disable once ConvertToPrimaryConstructor
-    // public ServiceImpls(IocDescriptor descriptor)
-    // {
-    //     Descriptor = descriptor;
-    //     Item = descriptor.Implementation;
-    // }
-    
-    // ReSharper disable once ConvertToPrimaryConstructor
-    public ServiceImpls(object? item = null) => Item = item;
-
-    // public IocDescriptor Descriptor { get; init; }
-    public object? Item { get; internal set; }
-    public ServiceImpls? Next { get; internal set; }
-    
-    public ServiceImplEnumerator GetEnumerator() => new ServiceImplEnumerator(this);
-    IEnumerator<ServiceImpls> IEnumerable<ServiceImpls>.GetEnumerator() => GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-
-    public record struct ServiceImplEnumerator(ServiceImpls First) : IEnumerator<ServiceImpls>
-    {
-        public bool MoveNext()
-        {
-            if (Current is null)
-            {
-                Current = First;
-                return true;
-            }
-            if (Current.Next is null) return false;
-            Current = Current.Next;
-            return true;
-        }
-
-        public void Reset() => Current = null!;
-        public ServiceImpls Current { get; private set; }
-        object IEnumerator.Current => Current;
-        public void Dispose() { }
-    }
-    
-    internal ServiceImpls Prepend(ServiceImpls itemToAdd)
-    {
-        if (itemToAdd == this) return itemToAdd;
-        itemToAdd.Next = this;
-        return itemToAdd;
-    }
-
-    internal ServiceImpls Add(ServiceImpls itemToAdd)
-    {
-        var last = this.LastOrDefault(x => x != itemToAdd);
-        if (last != null)
-            last.Next = itemToAdd;
-        return this;
-    }
+    IContainerScope CreateScope();
 }
+
+public interface IContainerScope : IContainerScopeFactory, IDisposable, IAsyncDisposable
+{
+    public IServiceProvider Services { get; }
+}
+
 
 internal record ServiceInstanceProvider(object? Instance = null)
 {
@@ -99,25 +55,26 @@ internal record ServiceInstanceProvider(object? Instance = null)
 
 // Scope Engine
 
-public sealed record IocContainerScope : IDisposable, IAsyncDisposable, IServiceProvider
+public sealed record IocContainerScope : IServiceProvider, IContainerScope,
+    IContainerScopeFactory, IDisposable, IAsyncDisposable 
 {
-    public IocContainerScope RootContainerScope { get; init; }
-    public IocContainerScope ParentContainerScope { get; init; }
+    private readonly IServiceProvider? _wrappedProvider;
+    public IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, this) ? _wrappedProvider : value; }
+    public IServiceProvider Services => this;
+    public IocContainerScope RootContainerScope { get; }
+    public IocContainerScope ParentContainerScope { get; }
     public ServiceScopeId Id { get; init; }
     public bool IsRootContainerScope { get; init; }
 
     private static IEnumerable<KeyValuePair<Type, IocDescriptor>> ToKeyValuePair(IEnumerable<IocDescriptor> services) 
         => services.Select(d => new KeyValuePair<Type, IocDescriptor>(d.ServiceType, d));
-    
-    // private static IEnumerable<KeyValuePair<Type, IocDescriptor>> PreserveLastDuplicate(
-    //     IEnumerable<KeyValuePair<Type, IocDescriptor>> collection) =>
-    //     collection.skip;
 
     public IocContainerScope() : this(default(IEnumerable<IocDescriptor>), default(ServiceScopeId)) { }
     internal IocContainerScope(ServiceScopeId? id) : this(default(IEnumerable<IocDescriptor>), id) { }
     public IocContainerScope(IEnumerable<IocDescriptor> services) : this(services, default(ServiceScopeId)) { }
     internal IocContainerScope(IEnumerable<IocDescriptor>? services, ServiceScopeId? id)
     {
+        // WrappedProvider ...
         RootContainerScope = this;
         ParentContainerScope = this;
         Id = id ?? new ServiceScopeId();
@@ -125,14 +82,8 @@ public sealed record IocContainerScope : IDisposable, IAsyncDisposable, IService
         Descriptors = services?.ToList() ?? new List<IocDescriptor>();
         CachedDescriptors = new ConcurrentDictionary<Type, IocDescriptor>();
         ScopedDescriptors = Descriptors.Where(d => d.Lifetime is IocLifetime.Scoped).ToList();
-        // CachedDescriptors = services is null
-        //     ? new ConcurrentDictionary<Type, IocDescriptor>()
-        //     : new ConcurrentDictionary<Type, IocDescriptor>(ToKeyValuePair(Descriptors));
-
         Singletons = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
         Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
-        // Singletons = new ConcurrentDictionary<Type, ServiceImpls>();
-        // Scoped = new ConcurrentDictionary<Type, ServiceImpls>();
         
         if (services == null) return;
 
@@ -145,35 +96,55 @@ public sealed record IocContainerScope : IDisposable, IAsyncDisposable, IService
                 descriptor);
         }
         
+        InternalAddThisAsService();
         InternalAddSingletons();
         AddBasicServices();
     }
 
     private void AddBasicServices()
     {
-        var d = IocDescriptor.CreateTransient(_ => IocUtilitiesDelegation.Default);
-        if (!CachedDescriptors.TryAdd(typeof(IocUtilitiesDelegation), d)) return;
+        var type = typeof(IocUtilitiesDelegation);
+        if (CachedDescriptors.ContainsKey(type)) return;
+        var d = IocDescriptor.CreateSingleton(IocUtilitiesDelegation.NewUninitializedIocUtilitiesDelegation());
+        if (!CachedDescriptors.TryAdd(type, d)) return;
         Descriptors.Add(d);
-        // Singletons.TryAdd(d, new ServiceInstanceProvider(d.Implementation));
+        Singletons.TryAdd(d, new ServiceInstanceProvider(d.Implementation));
+    }
+    
+    private void InternalAddThisAsService()
+    {
+        // var d1 = IocDescriptor.CreateScoped(this);
+        var d1 = IocDescriptor.CreateScoped(p => p);
+        var d2 = IocDescriptor.CreateScoped<IocContainerScope>(p => (IocContainerScope)p);
+        
+        Scoped.TryAdd(d1, new ServiceInstanceProvider());
+        Scoped.TryAdd(d2, new ServiceInstanceProvider());
+        CachedDescriptors.TryAdd(d1.ServiceType, d1);
+        CachedDescriptors.TryAdd(d2.ServiceType, d2);
+        
+        Descriptors.Add(d1);
+        Descriptors.Add(d2);
     }
     
     // Creates Scope
     private IocContainerScope(IocContainerScope parentContainerScope)
     {
+        _wrappedProvider =
+            parentContainerScope._wrappedProvider?.GetService<IContainerScopeFactory>()?.CreateScope().Services ??
+            parentContainerScope._wrappedProvider; // create scope from wrapped provider
         RootContainerScope = parentContainerScope.RootContainerScope;
         ParentContainerScope = parentContainerScope;
         Id = new ServiceScopeId();
         IsRootContainerScope = false;
-        Singletons = RootContainerScope.Singletons;
-        Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
-        // Scoped = new ConcurrentDictionary<Type, ServiceImpls>();
         Descriptors = RootContainerScope.Descriptors;
         CachedDescriptors = RootContainerScope.CachedDescriptors;
         ScopedDescriptors = RootContainerScope.ScopedDescriptors;
-        
+        Singletons = RootContainerScope.Singletons;
+        Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
+
         InternalAddScoped();
     }
-    
+
     public interface IAmUnitTesting
     {
         public static IocContainerScope CreateScope(IocContainerScope parentContainerScope, ServiceScopeId? id = null)
@@ -183,16 +154,11 @@ public sealed record IocContainerScope : IDisposable, IAsyncDisposable, IService
     }
     internal IocContainerScope CreateScope(ServiceScopeId id) => new(this) { Id = id };
     
+    IContainerScope IContainerScopeFactory.CreateScope() => CreateScope();
     public IocContainerScope CreateScope() => new(this);
     
-
-    // descriptors should be a list to allow duplicates
     private List<IocDescriptor> Descriptors { get; init; }
     private List<IocDescriptor> ScopedDescriptors { get; init; }
-    // private ConcurrentDictionary<Type, IocDescriptor> Descriptors { get; }
-    
-    // private ConcurrentDictionary<Type, ServiceImpls> Singletons { get; }
-    // private ConcurrentDictionary<Type, ServiceImpls> Scoped { get; }
     
     private ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> Singletons { get; }
     private ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> Scoped { get; }
@@ -215,47 +181,67 @@ public sealed record IocContainerScope : IDisposable, IAsyncDisposable, IService
     private static void InternalAddServiceImpls(ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> dict, IocDescriptor descriptor)
     {
         dict.TryAdd(descriptor, new ServiceInstanceProvider(descriptor.Implementation));
-        
         // dict.AddOrUpdate(descriptor, static (_, d) => new ServiceInstanceProvider(d.Implementation),
         //     static (_, s, d) => new ServiceInstanceProvider(d.Implementation),
         //     descriptor);
-
-        // dict.AddOrUpdate(descriptor.ServiceType, static (_, d) => new ServiceImpls(d),
-        //     static (_, s, d) => s.Prepend(new ServiceImpls(d)), descriptor);
     }
     
+    public void TryAdd(IocDescriptor descriptor) => TryAdd(descriptor, true);
+    public void Add(IocDescriptor descriptor) => Add(descriptor, true);
+    private bool Add(IocDescriptor descriptor, bool needsLock)
+    {
+        if (!needsLock)
+            return InternalUnsafeAdd(descriptor);
+        lock (Descriptors)
+            return InternalUnsafeAdd(descriptor);
+    }
 
-    // public void Add2(IocDescriptor descriptor)
-    // {
-    //     Descriptors.Add(descriptor);
-    //     AddInternal2(descriptor);
-    // }
-    //
-    // // set singletons from descriptors Descriptor.Implementation
-    // private void AddInternal2(IocDescriptor descriptor, bool needsLock = true)
-    // {
-    //     var dict = descriptor.Lifetime == IocLifetime.Singleton
-    //         ? Singletons
-    //         : Scoped;
-    //     if (descriptor.Implementation is null || descriptor.Lifetime is IocLifetime.Transient ||
-    //         !dict.ContainsKey(descriptor.ServiceType) && dict.TryAdd(descriptor.ServiceType,
-    //             new ServiceImpls(descriptor.Implementation)) ||
-    //         !dict.TryGetValue(descriptor.ServiceType, out var serviceImpls)) return;
-    //     if (!needsLock)
-    //     {
-    //         AddNext();
-    //         return;
-    //     }
-    //     lock (serviceImpls) AddNext();
-    //     void AddNext() => serviceImpls.Last().Next = new ServiceImpls(descriptor.Implementation);
-    // }
+    private bool InternalUnsafeAdd(IocDescriptor descriptor)
+    {
+        CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
+            static (_, d) => d, static (_, _, d) => d, descriptor);
+        Descriptors.Add(descriptor);
+        if (descriptor.Lifetime is IocLifetime.Transient) return true;
+        if (descriptor.Lifetime is IocLifetime.Scoped) ScopedDescriptors.Add(descriptor);
+        var dict = 
+            descriptor.Lifetime is IocLifetime.Scoped ? Scoped : Singletons;
+        dict.TryAdd(descriptor, new ServiceInstanceProvider(descriptor.Implementation));
+        dict.AddOrUpdate(descriptor, static (_, d) => new ServiceInstanceProvider(d.Implementation),
+            static (_, s, d) =>
+            {
+                s.Instance = d.Implementation;
+                return s;
+            }, descriptor);
+        return true;
+    }
+
+    private bool TryAdd(IocDescriptor descriptor, bool needsLock)
+    {
+        if (CachedDescriptors.ContainsKey(descriptor.ServiceType)) return false;
+        if (!needsLock)
+            return InternalUnsafeInnerLockTryAdd(descriptor);
+        lock (Descriptors)
+            return InternalUnsafeInnerLockTryAdd(descriptor);
+    }
+
+    private bool InternalUnsafeInnerLockTryAdd(IocDescriptor descriptor)
+    {
+        if (!CachedDescriptors.TryAdd(descriptor.ServiceType, descriptor)) return false;
+        Descriptors.Add(descriptor);
+        if (descriptor.Lifetime is IocLifetime.Transient) return true;
+        if (descriptor.Lifetime is IocLifetime.Scoped) ScopedDescriptors.Add(descriptor);
+        var dict = 
+            descriptor.Lifetime is IocLifetime.Scoped ? Scoped : Singletons;
+        dict.TryAdd(descriptor, new ServiceInstanceProvider(descriptor.Implementation));
+        return true;
+    }
 
     public object? GetService(Type serviceType)
     {
         return 
             CachedDescriptors.TryGetValue(serviceType, out var descriptor)
             ? GetServiceForDescriptor2(descriptor)
-            : null;
+            : WrappedProvider?.GetService(serviceType);
         // return GetServiceForDescriptor2(Descriptors.Last(x => x.ServiceType == serviceType));
     }
 
@@ -274,7 +260,9 @@ public sealed record IocContainerScope : IDisposable, IAsyncDisposable, IService
         => descriptor.Lifetime switch
         {
             IocLifetime.Singleton => GetSingletonOrScopedService(Singletons, descriptor),
-            IocLifetime.Scoped => GetSingletonOrScopedService(Scoped, descriptor),
+            IocLifetime.Scoped => IsDisposed && !IsRootContainerScope 
+                ? throw new InvalidOperationException("Scope is disposed.")
+                : GetSingletonOrScopedService(Scoped, descriptor),
             IocLifetime.Transient => GetTransientService(descriptor),
             _ => null
         };
@@ -292,66 +280,27 @@ public sealed record IocContainerScope : IDisposable, IAsyncDisposable, IService
                     descriptor.Factory?.Invoke(this) ?? TryCreateService(this, descriptor);
         }
     }
-
-    // internal object? GetSingletons(IocDescriptor descriptor)
-    // {
-    //     if (!Singletons.TryGetValue(descriptor.ServiceType, out var s)) return null;
-    //     
-    //     return s.Item ?? Locke();
-    //         
-    //     object? Locke()
-    //     {
-    //         lock (s) return s.Item ??= descriptor.Factory?.Invoke(this);
-    //     }
-    // }
-    
-    // internal object? GetLastSingletons(IocDescriptor descriptor)
-    // {
-    //     if (!Singletons.TryGetValue(descriptor.ServiceType, out var s)) return null;
-    //     
-    //     var last = s.Last();
-    //     
-    //     return last.Item ?? Locke();
-    //         
-    //     object? Locke()
-    //     {
-    //         lock (s) return last.Item ??= descriptor.Factory?.Invoke(this);
-    //     }
-    // }
-
-    // internal object? GetSingletonOrScopedService(IocDescriptor descriptor)
-    // {
-    //     if (descriptor.Implementation is { }) return descriptor.Implementation;
-    //     
-    //     
-    //     
-    //     // if (descriptor.Factory?.Invoke(ContainerProvider) is { } serviceImpl) return serviceImpl;
-    //     // lock (descriptor)
-    //     // {
-    //     //     return descriptor.Implementation ??= TryCreateService(ContainerProvider, descriptor);    
-    //     // }
-    //
-    //     return null;
-    // }
-
-    // internal object? GetScopedService(IocDescriptor descriptor) => GetSingletonService(descriptor); // it is scoped already
     
     internal object? GetTransientService(IocDescriptor descriptor)
     {
-        // if (descriptor.Factory?.Invoke(ContainerProvider) is { } serviceImpl) return serviceImpl;
-        // return TryCreateService(ContainerProvider, descriptor);
-
-        return null;
+        if (descriptor.Factory?.Invoke(this) is { } serviceInstance) return serviceInstance;
+        return TryCreateService(this, descriptor);
+        // return null;
     }
 
     internal static object? TryCreateService(IServiceProvider provider, IocDescriptor descriptor)
     {
+        if (descriptor.ServiceType.IsGenericTypeDefinition)
+        {
+            // open generic
+            return null;
+        }
         var type = descriptor.ImplType ?? descriptor.ServiceType;
-        if (type.IsAbstract) return null;
-
-        return IocUtilitiesDelegation.Default.CreateInstance(provider, type);
-
-        // return Activator.CreateInstance(type);
+        return type.IsAbstract
+            ? null
+            : provider.GetRequiredService<IocUtilitiesDelegation>().CreateInstance(provider, type);
+        // return provider.TryCreateInstance(type);
+        // return IocUtilitiesDelegation.Default.CreateInstance(provider, type);
     }
     
     internal enum ActionType

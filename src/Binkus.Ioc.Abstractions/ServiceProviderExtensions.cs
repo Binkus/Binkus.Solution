@@ -15,7 +15,7 @@ public static class ServiceProviderServiceExtensions
         if (type is null || !type.IsAssignableTo(typeof(TServiceToBeAssignableTo))) return default;
         
         if (!type.IsAbstract) 
-            return (TServiceToBeAssignableTo?)IocUtilitiesDelegation.Default.GetServiceOrCreateInstance(services, type);
+            return (TServiceToBeAssignableTo?)services.GetIocUtilities().GetServiceOrCreateInstance(services, type);
         
         return (TServiceToBeAssignableTo?)services.GetService(type);
     }
@@ -26,7 +26,7 @@ public static class ServiceProviderServiceExtensions
         (this IServiceProvider services) where TServiceToGetOrCreate : TServiceToBeAssignableTo
     {
         return !typeof(TServiceToGetOrCreate).IsAbstract
-            ? IocUtilitiesDelegation.Default.GetServiceOrCreateInstance<TServiceToGetOrCreate>(services)
+            ? services.GetIocUtilities().GetServiceOrCreateInstance<TServiceToGetOrCreate>(services)
             : services.GetService<TServiceToGetOrCreate>();
     }
 
@@ -35,7 +35,7 @@ public static class ServiceProviderServiceExtensions
         (this IServiceProvider services)
     {
         return !typeof(TService).IsAbstract
-            ? IocUtilitiesDelegation.Default.GetServiceOrCreateInstance<TService>(services)
+            ? services.GetIocUtilities().GetServiceOrCreateInstance<TService>(services)
             : services.GetService<TService>();
     }
     
@@ -48,7 +48,7 @@ public static class ServiceProviderServiceExtensions
         if (type is null || !type.IsAssignableTo(serviceTypeToBeAssignableTo)) return default;
 
         return !type.IsAbstract
-            ? IocUtilitiesDelegation.Default.GetServiceOrCreateInstance(services, type)
+            ? services.GetIocUtilities().GetServiceOrCreateInstance(services, type)
             : services.GetService(type);
     }
     
@@ -58,7 +58,7 @@ public static class ServiceProviderServiceExtensions
         if (type is null ) return default;
 
         return !type.IsAbstract
-            ? IocUtilitiesDelegation.Default.GetServiceOrCreateInstance(services, type)
+            ? services.GetIocUtilities().GetServiceOrCreateInstance(services, type)
             : services.GetService(type);
     }
     
@@ -71,7 +71,7 @@ public static class ServiceProviderServiceExtensions
         if (type is null || !type.IsAssignableTo(serviceTypeToBeAssignableTo)) return default;
 
         return !type.IsAbstract
-            ? IocUtilitiesDelegation.Default.CreateInstance(services, type, parameters)
+            ? services.GetIocUtilities().CreateInstance(services, type, parameters)
             : default;
     }
     
@@ -82,7 +82,7 @@ public static class ServiceProviderServiceExtensions
         if (type is null ) return default;
 
         return !type.IsAbstract
-            ? IocUtilitiesDelegation.Default.CreateInstance(services, type, parameters)
+            ? services.GetIocUtilities().CreateInstance(services, type, parameters)
             : default;
     }
     

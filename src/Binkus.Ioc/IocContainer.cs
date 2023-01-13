@@ -10,9 +10,6 @@ namespace Binkus.DependencyInjection;
 
 public sealed class IocContainer // : IServiceProvider
 {
-    private static IEnumerable<KeyValuePair<Type, IocDescriptor>> ToKeyValuePair(IEnumerable<IocDescriptor> services) 
-        => services.Select(d => new KeyValuePair<Type, IocDescriptor>(d.ServiceType, d));
-    
     public IocContainer(IEnumerable<IocDescriptor> services, bool readOnly = true) : this(services, null, readOnly) { }
     public IocContainer(IEnumerable<IocDescriptor> services, ServiceScopeId? id, bool readOnly = true) : this(readOnly)
     {
@@ -42,7 +39,7 @@ public interface IContainerScopeFactory
     IContainerScope CreateScope();
 }
 
-public interface IContainerScope : IContainerScopeFactory, IDisposable, IAsyncDisposable
+public interface IContainerScope : IContainerScopeFactory, IAsyncDisposable, IDisposable
 {
     public IServiceProvider Services { get; }
 }
@@ -62,7 +59,8 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     public IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, this) ? _wrappedProvider : value; }
     public IServiceProvider Services => this;
     public IocContainerScope RootContainerScope { get; }
-    public IocContainerScope ParentContainerScope { get; }
+    public IocContainerScope? ParentContainerScope => WeakParentContainerScope?.TryGetTarget(out var target) ?? false ? target : null;
+    private WeakReference<IocContainerScope>? WeakParentContainerScope { get; }
     public ServiceScopeId Id { get; init; }
     public bool IsRootContainerScope { get; init; }
 
@@ -76,7 +74,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     {
         // WrappedProvider ...
         RootContainerScope = this;
-        ParentContainerScope = this;
+        WeakParentContainerScope = null;
         Id = id ?? new ServiceScopeId();
         IsRootContainerScope = true;
         Descriptors = services?.ToList() ?? new List<IocDescriptor>();
@@ -98,6 +96,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         
         InternalAddThisAsService();
         InternalAddSingletons();
+        InternalAddScoped();
         AddBasicServices();
     }
 
@@ -133,7 +132,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             parentContainerScope._wrappedProvider?.GetService<IContainerScopeFactory>()?.CreateScope().Services ??
             parentContainerScope._wrappedProvider; // create scope from wrapped provider
         RootContainerScope = parentContainerScope.RootContainerScope;
-        ParentContainerScope = parentContainerScope;
+        WeakParentContainerScope = new WeakReference<IocContainerScope>(parentContainerScope);
         Id = new ServiceScopeId();
         IsRootContainerScope = false;
         Descriptors = RootContainerScope.Descriptors;
@@ -174,7 +173,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     
     private void InternalAddScoped()
     {
-        foreach (var descriptor in Descriptors.Where(d => d.Lifetime is IocLifetime.Scoped)) 
+        foreach (var descriptor in ScopedDescriptors) 
             InternalAddServiceImpls(Scoped, descriptor);
     }
     
@@ -186,7 +185,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         //     descriptor);
     }
     
-    public void TryAdd(IocDescriptor descriptor) => TryAdd(descriptor, true);
+    public bool TryAdd(IocDescriptor descriptor) => TryAdd(descriptor, true);
     public void Add(IocDescriptor descriptor) => Add(descriptor, true);
     private bool Add(IocDescriptor descriptor, bool needsLock)
     {
@@ -240,9 +239,8 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     {
         return 
             CachedDescriptors.TryGetValue(serviceType, out var descriptor)
-            ? GetServiceForDescriptor2(descriptor)
+            ? GetServiceForDescriptor(descriptor)
             : WrappedProvider?.GetService(serviceType);
-        // return GetServiceForDescriptor2(Descriptors.Last(x => x.ServiceType == serviceType));
     }
 
     private object? GetSpecialService(Type serviceType)
@@ -256,7 +254,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         
     }
     
-    private object? GetServiceForDescriptor2(IocDescriptor descriptor)
+    private object? GetServiceForDescriptor(IocDescriptor descriptor)
         => descriptor.Lifetime switch
         {
             IocLifetime.Singleton => GetSingletonOrScopedService(Singletons, descriptor),

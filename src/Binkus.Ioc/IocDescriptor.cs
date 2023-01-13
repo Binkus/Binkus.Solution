@@ -133,6 +133,10 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
         return !Equals(left, right);
     }
     
+    // Conversion
+
+    public static implicit operator IocLifetime(IocDescriptor descriptor) => descriptor.Lifetime;
+    
     //
     // Static creation helper:
 

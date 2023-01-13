@@ -309,26 +309,43 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         Factory,
     }
 
-    internal ActionType GetDescriptorActionType(IocDescriptor descriptor)
-        => descriptor switch
+    internal ActionType GetDescriptorActionType(IocDescriptor descriptor) =>
+        descriptor switch
         {
             { Implementation: { } } => ActionType.CachedInstance,
             { Factory: { } } => ActionType.Factory,
             { ImplType: { } } => ActionType.ImplType,
             _ => ActionType.Invalid
         };
+
+    private ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>? TryGetDictFor(IocLifetime lifetime) =>
+        lifetime switch
+        {
+            IocLifetime.Singleton => Singletons,
+            IocLifetime.Scoped => Scoped,
+            _ => null
+        };
+
+    private object? TryGetImplFor(IocDescriptor descriptor) =>
+        descriptor.Implementation ?? TryGetDictFor(descriptor)?.GetValueOrDefault(descriptor)?.Instance;
+
+    private object? TryGetDisposingImplFor(IocDescriptor descriptor) =>
+        IsRootContainerScope || descriptor.Lifetime is IocLifetime.Singleton
+            ? TryGetImplFor(descriptor)
+            : descriptor.Implementation is not null
+                ? null
+                : TryGetDictFor(descriptor)?.GetValueOrDefault(descriptor)?.Instance;
     
     // Disposal:
 
     private async ValueTask AsyncDispose()
     {
         // async dispose:
-        IEnumerable<IocDescriptor> descriptors = null!;//ContainerProvider.Descriptors.Values; // todo
-        foreach (var descriptor in descriptors)
+        foreach (var descriptor in Descriptors)
         {
             if (!IsRootContainerScope && descriptor.Lifetime is not IocLifetime.Scoped) continue;
-            // only scoped services get disposed as well as singletons if this represents the root IoC Container:
-            var impl = descriptor.Implementation ?? null; // todo get from singleton collection
+            // Singletons get disposed only when this is the root IoC Container:
+            var impl = TryGetDisposingImplFor(descriptor);
             switch (impl)
             {
                 case null:
@@ -345,12 +362,11 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     private void SyncDispose()
     {
         // sync dispose:
-        IEnumerable<IocDescriptor> descriptors = null!;//ContainerProvider.Descriptors.Values; // todo
-        foreach (var descriptor in descriptors)
+        foreach (var descriptor in Descriptors)
         {
             if (!IsRootContainerScope && descriptor.Lifetime is not IocLifetime.Scoped) continue;
-            // only scoped services get disposed as well as singletons if this represents the root IoC Container:
-            var impl = descriptor.Implementation ?? null; // todo get from singleton collection
+            // Singletons get disposed only when this is the root IoC Container:
+            var impl = TryGetDisposingImplFor(descriptor);
             switch (impl)
             {
                 case null:

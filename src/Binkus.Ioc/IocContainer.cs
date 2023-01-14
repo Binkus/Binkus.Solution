@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Runtime.CompilerServices;
 using Binkus.DependencyInjection.Extensions;
 
 // ReSharper disable ClassNeverInstantiated.Global
@@ -187,9 +188,9 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     
     public bool TryAdd(IocDescriptor descriptor) => TryAdd(descriptor, true);
     public void Add(IocDescriptor descriptor) => Add(descriptor, true);
-    private bool Add(IocDescriptor descriptor, bool needsLock)
+    private bool Add(IocDescriptor descriptor, bool lockDescriptors)
     {
-        if (!needsLock)
+        if (!lockDescriptors)
             return InternalUnsafeAdd(descriptor);
         lock (Descriptors)
             return InternalUnsafeAdd(descriptor);
@@ -197,27 +198,28 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
 
     private bool InternalUnsafeAdd(IocDescriptor descriptor)
     {
+        // if (IsReadOnly) return false;
         CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
             static (_, d) => d, static (_, _, d) => d, descriptor);
         Descriptors.Add(descriptor);
         if (descriptor.Lifetime is IocLifetime.Transient) return true;
         if (descriptor.Lifetime is IocLifetime.Scoped) ScopedDescriptors.Add(descriptor);
-        var dict = 
+        var dict =
             descriptor.Lifetime is IocLifetime.Scoped ? Scoped : Singletons;
-        dict.TryAdd(descriptor, new ServiceInstanceProvider(descriptor.Implementation));
         dict.AddOrUpdate(descriptor, static (_, d) => new ServiceInstanceProvider(d.Implementation),
             static (_, s, d) =>
             {
                 s.Instance = d.Implementation;
                 return s;
             }, descriptor);
+        WhenDisposedDisposeImplFrom(descriptor);
         return true;
     }
 
-    private bool TryAdd(IocDescriptor descriptor, bool needsLock)
+    private bool TryAdd(IocDescriptor descriptor, bool lockDescriptors)
     {
         if (CachedDescriptors.ContainsKey(descriptor.ServiceType)) return false;
-        if (!needsLock)
+        if (!lockDescriptors)
             return InternalUnsafeInnerLockTryAdd(descriptor);
         lock (Descriptors)
             return InternalUnsafeInnerLockTryAdd(descriptor);
@@ -225,6 +227,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
 
     private bool InternalUnsafeInnerLockTryAdd(IocDescriptor descriptor)
     {
+        // if (IsReadOnly) return false;
         if (!CachedDescriptors.TryAdd(descriptor.ServiceType, descriptor)) return false;
         Descriptors.Add(descriptor);
         if (descriptor.Lifetime is IocLifetime.Transient) return true;
@@ -232,6 +235,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         var dict = 
             descriptor.Lifetime is IocLifetime.Scoped ? Scoped : Singletons;
         dict.TryAdd(descriptor, new ServiceInstanceProvider(descriptor.Implementation));
+        WhenDisposedDisposeImplFrom(descriptor);
         return true;
     }
 
@@ -336,7 +340,73 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                 ? null
                 : TryGetDictFor(descriptor)?.GetValueOrDefault(descriptor)?.Instance;
     
-    // Disposal:
+    //
+    // scope mutability:
+    
+    // public bool IsReadOnly { get; private set; }
+    //
+    // public void MakeReadOnly() => IsReadOnly = true;
+    //
+    // private void ValidateMutability()
+    // {
+    //     if (IsReadOnly) throw new InvalidOperationException("Container is readonly.");
+    // }
+    //
+    // private bool IsMutationForbidden(IocLifetime lifetime) =>
+    //     IsReadOnly || (lifetime is IocLifetime.Scoped && IsDisposed) || RootContainerScope.IsDisposed;
+    
+    //
+
+    #region Disposal
+    
+    // obj / descriptor's Implementation-property disposal:
+
+    // private void WhenDisposedDisposeImplOf(IocDescriptor descriptor)
+    // {
+    //     if (!IsMutationForbidden(descriptor)) return;
+    //     // if ((descriptor == IocLifetime.Scoped && IsDisposed) || RootContainerScope.IsDisposed) { }
+    //     var impl = TryGetImplFor(descriptor);
+    //     TryDisposalOf(impl);
+    // }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void WhenDisposedDisposeImplFrom(IocDescriptor descriptor)
+    {
+        if ((IsDisposed && descriptor == IocLifetime.Scoped) || RootContainerScope.IsDisposed)
+            TryDisposalOf(descriptor.Implementation);
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void TryDisposalOf(object? obj)
+    {
+        switch (obj)
+        {
+            case null: return;
+            case IDisposable d:
+                d.Dispose();
+                return;
+            case IAsyncDisposable ad:
+                ad.DisposeAsync().GetAwaiter().GetResult();
+                return;
+        }
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static ValueTask TryDisposalOfAsync(object? obj)
+    {
+        switch (obj)
+        {
+            case null: return default;
+            case IAsyncDisposable ad:
+                return ad.DisposeAsync();
+            case IDisposable d:
+                d.Dispose();
+                return default;
+            default: return default;
+        }
+    }
+    
+    // Scope Disposal:
 
     private async ValueTask AsyncDispose()
     {
@@ -392,7 +462,8 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         if (!disposing) return;
         LockScopedContainer();
         // sync dispose:
-        SyncDispose();
+        lock (Descriptors)
+            SyncDispose();
     }
     
     public void Dispose()
@@ -420,12 +491,15 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         Dispose(false);
         LockScopedContainer();
         // async dispose:
-        return AsyncDispose();
+        lock (Descriptors)
+            return AsyncDispose();
     }
 
     private void LockScopedContainer()
     {
         // todo Lock scoped Container in the sense of - no more service resolvation possible, don't affect root provider
     }
+    
+    #endregion
 }
 

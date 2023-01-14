@@ -421,11 +421,13 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                 case null:
                     continue;
                 case IAsyncDisposable asyncDisposable:
+                    await Task.Yield();
                     await asyncDisposable.DisposeAsync();
-                    break;
-                default:
-                    (descriptor.Implementation as IDisposable)?.Dispose();
-                    break;
+                    continue;
+                case IDisposable disposable:
+                    await Task.Yield();
+                    disposable.Dispose();
+                    continue;
             }
         }
     }
@@ -443,15 +445,14 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                     continue;
                 case IDisposable disposable:
                     disposable.Dispose();
-                    break;
-                default:
-                    (descriptor.Implementation as IAsyncDisposable)?.DisposeAsync().GetAwaiter().GetResult();
-                    break;
+                    continue;
+                case IAsyncDisposable asyncDisposable:
+                    asyncDisposable.DisposeAsync().GetAwaiter().GetResult();
+                    continue;
             }
         }
     }
     
-    private readonly object _mutex = new();
     public bool IsDisposed { get; private set; }
     ~IocContainerScope() => Dispose(false);
     private void Dispose(bool disposing)
@@ -461,38 +462,40 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         
         if (!disposing) return;
         LockScopedContainer();
+        
         // sync dispose:
-        lock (Descriptors)
-            SyncDispose();
+        SyncDispose();
     }
     
     public void Dispose()
     {
         if (IsDisposed) return;
-        lock (_mutex)
+        lock (Descriptors)
         {
             if (IsDisposed) return;
             IsDisposed = true;
             GC.SuppressFinalize(this);
+
+            // sync dispose:
+            Dispose(true);
         }
-        // sync dispose:
-        Dispose(true);
     }
     public ValueTask DisposeAsync()
     {
         if (IsDisposed) return default;
-        lock (_mutex)
+        lock (Descriptors)
         {
             if (IsDisposed) return default;
             IsDisposed = true;
             GC.SuppressFinalize(this);
-        }
-        // sync common and or unmanaged dispose (without executing SyncDispose()):
-        Dispose(false);
-        LockScopedContainer();
-        // async dispose:
-        lock (Descriptors)
+
+            // sync common and or unmanaged dispose (without executing SyncDispose()):
+            Dispose(false);
+            LockScopedContainer();
+            
+            // async dispose:
             return AsyncDispose();
+        }
     }
 
     private void LockScopedContainer()

@@ -54,8 +54,27 @@ internal record ServiceInstanceProvider(object? Instance = null)
 // Scope Engine
 
 public sealed record IocContainerScope : IServiceProvider, IContainerScope,
-    IContainerScopeFactory, IDisposable, IAsyncDisposable 
+    IContainerScopeFactory, IDisposable, IAsyncDisposable, IEnumerable<IocDescriptor>
 {
+    public List<IocDescriptor>.Enumerator GetEnumerator()
+    {
+        lock (Descriptors) return Descriptors.ToList().GetEnumerator();
+    }
+    
+    IEnumerator<IocDescriptor> IEnumerable<IocDescriptor>.GetEnumerator() => GetEnumerator();
+
+    IEnumerator IEnumerable.GetEnumerator()
+    {
+        return GetEnumerator();
+        // return ((IEnumerable)Descriptors).GetEnumerator();
+        // lock (Descriptors)
+        // {
+        //     var d = new IocDescriptor[Descriptors.Count];
+        //     Descriptors.CopyTo(d);
+        //     return d.AsEnumerable().GetEnumerator();            
+        // }
+    }
+
     private readonly IServiceProvider? _wrappedProvider;
     public IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, this) ? _wrappedProvider : value; }
     public IServiceProvider Services => this;

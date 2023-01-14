@@ -11,6 +11,12 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
+            <_Parameter1>$(AssemblyName).Tests</_Parameter1>
+        </AssemblyAttribute>
+    </ItemGroup>
+
+    <ItemGroup>
       <ProjectReference Include="..\Binkus.Ioc.Abstractions\Binkus.Ioc.Abstractions.csproj" />
     </ItemGroup>
 

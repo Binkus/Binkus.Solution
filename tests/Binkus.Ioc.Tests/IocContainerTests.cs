@@ -11,17 +11,27 @@ public sealed class IocContainerTests
 
     private const bool UseImplTypeInsteadOfFactory = true;
     private const bool UseContainerScopeWithDescriptorList = true;
+    private const bool UseIocUtilitiesInsteadOfActivatorUtilities = true;
     
     public IocContainerTests()
     {
-        _containerScope = CreateContainerScope();
-        SetupIocUtilities.SetIocUtilitiesForIocUtilitiesDelegation(_containerScope);
-        // _containerScope.GetIocUtilities().FuncCreateInstance = ActivatorUtilities.CreateInstance;
-        
         _msDiServiceProvider = CreateMsDiServiceProvider();
+        _containerScope = CreateContainerScope();
+        SetIocUtilities(_containerScope);
+        SetIocUtilities(_msDiServiceProvider);
     }
 
     #region Setup
+
+    private static void SetIocUtilities(IServiceProvider iocContainerScope)
+    {
+        if (UseIocUtilitiesInsteadOfActivatorUtilities)
+        {
+            SetupIocUtilities.SetIocUtilitiesForIocUtilitiesDelegation(iocContainerScope);
+            return;
+        }
+        iocContainerScope.GetIocUtilities().FuncCreateInstance = ActivatorUtilities.CreateInstance;
+    }
     
     private static IocContainerScope CreateContainerScope() => 
         UseContainerScopeWithDescriptorList
@@ -176,11 +186,11 @@ public sealed class IocContainerTests
     public void TestContainer()
     {
         var single0 = _containerScope.GetRequiredService<IInnerRequesterSingletonService>();
-        var scoped0 = _containerScope.GetRequiredService<IInnerRequesterScopedService>(); // broken in root scope currently
+        var scoped0 = _containerScope.GetRequiredService<IInnerRequesterScopedService>();
         var transient0 = _containerScope.GetRequiredService<IInnerRequesterTransientService>();
         
         var single1 = _containerScope.GetRequiredService<IInnerRequesterSingletonService>();
-        var scoped1 = _containerScope.GetRequiredService<IInnerRequesterScopedService>(); // broken in root scope currently
+        var scoped1 = _containerScope.GetRequiredService<IInnerRequesterScopedService>();
         var transient1 = _containerScope.GetRequiredService<IInnerRequesterTransientService>();
 
         var newScope = _containerScope.CreateScope();
@@ -229,35 +239,6 @@ public sealed class IocContainerTests
         Assert.Equal(newSingle0, new2Single0);
         Assert.NotEqual(newScoped0, new2Scoped0);
         Assert.NotEqual(newTransient0, new2Transient0);
-        
-        //
-        
-        // Assert.True(single0 == single1);
-        // Assert.True(scoped0 == scoped1);
-        // Assert.True(transient0 != transient1);
-        //
-        // Assert.True(newSingle0 == newSingle1);
-        // Assert.True(newScoped0 == newScoped1);
-        // Assert.True(newTransient0 != newTransient1);
-        //
-        // Assert.True(single0 == newSingle0);
-        // Assert.True(scoped0 != newScoped0);
-        // Assert.True(transient0 != newTransient0);
-        //
-        // //
-        //
-        // Assert.True(new2Single0 == new2Single1);
-        // Assert.True(new2Scoped0 == new2Scoped1);
-        // Assert.True(new2Transient0 != new2Transient1);
-        //
-        // Assert.True(single0 == new2Single0);
-        // Assert.True(scoped0 != new2Scoped0);
-        // Assert.True(newScoped0 != new2Scoped0);
-        // Assert.True(transient0 != new2Transient0);
-        //
-        // Assert.True(newSingle0 == new2Single0);
-        // Assert.True(newScoped0 != new2Scoped0);
-        // Assert.True(newTransient0 != new2Transient0);
     }
     
     //

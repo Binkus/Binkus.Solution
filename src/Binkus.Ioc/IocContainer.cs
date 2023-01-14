@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Runtime.CompilerServices;
 using Binkus.DependencyInjection.Extensions;
 
+// ReSharper disable UnusedAutoPropertyAccessor.Global
 // ReSharper disable ClassNeverInstantiated.Global
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -49,6 +50,12 @@ public interface IContainerScope : IContainerScopeFactory, IAsyncDisposable, IDi
 internal record ServiceInstanceProvider(object? Instance = null)
 {
     public object? Instance { get; internal set; } = Instance;
+    
+    // todo evaluate adding sth. like "bool IsDisposed" in regards to scopes,
+    // see "object? TryGetDisposingImplFor(IocDescriptor descriptor)" in IocContainerScope
+    // and think about potential dilemmas, e.g. double (potential) disposing -
+    // what if double-disposal throws exception, if double-disposal is possible (evaluate that first),
+    // saving here a property IsDisposed could rescue the day, or a try-catch.
 }
 
 // Scope Engine
@@ -132,9 +139,6 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                 default: continue;
             }
         }
-
-        // InternalAddSingletons();
-        // InternalAddScoped();
     }
 
     private void AddBasicServices()
@@ -195,18 +199,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     
     private ConcurrentDictionary<Type, IocDescriptor> CachedDescriptors { get; }
 
-
-    // private void InternalAddSingletons()
-    // {
-    //     foreach (var descriptor in Descriptors.Where(d => d.Lifetime is IocLifetime.Singleton)) 
-    //         InternalAddServiceImpls(Singletons, descriptor);
-    // }
-    //
-    // private void InternalAddScoped()
-    // {
-    //     foreach (var descriptor in ScopedDescriptors) 
-    //         InternalAddServiceImpls(Scoped, descriptor);
-    // }
+    
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void InternalAddServiceImpls(ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> dict, IocDescriptor descriptor)
@@ -533,7 +526,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
 
     private void LockScopedContainer()
     {
-        // todo Lock scoped Container in the sense of - no more service resolvation possible, don't affect root provider
+        // todo evaluate locking scoped Container in the sense of - no more service resolvation possible, don't affect root provider
     }
     
     #endregion

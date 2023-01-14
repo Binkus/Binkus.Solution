@@ -8,57 +8,109 @@ public sealed class IocContainerTests
 {
     private readonly IocContainerScope _containerScope;
     private readonly IServiceProvider _msDiServiceProvider;
+
+    private const bool UseImplTypeInsteadOfFactory = true;
+    private const bool UseContainerScopeWithDescriptorList = true;
     
     public IocContainerTests()
     {
-        List<IocDescriptor> descriptors = new(6);
-        
-        // descriptors.Add(IocDescriptor.CreateSingleton<ISingletonService, TestRecordService>());
-        // descriptors.Add(IocDescriptor.CreateScoped<IScopedService, TestRecordService>());
-        // descriptors.Add(IocDescriptor.CreateTransient<ITransientService, TestRecordService>());
-        //
-        // descriptors.Add(IocDescriptor.CreateSingleton<IInnerRequesterSingletonService, InnerRequesterTestRecordService>());
-        // descriptors.Add(IocDescriptor.CreateScoped<IInnerRequesterScopedService, InnerRequesterTestRecordService>());
-        // descriptors.Add(IocDescriptor.CreateTransient<IInnerRequesterTransientService, InnerRequesterTestRecordService>());
-        
-        //
-        
-        descriptors.Add(IocDescriptor.CreateSingleton<ISingletonService>(_ => new TestRecordService()));
-        descriptors.Add(IocDescriptor.CreateScoped<IScopedService>(_ => new TestRecordService()));
-        descriptors.Add(IocDescriptor.CreateTransient<ITransientService>(_ => new TestRecordService()));
-        
-        descriptors.Add(IocDescriptor.CreateSingleton<IInnerRequesterSingletonService, InnerRequesterTestRecordService>());
-        descriptors.Add(IocDescriptor.CreateScoped<IInnerRequesterScopedService, InnerRequesterTestRecordService>());
-        descriptors.Add(IocDescriptor.CreateTransient<IInnerRequesterTransientService, InnerRequesterTestRecordService>());
-        
-
-        _containerScope = new IocContainerScope(descriptors);
+        _containerScope = CreateContainerScope();
         SetupIocUtilities.SetIocUtilitiesForIocUtilitiesDelegation(_containerScope);
         // _containerScope.GetIocUtilities().FuncCreateInstance = ActivatorUtilities.CreateInstance;
         
+        _msDiServiceProvider = CreateMsDiServiceProvider();
+    }
+
+    #region Setup
+    
+    private static IocContainerScope CreateContainerScope() => 
+        UseContainerScopeWithDescriptorList
+            ? CreateContainerScopeWithDescriptorList()
+            : CreateContainerScopeWithCollectionInitializer();
+
+    private static IocContainerScope CreateContainerScopeWithCollectionInitializer() =>
+        UseImplTypeInsteadOfFactory
+            ? new IocContainerScope
+            {
+                (IocDescriptor.CreateSingleton<ISingletonService, TestRecordService>()),
+                (IocDescriptor.CreateScoped<IScopedService, TestRecordService>()),
+                (IocDescriptor.CreateTransient<ITransientService, TestRecordService>()),
+                
+                (IocDescriptor.CreateSingleton<IInnerRequesterSingletonService, InnerRequesterTestRecordService>()),
+                (IocDescriptor.CreateScoped<IInnerRequesterScopedService, InnerRequesterTestRecordService>()),
+                (IocDescriptor.CreateTransient<IInnerRequesterTransientService, InnerRequesterTestRecordService>()),
+            }
+            : new IocContainerScope
+            {
+                (IocDescriptor.CreateSingleton<ISingletonService>(_ => new TestRecordService())),
+                (IocDescriptor.CreateScoped<IScopedService>(_ => new TestRecordService())),
+                (IocDescriptor.CreateTransient<ITransientService>(_ => new TestRecordService())),
+
+                (IocDescriptor.CreateSingleton<IInnerRequesterSingletonService, InnerRequesterTestRecordService>()),
+                (IocDescriptor.CreateScoped<IInnerRequesterScopedService, InnerRequesterTestRecordService>()),
+                (IocDescriptor.CreateTransient<IInnerRequesterTransientService, InnerRequesterTestRecordService>()),
+            };
+
+    private static IocContainerScope CreateContainerScopeWithDescriptorList()
+    {
+        List<IocDescriptor> descriptors = new(6);
+
+        if (UseImplTypeInsteadOfFactory)
+        {
+            descriptors.Add(IocDescriptor.CreateSingleton<ISingletonService, TestRecordService>());
+            descriptors.Add(IocDescriptor.CreateScoped<IScopedService, TestRecordService>());
+            descriptors.Add(IocDescriptor.CreateTransient<ITransientService, TestRecordService>());
         
+            descriptors.Add(IocDescriptor.CreateSingleton<IInnerRequesterSingletonService, InnerRequesterTestRecordService>());
+            descriptors.Add(IocDescriptor.CreateScoped<IInnerRequesterScopedService, InnerRequesterTestRecordService>());
+            descriptors.Add(IocDescriptor.CreateTransient<IInnerRequesterTransientService, InnerRequesterTestRecordService>());    
+        }
+        else
+        {
+            descriptors.Add(IocDescriptor.CreateSingleton<ISingletonService>(_ => new TestRecordService()));
+            descriptors.Add(IocDescriptor.CreateScoped<IScopedService>(_ => new TestRecordService()));
+            descriptors.Add(IocDescriptor.CreateTransient<ITransientService>(_ => new TestRecordService()));
+        
+            descriptors.Add(IocDescriptor.CreateSingleton<IInnerRequesterSingletonService, InnerRequesterTestRecordService>());
+            descriptors.Add(IocDescriptor.CreateScoped<IInnerRequesterScopedService, InnerRequesterTestRecordService>());
+            descriptors.Add(IocDescriptor.CreateTransient<IInnerRequesterTransientService, InnerRequesterTestRecordService>());    
+        }
+
+        return new IocContainerScope(descriptors);
+    }
+
+    private static IServiceProvider CreateMsDiServiceProvider()
+    {
+        // ReSharper disable once UseObjectOrCollectionInitializer
         ServiceCollection services = new();
 
-        // services.Add(ServiceDescriptor.Singleton<ISingletonService, TestRecordService>());
-        // services.Add(ServiceDescriptor.Scoped<IScopedService, TestRecordService>());
-        // services.Add(ServiceDescriptor.Transient<ITransientService, TestRecordService>());
-        //
-        // services.Add(ServiceDescriptor.Singleton<IInnerRequesterSingletonService, InnerRequesterTestRecordService>());
-        // services.Add(ServiceDescriptor.Scoped<IInnerRequesterScopedService, InnerRequesterTestRecordService>());
-        // services.Add(ServiceDescriptor.Transient<IInnerRequesterTransientService, InnerRequesterTestRecordService>());
+        if (UseImplTypeInsteadOfFactory)
+        {
+            services.Add(ServiceDescriptor.Singleton<ISingletonService, TestRecordService>());
+            services.Add(ServiceDescriptor.Scoped<IScopedService, TestRecordService>());
+            services.Add(ServiceDescriptor.Transient<ITransientService, TestRecordService>());
         
-        //
+            services.Add(ServiceDescriptor.Singleton<IInnerRequesterSingletonService, InnerRequesterTestRecordService>());
+            services.Add(ServiceDescriptor.Scoped<IInnerRequesterScopedService, InnerRequesterTestRecordService>());
+            services.Add(ServiceDescriptor.Transient<IInnerRequesterTransientService, InnerRequesterTestRecordService>());    
+        }
+        else
+        {
+            services.Add(ServiceDescriptor.Singleton<ISingletonService>(_ => new TestRecordService()));
+            services.Add(ServiceDescriptor.Scoped<IScopedService>(_ => new TestRecordService()));
+            services.Add(ServiceDescriptor.Transient<ITransientService>(_ => new TestRecordService()));
         
-        services.Add(ServiceDescriptor.Singleton<ISingletonService>(_ => new TestRecordService()));
-        services.Add(ServiceDescriptor.Scoped<IScopedService>(_ => new TestRecordService()));
-        services.Add(ServiceDescriptor.Transient<ITransientService>(_ => new TestRecordService()));
-        
-        services.Add(ServiceDescriptor.Singleton<IInnerRequesterSingletonService, InnerRequesterTestRecordService>());
-        services.Add(ServiceDescriptor.Scoped<IInnerRequesterScopedService, InnerRequesterTestRecordService>());
-        services.Add(ServiceDescriptor.Transient<IInnerRequesterTransientService, InnerRequesterTestRecordService>());
-        
-        _msDiServiceProvider = services.BuildServiceProvider();
+            services.Add(ServiceDescriptor.Singleton<IInnerRequesterSingletonService, InnerRequesterTestRecordService>());
+            services.Add(ServiceDescriptor.Scoped<IInnerRequesterScopedService, InnerRequesterTestRecordService>());
+            services.Add(ServiceDescriptor.Transient<IInnerRequesterTransientService, InnerRequesterTestRecordService>());            
+        }
+
+        return services.BuildServiceProvider();
     }
+    
+    #endregion
+
+    //
 
     [Fact]
     public void TestBasicContainer()
@@ -119,8 +171,6 @@ public sealed class IocContainerTests
         Assert.NotEqual(newScoped0, new2Scoped0);
         Assert.NotEqual(newTransient0, new2Transient0);
     }
-    
-    
 
     [Fact]
     public void TestContainer()
@@ -143,7 +193,7 @@ public sealed class IocContainerTests
         var newScoped1 = newScope.GetRequiredService<IInnerRequesterScopedService>();
         var newTransient1 = newScope.GetRequiredService<IInnerRequesterTransientService>();
         
-        var new2Scope = _containerScope.CreateScope();
+        var new2Scope = newScope.CreateScope();
         
         var new2Single0 = new2Scope.GetRequiredService<IInnerRequesterSingletonService>();
         var new2Scoped0 = new2Scope.GetRequiredService<IInnerRequesterScopedService>();
@@ -209,6 +259,10 @@ public sealed class IocContainerTests
         // Assert.True(newScoped0 != new2Scoped0);
         // Assert.True(newTransient0 != new2Transient0);
     }
+    
+    //
+    
+    #region MS DI
     
     //
     // MS DI
@@ -333,4 +387,6 @@ public sealed class IocContainerTests
         Assert.NotEqual(newScoped0, new2Scoped0);
         Assert.NotEqual(newTransient0, new2Transient0);
     }
+    
+    #endregion
 }

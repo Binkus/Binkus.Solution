@@ -47,7 +47,7 @@ public interface IContainerScope : IContainerScopeFactory, IAsyncDisposable, IDi
 }
 
 
-internal record ServiceInstanceProvider(object? Instance = null)
+internal sealed record ServiceInstanceProvider(object? Instance = null)
 {
     public object? Instance { get; internal set; } = Instance;
     
@@ -67,29 +67,62 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     {
         lock (Descriptors) return Descriptors.ToList().GetEnumerator();
     }
-    
     IEnumerator<IocDescriptor> IEnumerable<IocDescriptor>.GetEnumerator() => GetEnumerator();
+    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
-    IEnumerator IEnumerable.GetEnumerator()
+    // WIP
+    public sealed record ContainerOptions
     {
-        return GetEnumerator();
-        // return ((IEnumerable)Descriptors).GetEnumerator();
-        // lock (Descriptors)
+        public static ContainerOptions Default { get; } = new(); 
+        
+        public bool IsReadOnly { get; init; }
+        public bool TriesCreatingScopeForWrappedProvider { get; init; } = true;
+
+        public WrappedProviderExecutionChainPositionEnum WrappedProviderExecutionChainPosition { get; init; } =
+            WrappedProviderExecutionChainPositionEnum.Last;
+
+        public enum WrappedProviderExecutionChainPositionEnum
+        {
+            First,
+            Last,
+        }
+
+        // public delegate object? GetServiceDelegate(Type serviceType);
+        //
+        // public GetServiceDelegate? GetServiceFun { get; init; }
+        //
+        // public object? GetService(IocContainerScope services, Type serviceType)
         // {
-        //     var d = new IocDescriptor[Descriptors.Count];
-        //     Descriptors.CopyTo(d);
-        //     return d.AsEnumerable().GetEnumerator();            
+        //     return services.GetService(serviceType);
         // }
     }
 
+    internal sealed record RootProperties
+    {
+        // private readonly IServiceProvider? _wrappedProvider;
+        // internal IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, RootContainerScope) ? _wrappedProvider : value; }
+        
+        internal required IocContainerScope RootContainerScope { get; init; }
+        
+        internal required List<IocDescriptor> Descriptors { get; init; }
+        internal required List<IocDescriptor> ScopedDescriptors { get; init; }
+        
+        internal required ConcurrentDictionary<Type, IocDescriptor> CachedDescriptors { get; init; }
+    
+        internal required ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> Singletons { get; init; }
+    }
+    
+    internal RootProperties Root { get; }
+    
     private readonly IServiceProvider? _wrappedProvider;
-    public IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, this) ? _wrappedProvider : value; }
+    public IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, this) || (!ReferenceEquals(this, RootContainerScope) && Equals(value, RootContainerScope)) ? _wrappedProvider : value; }
+    // public IServiceProvider? WrappedProvider { get => Root.WrappedProvider; init => _wrappedProvider = Equals(value, this) ? _wrappedProvider : value; }
     public IServiceProvider Services => this;
-    public IocContainerScope RootContainerScope { get; }
+    public IocContainerScope RootContainerScope => Root.RootContainerScope;
     public IocContainerScope? ParentContainerScope => WeakParentContainerScope?.TryGetTarget(out var target) ?? false ? target : null;
     private WeakReference<IocContainerScope>? WeakParentContainerScope { get; }
-    public ServiceScopeId Id { get; init; }
-    public bool IsRootContainerScope { get; init; }
+    public ServiceScopeId Id { get; internal init; }
+    public bool IsRootContainerScope { get; internal init; }
 
     private static IEnumerable<KeyValuePair<Type, IocDescriptor>> ToKeyValuePair(IEnumerable<IocDescriptor> services) 
         => services.Select(d => new KeyValuePair<Type, IocDescriptor>(d.ServiceType, d));
@@ -100,15 +133,22 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     internal IocContainerScope(IEnumerable<IocDescriptor>? services, ServiceScopeId? id)
     {
         // WrappedProvider ...
-        RootContainerScope = this;
-        WeakParentContainerScope = null;
+        // RootContainerScope = this;
+        // WeakParentContainerScope = null;
         Id = id ?? new ServiceScopeId();
         IsRootContainerScope = true;
-        Descriptors = services?.ToList() ?? new List<IocDescriptor>();
-        CachedDescriptors = new ConcurrentDictionary<Type, IocDescriptor>();
-        ScopedDescriptors = new List<IocDescriptor>();
-        // ScopedDescriptors = Descriptors.Where(d => d.Lifetime is IocLifetime.Scoped).ToList();
-        Singletons = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
+        
+        var descriptors = services?.ToList() ?? new List<IocDescriptor>();
+        
+        Root = new RootProperties
+        {
+            RootContainerScope = this,
+            Descriptors = descriptors,
+            CachedDescriptors = new ConcurrentDictionary<Type, IocDescriptor>(),
+            ScopedDescriptors = new List<IocDescriptor>(),
+            // ScopedDescriptors = descriptors.Where(d => d.Lifetime is IocLifetime.Scoped).ToList(),
+            Singletons = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>(),
+        };
         Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
         
         InternalAddThisAsService();
@@ -165,21 +205,66 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         Descriptors.Add(d1);
         Descriptors.Add(d2);
     }
+
+    // fork - WIP
+    private IocContainerScope(bool fork, IocContainerScope current, ServiceScopeId? forkId = null)
+    {
+        Id = forkId ?? new ServiceScopeId();
+        if (fork)
+        {
+            lock (current.Descriptors)
+            {
+                Root = current.Root with
+                {
+                    RootContainerScope = this,
+                    Descriptors = current.Descriptors.ToList(),
+                };
+                
+                Scoped = current.Scoped;
+            }
+        }
+        else
+        {
+            lock (current.Descriptors)
+            {
+                Root = current.Root with
+                {
+                    RootContainerScope = this,
+                    Descriptors = current.Descriptors.ToList(),
+                };
+                
+                Scoped = current.Scoped;
+            }
+        }
+    }
+    
+    // WIP
+    internal IocContainerScope AsRootScope(bool sameId = true)
+    {
+        return new IocContainerScope(false, this, sameId ? Id : null);
+    }
+    
+    // WIP
+    internal IocContainerScope Fork(bool sameId)
+    {
+        return new IocContainerScope(true, this, sameId ? Id : null);
+    }
     
     // Creates Scope
     private IocContainerScope(IocContainerScope parentContainerScope)
     {
+        Root = parentContainerScope.Root;
         _wrappedProvider =
             parentContainerScope._wrappedProvider?.GetService<IContainerScopeFactory>()?.CreateScope().Services ??
             parentContainerScope._wrappedProvider; // create scope from wrapped provider
-        RootContainerScope = parentContainerScope.RootContainerScope;
+        // RootContainerScope = parentContainerScope.RootContainerScope;
         WeakParentContainerScope = new WeakReference<IocContainerScope>(parentContainerScope);
         Id = new ServiceScopeId();
         IsRootContainerScope = false;
-        Descriptors = RootContainerScope.Descriptors;
-        CachedDescriptors = RootContainerScope.CachedDescriptors;
-        ScopedDescriptors = RootContainerScope.ScopedDescriptors;
-        Singletons = RootContainerScope.Singletons;
+        // Descriptors = RootContainerScope.Descriptors;
+        // CachedDescriptors = RootContainerScope.CachedDescriptors;
+        // ScopedDescriptors = RootContainerScope.ScopedDescriptors;
+        // Singletons = RootContainerScope.Singletons;
         Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
 
         foreach (var descriptor in ScopedDescriptors) 
@@ -190,17 +275,17 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     
     IContainerScope IContainerScopeFactory.CreateScope() => CreateScope();
     public IocContainerScope CreateScope() => new(this);
-    
-    private List<IocDescriptor> Descriptors { get; init; }
-    private List<IocDescriptor> ScopedDescriptors { get; init; }
-    
-    private ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> Singletons { get; }
-    private ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> Scoped { get; }
-    
-    private ConcurrentDictionary<Type, IocDescriptor> CachedDescriptors { get; }
 
+    internal List<IocDescriptor> Descriptors => Root.Descriptors;
+    internal List<IocDescriptor> ScopedDescriptors => Root.ScopedDescriptors;
+
+    internal ConcurrentDictionary<Type, IocDescriptor> CachedDescriptors => Root.CachedDescriptors;
+
+    internal ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> Singletons => Root.Singletons;
     
+    internal ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> Scoped { get; }
     
+
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static void InternalAddServiceImpls(ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> dict, IocDescriptor descriptor)
     {

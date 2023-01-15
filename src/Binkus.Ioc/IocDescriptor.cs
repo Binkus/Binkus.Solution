@@ -33,7 +33,10 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     }
     
     [SetsRequiredMembers]
-    public IocDescriptor(Type serviceType, object implementation, bool scoped = false)
+    public IocDescriptor(Type serviceType, object implementation) : this(serviceType, implementation, false) { }
+    
+    [SetsRequiredMembers]
+    internal IocDescriptor(Type serviceType, object implementation, bool scoped)
     {
         ArgumentNullException.ThrowIfNull(serviceType);
         ArgumentNullException.ThrowIfNull(implementation);
@@ -65,6 +68,11 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     internal IocDescriptor Copy() => new(this);
 
     internal IocDescriptor() { }
+    
+    internal IocDescriptor With(/* todo */) // potential public API for creating new Descriptors with prev one as base 
+    {
+        return new IocDescriptor(this);
+    }
 
     internal void ThrowIfImplTypeIsNotAssignableToServiceType()
     {
@@ -151,10 +159,10 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     // Concrete Implementation provided:
 
     public static IocDescriptor CreateSingleton(Type serviceType, object implementation) => new(serviceType, implementation);
-    public static IocDescriptor CreateScoped(Type serviceType, object implementation) => new(serviceType, implementation, true);
+    internal static IocDescriptor CreateScoped(Type serviceType, object implementation) => new(serviceType, implementation, true);
     
     public static IocDescriptor CreateSingleton<T>(T implementation) where T : notnull => new(typeof(T), implementation);
-    public static IocDescriptor CreateScoped<T>(T implementation) where T : notnull => new(typeof(T), implementation, true);
+    internal static IocDescriptor CreateScoped<T>(T implementation) where T : notnull => new(typeof(T), implementation, true);
     
     //
     // Factories provided:
@@ -194,13 +202,15 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     
     // Concrete Implementation provided:
     
-    public static IocDescriptor Create(Type serviceType, object implementation, bool scoped = false) => new(serviceType, implementation, scoped);
-    public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, object implementation) => new(serviceType, implementation, lifetime is not IocLifetime.Transient ? lifetime is IocLifetime.Scoped : throw new InvalidOperationException());
+    public static IocDescriptor Create(Type serviceType, object implementation) => new(serviceType, implementation);
+    internal static IocDescriptor Create(Type serviceType, object implementation, bool scoped) => new(serviceType, implementation, scoped);
+    internal static IocDescriptor Create(IocLifetime lifetime, Type serviceType, object implementation) => new(serviceType, implementation, lifetime is not IocLifetime.Transient ? lifetime is IocLifetime.Scoped : throw new InvalidOperationException());
     
     // " but generic:
     
-    public static IocDescriptor Create<T>(IocLifetime lifetime, T implementation) where T : notnull => new(typeof(T), implementation, lifetime is not IocLifetime.Transient ? lifetime is IocLifetime.Scoped : throw new InvalidOperationException());
-    public static IocDescriptor Create<T>(T implementation, bool scoped = false) where T : notnull => new(typeof(T), implementation, scoped);
+    internal static IocDescriptor Create<T>(IocLifetime lifetime, T implementation) where T : notnull => new(typeof(T), implementation, lifetime is not IocLifetime.Transient ? lifetime is IocLifetime.Scoped : throw new InvalidOperationException());
+    internal static IocDescriptor Create<T>(T implementation, bool scoped) where T : notnull => new(typeof(T), implementation, scoped);
+    public static IocDescriptor Create<T>(T implementation) where T : notnull => new(typeof(T), implementation);
     
     // Factories:
     

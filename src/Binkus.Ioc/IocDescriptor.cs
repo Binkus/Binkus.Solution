@@ -19,6 +19,7 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
         ImplType = implType;
         
         ThrowIfImplTypeIsNotAssignableToServiceType();
+        ThrowIfImplTypeIsNotConstructable();
     }
     
     [SetsRequiredMembers]
@@ -63,7 +64,7 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     
     internal IocDescriptor Copy() => new(this);
 
-    public IocDescriptor() { }
+    internal IocDescriptor() { }
 
     internal void ThrowIfImplTypeIsNotAssignableToServiceType()
     {
@@ -71,8 +72,12 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
             throw new InvalidOperationException(
                 $"{Implementation}'s Type {ImplType} can't be assigned to {ServiceType}");
     }
+
+    internal void ThrowIfImplTypeIsNotConstructable()
+    {
+    }
     
-    public IocDescriptor ThrowOnInvalidity()
+    internal IocDescriptor ThrowOnInvalidity()
     {
         if (ServiceType is null || (ImplType is null && Factory is null && Implementation is null))
             throw new InvalidOperationException($"Invalid {nameof(IocDescriptor)}");
@@ -81,6 +86,8 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
         
         return this;
     }
+
+    // private bool IsInvalidOpenGeneric() => ServiceType.IsGenericTypeDefinition && (ImplType is null || !ImplType.IsGenericTypeDefinition || Implementation is not null);
     
     private static IocLifetime ThrowOnInvalidLifetime(IocLifetime lifetime)
     {
@@ -139,6 +146,9 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     
     //
     // Static creation helper:
+    
+    //
+    // Concrete Implementation provided:
 
     public static IocDescriptor CreateSingleton(Type serviceType, object implementation) => new(serviceType, implementation);
     public static IocDescriptor CreateScoped(Type serviceType, object implementation) => new(serviceType, implementation, true);
@@ -147,6 +157,7 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     public static IocDescriptor CreateScoped<T>(T implementation) where T : notnull => new(typeof(T), implementation, true);
     
     //
+    // Factories provided:
     
     public static IocDescriptor CreateSingleton(Type serviceType, Func<IServiceProvider, object> factory) => new(IocLifetime.Singleton, serviceType, factory);
     public static IocDescriptor CreateScoped(Type serviceType, Func<IServiceProvider, object> factory) => new(IocLifetime.Scoped, serviceType, factory);
@@ -157,35 +168,55 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     public static IocDescriptor CreateTransient<T>(Func<IServiceProvider, T> factory) where T : class => new(IocLifetime.Transient, typeof(T), factory) { ImplType = typeof(T) }; // ImplType not really needed
     
     //
+    // ImplType for Activator: No factory, no life, no concrete Implementation provided:
     
     public static IocDescriptor CreateSingleton(Type serviceType, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type implType) => new(IocLifetime.Singleton, serviceType, implType);
     public static IocDescriptor CreateScoped(Type serviceType, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type implType) => new(IocLifetime.Scoped, serviceType, implType);
     public static IocDescriptor CreateTransient(Type serviceType, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type implType) => new(IocLifetime.Transient, serviceType, implType);
     
     public static IocDescriptor CreateSingleton<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImpl>() where TImpl : TService => new(IocLifetime.Singleton, typeof(TService), typeof(TImpl));
-    public static IocDescriptor CreateScoped<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImpl>() where TImpl : TService=> new(IocLifetime.Scoped, typeof(TService), typeof(TImpl));
+    public static IocDescriptor CreateScoped<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImpl>() where TImpl : TService => new(IocLifetime.Scoped, typeof(TService), typeof(TImpl));
     public static IocDescriptor CreateTransient<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImpl>() where TImpl : TService => new(IocLifetime.Transient, typeof(TService), typeof(TImpl));
+    
+    //
+    // ImplType for Activator with ImplType as ServiceType:
+    
+    public static IocDescriptor CreateSingleton([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type serviceImplType) => new(IocLifetime.Singleton, serviceImplType, serviceImplType);
+    public static IocDescriptor CreateScoped([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type serviceImplType) => new(IocLifetime.Scoped, serviceImplType, serviceImplType);
+    public static IocDescriptor CreateTransient([DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type serviceImplType) => new(IocLifetime.Transient, serviceImplType, serviceImplType);
+    
+    public static IocDescriptor CreateSingleton<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TServiceImpl>() => new(IocLifetime.Singleton, typeof(TServiceImpl), typeof(TServiceImpl));
+    public static IocDescriptor CreateScoped<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TServiceImpl>() => new(IocLifetime.Scoped, typeof(TServiceImpl), typeof(TServiceImpl));
+    public static IocDescriptor CreateTransient<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TServiceImpl>() => new(IocLifetime.Transient, typeof(TServiceImpl), typeof(TServiceImpl));
     
     //
     // Runtime lifetime:
     
+    // Concrete Implementation provided:
+    
     public static IocDescriptor Create(Type serviceType, object implementation, bool scoped = false) => new(serviceType, implementation, scoped);
     public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, object implementation) => new(serviceType, implementation, lifetime is not IocLifetime.Transient ? lifetime is IocLifetime.Scoped : throw new InvalidOperationException());
     
-    //
+    // " but generic:
     
     public static IocDescriptor Create<T>(IocLifetime lifetime, T implementation) where T : notnull => new(typeof(T), implementation, lifetime is not IocLifetime.Transient ? lifetime is IocLifetime.Scoped : throw new InvalidOperationException());
     public static IocDescriptor Create<T>(T implementation, bool scoped = false) where T : notnull => new(typeof(T), implementation, scoped);
     
-    //
+    // Factories:
     
     public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, Func<IServiceProvider, object> factory) => new(lifetime, serviceType, factory);
     
     public static IocDescriptor Create<T>(IocLifetime lifetime, Func<IServiceProvider, T> factory) where T : class => new(lifetime, typeof(T), factory) { ImplType = typeof(T) }; // ImplType not really needed
     
-    //
+    // ImplType for Activator:
     
     public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type implType) => new(lifetime, serviceType, implType);
     
     public static IocDescriptor Create<TService, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TImpl>(IocLifetime lifetime) where TImpl : TService => new(lifetime, typeof(TService), typeof(TImpl));
+    
+    // " with ImplType is ServiceType:
+    
+    public static IocDescriptor Create(IocLifetime lifetime, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type serviceImplType) => new(lifetime, serviceImplType, serviceImplType);
+    
+    public static IocDescriptor Create<[DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] TServiceImpl>(IocLifetime lifetime) => new(lifetime, typeof(TServiceImpl), typeof(TServiceImpl));
 }

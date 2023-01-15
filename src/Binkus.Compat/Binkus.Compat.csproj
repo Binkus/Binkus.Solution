@@ -1,0 +1,12 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFrameworks>$(DotnetVersionsNetStandard2_0_AND_GREATER);</TargetFrameworks>
+        <LangVersion>$(DotnetLangVersionShared)</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <WarningsAsErrors>Nullable</WarningsAsErrors>
+        <RootNamespace>System</RootNamespace>
+    </PropertyGroup>
+
+</Project>

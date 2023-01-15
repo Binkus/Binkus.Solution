@@ -82,6 +82,12 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     {
         public static ContainerOptions Default { get; } = new(); 
         
+        // e.g. Transient, if no descriptor registered, try create instance anyway
+        public IocLifetime? HandleUnregisteredServicesAs { get; init; }
+        // if false above can only be null or transient;
+        public bool RegisterUnregisteredServicesOnHandleUnregistered { get; init; } = true;
+        
+        // if true handle RegisterUnregisteredServicesOnHandleUnregistered as false:
         public bool IsReadOnly { get; init; }
         public bool TriesCreatingScopeForWrappedProvider { get; init; } = true;
 
@@ -140,8 +146,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     internal IocContainerScope(IEnumerable<IocDescriptor>? services, ServiceScopeId? id)
     {
         // WrappedProvider ...
-        // RootContainerScope = this;
-        // WeakParentContainerScope = null;
+        
         Id = id ?? new ServiceScopeId();
         IsRootContainerScope = true;
         
@@ -206,7 +211,6 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     
     private void InternalAddThisAsService()
     {
-        // var d1 = IocDescriptor.CreateScoped(this);
         var d1 = IocDescriptor.CreateScoped(p => p);
         var d2 = IocDescriptor.CreateScoped<IocContainerScope>(p => (IocContainerScope)p);
         
@@ -215,6 +219,10 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         CachedDescriptors.TryAdd(d1.ServiceType, d1);
         CachedDescriptors.TryAdd(d2.ServiceType, d2);
         
+        // not necessarily needed to add them here but for more consistency:
+        // todo evaluate inserting at the beginning of the lists, for better extensibility:
+        ScopedDescriptors.Add(d1);
+        ScopedDescriptors.Add(d2);
         Descriptors.Add(d1);
         Descriptors.Add(d2);
     }
@@ -270,14 +278,9 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         _wrappedProvider =
             parentContainerScope._wrappedProvider?.GetService<IContainerScopeFactory>()?.CreateScope().Services ??
             parentContainerScope._wrappedProvider; // create scope from wrapped provider
-        // RootContainerScope = parentContainerScope.RootContainerScope;
         WeakParentContainerScope = new WeakReference<IocContainerScope>(parentContainerScope);
         Id = new ServiceScopeId();
         IsRootContainerScope = false;
-        // Descriptors = RootContainerScope.Descriptors;
-        // CachedDescriptors = RootContainerScope.CachedDescriptors;
-        // ScopedDescriptors = RootContainerScope.ScopedDescriptors;
-        // Singletons = RootContainerScope.Singletons;
         Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
 
         foreach (var descriptor in ScopedDescriptors) 
@@ -377,7 +380,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         return true;
     }
 
-    public object? GetService(Type serviceType)
+    public object? GetService([Pure] Type serviceType) =>
     {
         return 
             CachedDescriptors.TryGetValue(serviceType, out var descriptor)
@@ -396,8 +399,8 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         
     }
     
-    private object? GetServiceForDescriptor(IocDescriptor descriptor)
-        => descriptor.Lifetime switch
+    internal object? GetServiceForDescriptor(IocDescriptor descriptor) => 
+        descriptor.Lifetime switch
         {
             IocLifetime.Singleton => GetSingletonOrScopedService(Singletons, descriptor),
             IocLifetime.Scoped => IsDisposed && !IsRootContainerScope 
@@ -451,7 +454,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         Factory,
     }
 
-    internal ActionType GetDescriptorActionType(IocDescriptor descriptor) =>
+    internal ActionType GetDescriptorActionType([Pure] IocDescriptor descriptor) =>
         descriptor switch
         {
             { Implementation: { } } => ActionType.CachedInstance,
@@ -468,10 +471,10 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             _ => null
         };
 
-    private object? TryGetImplFor(IocDescriptor descriptor) =>
+    private object? TryGetImplFor([Pure] IocDescriptor descriptor) =>
         descriptor.Implementation ?? TryGetDictFor(descriptor)?.GetValueOrDefault(descriptor)?.Instance;
 
-    private object? TryGetDisposingImplFor(IocDescriptor descriptor) =>
+    private object? TryGetDisposingImplFor([Pure] IocDescriptor descriptor) =>
         IsRootContainerScope || descriptor.Lifetime is IocLifetime.Singleton
             ? TryGetImplFor(descriptor)
             : descriptor.Implementation is not null

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics.Contracts;
 using System.Runtime.CompilerServices;
 using Binkus.DependencyInjection.Extensions;
 
@@ -41,7 +42,10 @@ public interface IContainerScopeFactory
     IContainerScope CreateScope();
 }
 
-public interface IContainerScope : IContainerScopeFactory, IAsyncDisposable, IDisposable
+public interface IContainerScope : IContainerScopeFactory, IDisposable
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+    , IAsyncDisposable
+#endif
 {
     public IServiceProvider Services { get; }
 }
@@ -61,7 +65,10 @@ internal sealed record ServiceInstanceProvider(object? Instance = null)
 // Scope Engine
 
 public sealed record IocContainerScope : IServiceProvider, IContainerScope,
-    IContainerScopeFactory, IDisposable, IAsyncDisposable, IEnumerable<IocDescriptor>
+    IContainerScopeFactory, IDisposable, IEnumerable<IocDescriptor>
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
+    , IAsyncDisposable
+#endif
 {
     public List<IocDescriptor>.Enumerator GetEnumerator()
     {
@@ -161,10 +168,16 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             descriptor.ThrowOnInvalidity();
             
             // Newer descriptors (farther in the list) replace old ones when ServiceType is equal
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_0_OR_GREATER
             CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
                 static (_, d) => d, 
                 static (_, _, d) => d,
                 descriptor);
+#else
+            CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
+                (_) => descriptor, 
+                (_, _) => descriptor);
+#endif
 
             switch (descriptor.Lifetime)
             {
@@ -309,19 +322,33 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     private bool InternalUnsafeAdd(IocDescriptor descriptor)
     {
         // if (IsReadOnly) return false;
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_0_OR_GREATER
         CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
             static (_, d) => d, static (_, _, d) => d, descriptor);
+#else
+        CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
+            (_) => descriptor, (_, _) => descriptor);
+#endif
         Descriptors.Add(descriptor);
         if (descriptor.Lifetime is IocLifetime.Transient) return true;
         if (descriptor.Lifetime is IocLifetime.Scoped) ScopedDescriptors.Add(descriptor);
         var dict =
             descriptor.Lifetime is IocLifetime.Scoped ? Scoped : Singletons;
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_0_OR_GREATER
         dict.AddOrUpdate(descriptor, static (_, d) => new ServiceInstanceProvider(d.Implementation),
             static (_, s, d) =>
             {
                 s.Instance = d.Implementation;
                 return s;
             }, descriptor);
+#else
+        dict.AddOrUpdate(descriptor, (_) => new ServiceInstanceProvider(descriptor.Implementation),
+            (_, s) =>
+            {
+                s.Instance = descriptor.Implementation;
+                return s;
+            });
+#endif
         WhenDisposedDisposeImplFrom(descriptor);
         return true;
     }
@@ -496,12 +523,15 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             case IDisposable d:
                 d.Dispose();
                 return;
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
             case IAsyncDisposable ad:
                 ad.DisposeAsync().GetAwaiter().GetResult();
                 return;
+#endif
         }
     }
-    
+
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ValueTask TryDisposalOfAsync(object? obj)
     {
@@ -516,9 +546,11 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             default: return default;
         }
     }
+#endif
     
     // Scope Disposal:
 
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
     private async ValueTask AsyncDispose()
     {
         // async dispose:
@@ -542,6 +574,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             }
         }
     }
+#endif
     private void SyncDispose()
     {
         // sync dispose:
@@ -557,9 +590,11 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                 case IDisposable disposable:
                     disposable.Dispose();
                     continue;
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
                 case IAsyncDisposable asyncDisposable:
                     asyncDisposable.DisposeAsync().GetAwaiter().GetResult();
                     continue;
+#endif
             }
         }
     }
@@ -591,6 +626,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             Dispose(true);
         }
     }
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
     public ValueTask DisposeAsync()
     {
         if (IsDisposed) return default;
@@ -608,6 +644,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             return AsyncDispose();
         }
     }
+#endif
 
     private void LockScopedContainer()
     {

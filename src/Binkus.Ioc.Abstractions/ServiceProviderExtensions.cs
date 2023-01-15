@@ -12,7 +12,11 @@ public static class ServiceProviderServiceExtensions
     (this IServiceProvider services,
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type? type)
     {
+#if NET5_0_OR_GREATER
         if (type is null || !type.IsAssignableTo(typeof(TServiceToBeAssignableTo))) return default;
+#else
+        if (type is null || !typeof(TServiceToBeAssignableTo).IsAssignableFrom(type)) return default;  
+#endif
         
         if (!type.IsAbstract) 
             return (TServiceToBeAssignableTo?)services.GetIocUtilities().GetServiceOrCreateInstance(services, type);
@@ -45,7 +49,11 @@ public static class ServiceProviderServiceExtensions
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type? type,
         Type? serviceTypeToBeAssignableTo)
     {
+#if NET5_0_OR_GREATER
         if (type is null || !type.IsAssignableTo(serviceTypeToBeAssignableTo)) return default;
+#else
+        if (type is null || serviceTypeToBeAssignableTo is null || !serviceTypeToBeAssignableTo.IsAssignableFrom(type)) return default;
+#endif
 
         return !type.IsAbstract
             ? services.GetIocUtilities().GetServiceOrCreateInstance(services, type)
@@ -68,7 +76,11 @@ public static class ServiceProviderServiceExtensions
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type? type,
         Type? serviceTypeToBeAssignableTo, params object[] parameters)
     {
+#if NET5_0_OR_GREATER
         if (type is null || !type.IsAssignableTo(serviceTypeToBeAssignableTo)) return default;
+#else
+        if (type is null || serviceTypeToBeAssignableTo is null || !serviceTypeToBeAssignableTo.IsAssignableFrom(type)) return default;  
+#endif
 
         return !type.IsAbstract
             ? services.GetIocUtilities().CreateInstance(services, type, parameters)

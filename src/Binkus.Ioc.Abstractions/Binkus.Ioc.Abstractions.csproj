@@ -1,7 +1,7 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>$(DotnetVersionsShared);</TargetFrameworks>
+        <TargetFrameworks>$(DotnetVersionsNetStandard2_0_AND_GREATER);</TargetFrameworks>
         <LangVersion>$(DotnetLangVersionShared)</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -9,5 +9,28 @@
         <RootNamespace>Binkus.DependencyInjection</RootNamespace>
         <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>
     </PropertyGroup>
+
+    <ItemGroup>
+<!--        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">-->
+<!--            <_Parameter1>Binkus.Ioc</_Parameter1>-->
+<!--        </AssemblyAttribute>-->
+<!--        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">-->
+<!--            <_Parameter1>Binkus.Ioc.Microsoft.Extensions.DependencyInjection.Abstractions</_Parameter1>-->
+<!--        </AssemblyAttribute>-->
+        <InternalsVisibleTo Include="Binkus.Ioc.Microsoft.Extensions.DependencyInjection.Abstractions" />
+        <InternalsVisibleTo Include="Binkus.Ioc.Tests" />
+    </ItemGroup>
+
+    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net5.0'))">
+        <PackageReference Include="PolySharp" Version="1.10.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+        </PackageReference>
+<!--        <ProjectReference Include="PolySharp" Version="1.10.0" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="contentfiles;build" />-->
+    </ItemGroup>
+
+    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net5.0'))">
+        <ProjectReference Include="..\Binkus.Compat\Binkus.Compat.csproj" />
+    </ItemGroup>
 
 </Project>

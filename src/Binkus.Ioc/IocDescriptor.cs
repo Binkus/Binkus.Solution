@@ -12,8 +12,10 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
         Type serviceType, 
         [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type implType)
     {
+#if NET6_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(serviceType);
         ArgumentNullException.ThrowIfNull(implType);
+#endif
         _lifetime = ThrowOnInvalidLifetime(lifetime);
         ServiceType = serviceType;
         ImplType = implType;
@@ -25,8 +27,10 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     [SetsRequiredMembers]
     public IocDescriptor(IocLifetime lifetime, Type serviceType, Func<IServiceProvider, object> factory)
     {
+#if NET6_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(serviceType);
         ArgumentNullException.ThrowIfNull(factory);
+#endif
         _lifetime = ThrowOnInvalidLifetime(lifetime);
         ServiceType = serviceType;
         Factory = factory;
@@ -38,8 +42,10 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     [SetsRequiredMembers]
     internal IocDescriptor(Type serviceType, object implementation, bool scoped)
     {
+#if NET6_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(serviceType);
         ArgumentNullException.ThrowIfNull(implementation);
+#endif
         _lifetime = scoped ? IocLifetime.Scoped : IocLifetime.Singleton;
         ServiceType = serviceType;
         ImplType = implementation.GetType();
@@ -51,8 +57,10 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     [SetsRequiredMembers]
     internal IocDescriptor(IocDescriptor descriptor)
     {
+#if NET6_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(descriptor);
         ArgumentNullException.ThrowIfNull(descriptor.ServiceType);
+#endif
         _lifetime = ThrowOnInvalidLifetime(descriptor.Lifetime);
         ServiceType = descriptor.ServiceType;
         ImplType = descriptor.ImplType;
@@ -76,13 +84,19 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
 
     internal void ThrowIfImplTypeIsNotAssignableToServiceType()
     {
+#if NET5_0_OR_GREATER
         if (!ImplType?.IsAssignableTo(ServiceType) ?? false)
+#else
+        if (ImplType is not null && !ServiceType.IsAssignableFrom(ImplType))
+#endif
             throw new InvalidOperationException(
                 $"{Implementation}'s Type {ImplType} can't be assigned to {ServiceType}");
     }
 
     internal void ThrowIfImplTypeIsNotConstructable()
     {
+        // if ((!ImplType?.IsGenericTypeDefinition ?? true) || (ImplType?.IsAbstract ?? true))
+        //     throw new InvalidOperationException($"{nameof(ImplType)}:'{ImplType}' is not constructable.");
     }
     
     internal IocDescriptor ThrowOnInvalidity()
@@ -135,7 +149,11 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
 
     public override int GetHashCode()
     {
+#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
         return HashCode.Combine((int)Lifetime, ServiceType, ImplType, Factory, Implementation);
+#else
+        return ((int)Lifetime, ServiceType, ImplType, Factory, Implementation).GetHashCode();
+#endif
     }
 
     public static bool operator ==(IocDescriptor? left, IocDescriptor? right)

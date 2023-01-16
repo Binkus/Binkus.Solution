@@ -42,10 +42,7 @@ public interface IContainerScopeFactory
     IContainerScope CreateScope();
 }
 
-public interface IContainerScope : IContainerScopeFactory, IDisposable
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
-    , IAsyncDisposable
-#endif
+public interface IContainerScope : IContainerScopeFactory, IAsyncDisposable, IDisposable
 {
     public IServiceProvider Services { get; }
 }
@@ -65,10 +62,7 @@ internal sealed record ServiceInstanceProvider(object? Instance = null)
 // Scope Engine
 
 public sealed record IocContainerScope : IServiceProvider, IContainerScope,
-    IContainerScopeFactory, IDisposable, IEnumerable<IocDescriptor>
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
-    , IAsyncDisposable
-#endif
+    IContainerScopeFactory, IAsyncDisposable, IDisposable, IEnumerable<IocDescriptor>
 {
     public List<IocDescriptor>.Enumerator GetEnumerator()
     {
@@ -526,15 +520,12 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             case IDisposable d:
                 d.Dispose();
                 return;
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
             case IAsyncDisposable ad:
                 ad.DisposeAsync().GetAwaiter().GetResult();
                 return;
-#endif
         }
     }
 
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private static ValueTask TryDisposalOfAsync(object? obj)
     {
@@ -549,11 +540,9 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             default: return default;
         }
     }
-#endif
     
     // Scope Disposal:
 
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
     private async ValueTask AsyncDispose()
     {
         // async dispose:
@@ -577,7 +566,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             }
         }
     }
-#endif
+
     private void SyncDispose()
     {
         // sync dispose:
@@ -593,11 +582,9 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                 case IDisposable disposable:
                     disposable.Dispose();
                     continue;
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
                 case IAsyncDisposable asyncDisposable:
                     asyncDisposable.DisposeAsync().GetAwaiter().GetResult();
                     continue;
-#endif
             }
         }
     }
@@ -629,7 +616,6 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             Dispose(true);
         }
     }
-#if NETSTANDARD2_1_OR_GREATER || NETCOREAPP3_0_OR_GREATER
     public ValueTask DisposeAsync()
     {
         if (IsDisposed) return default;
@@ -647,7 +633,6 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             return AsyncDispose();
         }
     }
-#endif
 
     private void LockScopedContainer()
     {

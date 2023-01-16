@@ -11,24 +11,26 @@
     </PropertyGroup>
 
     <ItemGroup>
-<!--        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">-->
-<!--            <_Parameter1>$(AssemblyName).Tests</_Parameter1>-->
-<!--        </AssemblyAttribute>-->
-        <InternalsVisibleTo Include="$(AssemblyName).Tests" />
         <InternalsVisibleTo Include="$(AssemblyName).Microsoft.Extensions.DependencyInjection.Abstractions" />
+        <InternalsVisibleTo Include="$(AssemblyName).Tests" />
     </ItemGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Binkus.Ioc.Abstractions\Binkus.Ioc.Abstractions.csproj" />
     </ItemGroup>
 
-    <!-- Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net5.0'))" -->
-    <ItemGroup>
+    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">
         <PackageReference Include="PolySharp" Version="1.10.0">
             <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+            <IncludeAssets>runtime; native; analyzers; buildtransitive</IncludeAssets>
+<!--            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
         </PackageReference>
 <!--        <ProjectReference Include="PolySharp" Version="1.10.0" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="contentfiles;build" />-->
+    </ItemGroup>
+
+    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.1'))">
+        <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+        <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
     </ItemGroup>
 
 </Project>

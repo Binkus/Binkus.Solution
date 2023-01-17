@@ -1,14 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFrameworks>$(DotnetVersionsNetStandard2_0_AND_GREATER);net5.0;net45;net451;net452;net46;net461;net462;net47;net471;net472;net48;netcoreapp1.0;netcoreapp1.1;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>
+<!--        <TargetFrameworks>$(DotnetVersionsNetStandard2_0_AND_GREATER);net5.0;net45;net451;net452;net46;net461;net462;net47;net471;net472;net48;net481;netstandard1.0;netstandard1.1;netstandard1.2;netstandard1.3;netstandard1.4;netstandard1.5;netstandard1.6;netcoreapp1.0;netcoreapp1.1;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>-->
+        <TargetFrameworks>$(DotnetVersionsNetStandard2_0_AND_GREATER);net462;net47;net471;net472;net48;net481;netstandard1.0;netstandard1.1;netstandard1.2;netstandard1.3;netstandard1.4;netstandard1.5;netstandard1.6</TargetFrameworks>
         <CheckEolTargetFramework>false</CheckEolTargetFramework>
+        <!--        <ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>None</ResolveAssemblyWarnOrErrorOnTargetArchitectureMismatch>-->
         <LangVersion>$(DotnetLangVersionShared)</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <WarningsAsErrors>Nullable</WarningsAsErrors>
         <RootNamespace>System</RootNamespace>
     </PropertyGroup>
+
+    <ItemGroup>
+        <Using Remove="System.Net.Http"
+               Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.0'))" />
+    </ItemGroup>
 
     <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.1'))">
         <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
@@ -18,12 +25,26 @@
         <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="7.0.0" />
     </ItemGroup>
 
-    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.1')) And !$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp1.0'))">
-      <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
+    <ItemGroup Condition="$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.0')) And !$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.1')) And !$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp1.0'))">
+        <PackageReference Include="Microsoft.AspNet.WebApi.Client" Version="5.2.9" />
     </ItemGroup>
 
     <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.0')) And !$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp2.0'))">
         <PackageReference Include="System.ValueTuple" Version="4.5.0" />
+    </ItemGroup>
+
+    <!-- for .NET Framework 4.8.1, which not automagically pulled the following implicitly, 4.8 pulls following implicitly with v. 1.0.2 -->
+    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp1.0'))">
+        <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
+    </ItemGroup>
+
+    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">
+        <PackageReference Include="PolySharp" Version="1.10.0">
+            <PrivateAssets>all</PrivateAssets>
+            <IncludeAssets>runtime; native; analyzers; buildtransitive</IncludeAssets>
+            <!--            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
+        </PackageReference>
+        <!--        <ProjectReference Include="PolySharp" Version="1.10.0" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="contentfiles;build" />-->
     </ItemGroup>
 
 </Project>

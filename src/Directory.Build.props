@@ -1,4 +1,5 @@
 <Project>
+  
   <PropertyGroup>
     <AvaloniaVersion>11.0.0-preview4</AvaloniaVersion>
     <DotnetLangVersionShared>latest</DotnetLangVersionShared>
@@ -22,4 +23,46 @@
     <DotnetVersionMobile>net7.0</DotnetVersionMobile>
     <DotnetVersionWeb>net7.0</DotnetVersionWeb>
   </PropertyGroup>
+  <PropertyGroup>
+<!--    <TargetFrameworks>$(DotnetVersionsNetStandard2_0_AND_GREATER);</TargetFrameworks>-->
+<!--    <CheckEolTargetFramework>false</CheckEolTargetFramework>-->
+    <LangVersion>$(DotnetLangVersionShared)</LangVersion>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <WarningsAsErrors>Nullable</WarningsAsErrors>
+<!--    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
+<!--    <AnalysisLevel>7</AnalysisLevel>-->
+<!--    <AnalysisLevelStyle>7-all</AnalysisLevelStyle>-->
+<!--    <Features>strict</Features>-->
+    <RootNamespace>Binkus</RootNamespace>
+    <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>    
+  </PropertyGroup>
+  <PropertyGroup>
+    <!-- Potential Fix partially from https://github.com/OmniSharp/omnisharp-roslyn/issues/1542 -->
+<!--    https://github.com/AvaloniaUI/Avalonia/issues/2707 https://github.com/OmniSharp/omnisharp-roslyn/issues/1542 https://github.com/AvaloniaUI/Avalonia/discussions/8009 -->
+<!--    <AvaloniaBuildTasksLocation>$(MSBuildThisFileDirectory)\..\tools\netstandard2.0\Avalonia.Build.Tasks.dll</AvaloniaBuildTasksLocation>-->
+<!--    .nuget/packages/avalonia/11.0.0-preview4/tools/netstandard2.0 -->
+<!--    <AvaloniaBuildTasksLocation Condition="$(AvaloniaBuildTasksLocation) == ''">$(MSBuildThisFileDirectory)\..\tools\netstandard2.0\Avalonia.Build.Tasks.dll</AvaloniaBuildTasksLocation>-->
+<!--    <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>-->
+<!--    <NuGetPackageRoot2>$(NuGetPackageRoot)</NuGetPackageRoot2>-->
+<!--    <NuGetPackageRoot2 Condition=" '$(NuGetPackageRoot)' == '' ">AAA$(UserProfile)AAA\.nuget\packages\</NuGetPackageRoot2>-->
+<!--    <AvaloniaBuildTasksLocation Condition="$(AvaloniaBuildTasksLocation) == ''">$(NuGetPackageRoot2)\avalonia\$(AvaloniaVersion)\tools\netstandard2.0\Avalonia.Build.Tasks.dll</AvaloniaBuildTasksLocation>-->
+<!--    <AvaloniaBuildTasksLocation Condition="$(AvaloniaBuildTasksLocation) == ''">$(NuGetPackageRoot)\avalonia\$(AvaloniaVersion)\tools\netstandard2.0\Avalonia.Build.Tasks.dll</AvaloniaBuildTasksLocation>-->
+    <AvaloniaBuildTasksLocation Condition="'$(AvaloniaBuildTasksLocation)' == ''">..\tools\netstandard2.0\Avalonia.Build.Tasks.dll</AvaloniaBuildTasksLocation>
+  </PropertyGroup>
+<!--  Compatibility -->  
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">
+    <PackageReference Include="PolySharp" Version="1.10.0">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>build;analyzers</IncludeAssets>
+    </PackageReference>
+  </ItemGroup>
+  <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net5.0')) And '$(MSBuildProjectName)' != 'Binkus.Compat'">
+    <ProjectReference Include="$(MSBuildThisFileDirectory)Binkus.Compat\Binkus.Compat.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <Using Remove="System.Net.Http"
+           Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.0'))" />
+  </ItemGroup>
+  
 </Project>

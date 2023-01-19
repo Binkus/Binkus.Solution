@@ -15,13 +15,12 @@
         <InternalsVisibleTo Include="Binkus.Ioc.Tests" />
     </ItemGroup>
 
-    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net5.0'))">
-        <PackageReference Include="PolySharp" Version="1.10.0">
-            <PrivateAssets>all</PrivateAssets>
-            <IncludeAssets>runtime; native; analyzers; buildtransitive</IncludeAssets>            
-<!--            <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
-        </PackageReference>
-    </ItemGroup>
+<!--    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net5.0'))">-->
+<!--        <PackageReference Include="PolySharp" Version="1.10.0">-->
+<!--            <PrivateAssets>all</PrivateAssets>-->
+<!--            <IncludeAssets>runtime; native; analyzers; buildtransitive</IncludeAssets>-->
+<!--        </PackageReference>-->
+<!--    </ItemGroup>-->
 
     <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net5.0'))">
         <ProjectReference Include="..\Binkus.Compat\Binkus.Compat.csproj" />

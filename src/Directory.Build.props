@@ -2,14 +2,37 @@
   
   <PropertyGroup>
     <AvaloniaVersion>11.0.0-preview4</AvaloniaVersion>
-    <DotnetLangVersionShared>latest</DotnetLangVersionShared>
-    <DotnetLangVersionDesktop>latest</DotnetLangVersionDesktop>
-    <DotnetLangVersionMobile>latest</DotnetLangVersionMobile>
-    <DotnetLangVersionWeb>latest</DotnetLangVersionWeb>
+    <DotnetLangVersionShared>11</DotnetLangVersionShared>
+    <DotnetLangVersionDesktop>$(DotnetLangVersionShared)</DotnetLangVersionDesktop>
+    <DotnetLangVersionMobile>$(DotnetLangVersionShared)</DotnetLangVersionMobile>
+    <DotnetLangVersionWeb>$(DotnetLangVersionShared)</DotnetLangVersionWeb>
     <DotnetVersionsNet7_AND_GREATER>net7.0</DotnetVersionsNet7_AND_GREATER>
     <DotnetVersionsNet6_AND_GREATER>net6.0;$(DotnetVersionsNet7_AND_GREATER)</DotnetVersionsNet6_AND_GREATER>
+    <DotnetVersionsNet5_AND_GREATER>net5.0;$(DotnetVersionsNet6_AND_GREATER)</DotnetVersionsNet5_AND_GREATER>
+    <DotnetVersionsNet5_AND_GREATER_EOL>$(DotnetVersionsNet5_AND_GREATER)</DotnetVersionsNet5_AND_GREATER_EOL>
     <DotnetVersionsNetStandard2_1_AND_GREATER>netstandard2.1;$(DotnetVersionsNet6_AND_GREATER)</DotnetVersionsNetStandard2_1_AND_GREATER>
     <DotnetVersionsNetStandard2_0_AND_GREATER>netstandard2.0;$(DotnetVersionsNetStandard2_1_AND_GREATER)</DotnetVersionsNetStandard2_0_AND_GREATER>
+    <DotnetVersionsNetStandard1_6_AND_GREATER>netstandard1.6;$(DotnetVersionsNetStandard2_0_AND_GREATER)</DotnetVersionsNetStandard1_6_AND_GREATER>
+    <DotnetVersionsNetStandard1_5_AND_GREATER>netstandard1.5;$(DotnetVersionsNetStandard1_6_AND_GREATER)</DotnetVersionsNetStandard1_5_AND_GREATER>
+    <DotnetVersionsNetStandard1_4_AND_GREATER>netstandard1.4;$(DotnetVersionsNetStandard1_5_AND_GREATER)</DotnetVersionsNetStandard1_4_AND_GREATER>
+    <DotnetVersionsNetStandard1_3_AND_GREATER>netstandard1.3;$(DotnetVersionsNetStandard1_4_AND_GREATER)</DotnetVersionsNetStandard1_3_AND_GREATER>
+    <DotnetVersionsNetStandard1_2_AND_GREATER>netstandard1.2;$(DotnetVersionsNetStandard1_3_AND_GREATER)</DotnetVersionsNetStandard1_2_AND_GREATER>
+    <DotnetVersionsNetStandard1_1_AND_GREATER>netstandard1.1;$(DotnetVersionsNetStandard1_2_AND_GREATER)</DotnetVersionsNetStandard1_1_AND_GREATER>
+    <DotnetVersionsNetStandard1_0_AND_GREATER>netstandard1.0;$(DotnetVersionsNetStandard1_1_AND_GREATER)</DotnetVersionsNetStandard1_0_AND_GREATER>
+    <DotnetVersionsNetStandard2_1_AND_GREATER_EOL>netstandard2.1;$(DotnetVersionsNet5_AND_GREATER_EOL)</DotnetVersionsNetStandard2_1_AND_GREATER_EOL>
+    <DotnetVersionsNetStandard2_0_AND_GREATER_EOL>netstandard2.0;$(DotnetVersionsNetStandard2_1_AND_GREATER)</DotnetVersionsNetStandard2_0_AND_GREATER_EOL>
+    <DotnetVersionsNetStandard1_6_AND_GREATER_EOL>netstandard1.6;$(DotnetVersionsNetStandard2_0_AND_GREATER)</DotnetVersionsNetStandard1_6_AND_GREATER_EOL>
+    <DotnetVersionsNetStandard1_5_AND_GREATER_EOL>netstandard1.5;$(DotnetVersionsNetStandard1_6_AND_GREATER)</DotnetVersionsNetStandard1_5_AND_GREATER_EOL>
+    <DotnetVersionsNetStandard1_4_AND_GREATER_EOL>netstandard1.4;$(DotnetVersionsNetStandard1_5_AND_GREATER)</DotnetVersionsNetStandard1_4_AND_GREATER_EOL>
+    <DotnetVersionsNetStandard1_3_AND_GREATER_EOL>netstandard1.3;$(DotnetVersionsNetStandard1_4_AND_GREATER)</DotnetVersionsNetStandard1_3_AND_GREATER_EOL>
+    <DotnetVersionsNetStandard1_2_AND_GREATER_EOL>netstandard1.2;$(DotnetVersionsNetStandard1_3_AND_GREATER)</DotnetVersionsNetStandard1_2_AND_GREATER_EOL>
+    <DotnetVersionsNetStandard1_1_AND_GREATER_EOL>netstandard1.1;$(DotnetVersionsNetStandard1_2_AND_GREATER)</DotnetVersionsNetStandard1_1_AND_GREATER_EOL>
+    <DotnetVersionsNetStandard1_0_AND_GREATER_EOL>netstandard1.0;$(DotnetVersionsNetStandard1_1_AND_GREATER)</DotnetVersionsNetStandard1_0_AND_GREATER_EOL>
+    <DotnetVersionsNetCore1_0_TO_NetCore3_1_EOL>netcoreapp1.0;netcoreapp1.1;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1</DotnetVersionsNetCore1_0_TO_NetCore3_1_EOL>
+    <DotnetVersionsNetStandard1_0_NetCore1_0_AND_GREATER_EOL>$(DotnetVersionsNetCore1_0_TO_NetCore3_1_EOL);$(DotnetVersionsNetStandard1_0_AND_GREATER_EOL)</DotnetVersionsNetStandard1_0_NetCore1_0_AND_GREATER_EOL>
+    <DotnetVersionsNet35_TO_Net481>net35;net462;net47;net471;net472;net48;net481</DotnetVersionsNet35_TO_Net481>
+    <DotnetVersionsNet35_TO_Net481_EOL>net45;net451;net452;net46;net461;$(DotnetVersionsNet35_TO_Net481)</DotnetVersionsNet35_TO_Net481_EOL>
+    <DotnetVersionsNet35_NetStandard1_0_NetCore1_0_AND_GREATER_EOL>$(DotnetVersionsNet35_TO_Net481_EOL);$(DotnetVersionsNetStandard1_0_NetCore1_0_AND_GREATER_EOL)</DotnetVersionsNet35_NetStandard1_0_NetCore1_0_AND_GREATER_EOL>
     <DotnetVersionLowerShared>net7.0</DotnetVersionLowerShared>    
     <DotnetVersionUpperShared>net7.0</DotnetVersionUpperShared>
     <DotnetVersionsShared Condition="$(DotnetVersionLowerShared) == $(DotnetVersionUpperShared)">
@@ -39,15 +62,7 @@
   </PropertyGroup>
   <PropertyGroup>
     <!-- Potential Fix partially from https://github.com/OmniSharp/omnisharp-roslyn/issues/1542 -->
-<!--    https://github.com/AvaloniaUI/Avalonia/issues/2707 https://github.com/OmniSharp/omnisharp-roslyn/issues/1542 https://github.com/AvaloniaUI/Avalonia/discussions/8009 -->
-<!--    <AvaloniaBuildTasksLocation>$(MSBuildThisFileDirectory)\..\tools\netstandard2.0\Avalonia.Build.Tasks.dll</AvaloniaBuildTasksLocation>-->
-<!--    .nuget/packages/avalonia/11.0.0-preview4/tools/netstandard2.0 -->
-<!--    <AvaloniaBuildTasksLocation Condition="$(AvaloniaBuildTasksLocation) == ''">$(MSBuildThisFileDirectory)\..\tools\netstandard2.0\Avalonia.Build.Tasks.dll</AvaloniaBuildTasksLocation>-->
-<!--    <NuGetPackageRoot Condition=" '$(NuGetPackageRoot)' == '' ">$(UserProfile)\.nuget\packages\</NuGetPackageRoot>-->
-<!--    <NuGetPackageRoot2>$(NuGetPackageRoot)</NuGetPackageRoot2>-->
-<!--    <NuGetPackageRoot2 Condition=" '$(NuGetPackageRoot)' == '' ">AAA$(UserProfile)AAA\.nuget\packages\</NuGetPackageRoot2>-->
-<!--    <AvaloniaBuildTasksLocation Condition="$(AvaloniaBuildTasksLocation) == ''">$(NuGetPackageRoot2)\avalonia\$(AvaloniaVersion)\tools\netstandard2.0\Avalonia.Build.Tasks.dll</AvaloniaBuildTasksLocation>-->
-<!--    <AvaloniaBuildTasksLocation Condition="$(AvaloniaBuildTasksLocation) == ''">$(NuGetPackageRoot)\avalonia\$(AvaloniaVersion)\tools\netstandard2.0\Avalonia.Build.Tasks.dll</AvaloniaBuildTasksLocation>-->
+    <!--    https://github.com/AvaloniaUI/Avalonia/issues/2707 https://github.com/OmniSharp/omnisharp-roslyn/issues/1542 https://github.com/AvaloniaUI/Avalonia/discussions/8009 -->
     <AvaloniaBuildTasksLocation Condition="'$(AvaloniaBuildTasksLocation)' == ''">..\tools\netstandard2.0\Avalonia.Build.Tasks.dll</AvaloniaBuildTasksLocation>
   </PropertyGroup>
 <!--  Compatibility -->  
@@ -63,6 +78,10 @@
   <ItemGroup>
     <Using Remove="System.Net.Http"
            Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.0'))" />
+  </ItemGroup>
+  <!-- for optional .NET Framework 4.8.1 TFM -->
+  <ItemGroup Condition="'$(TargetFramework)' == 'net481' And !$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp1.0')) And '$(MSBuildProjectName)' != 'Binkus.Compat'">
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
   </ItemGroup>
   
 </Project>

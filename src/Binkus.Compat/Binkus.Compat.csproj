@@ -1,9 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-<!--        <TargetFrameworks>$(DotnetVersionsNetStandard2_0_AND_GREATER);net5.0;net45;net451;net452;net46;net461;net462;net47;net471;net472;net48;net481;netstandard1.0;netstandard1.1;netstandard1.2;netstandard1.3;netstandard1.4;netstandard1.5;netstandard1.6;netcoreapp1.0;netcoreapp1.1;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>-->
-        <TargetFrameworks>$(DotnetVersionsNetStandard2_0_AND_GREATER);net35;net462;net47;net471;net472;net48;net481;netstandard1.0;netstandard1.1;netstandard1.2;netstandard1.3;netstandard1.4;netstandard1.5;netstandard1.6</TargetFrameworks>
 <!--        <CheckEolTargetFramework>false</CheckEolTargetFramework>-->
+<!--        <TargetFrameworks>$(DotnetVersionsNetStandard2_0_AND_GREATER);net5.0;net35;net45;net451;net452;net46;net461;net462;net47;net471;net472;net48;net481;netstandard1.0;netstandard1.1;netstandard1.2;netstandard1.3;netstandard1.4;netstandard1.5;netstandard1.6;netcoreapp1.0;netcoreapp1.1;netcoreapp2.0;netcoreapp2.1;netcoreapp2.2;netcoreapp3.0;netcoreapp3.1</TargetFrameworks>-->
+        <TargetFrameworks>$(DotnetVersionsNetStandard2_0_AND_GREATER);net35;net462;net47;net471;net472;net48;net481;netstandard1.0;netstandard1.1;netstandard1.2;netstandard1.3;netstandard1.4;netstandard1.5;netstandard1.6</TargetFrameworks>
         <LangVersion>$(DotnetLangVersionShared)</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -40,14 +40,5 @@
     <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netcoreapp1.0'))">
         <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="All" />
     </ItemGroup>
-
-<!--    <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net7.0'))">-->
-<!--        <PackageReference Include="PolySharp" Version="1.10.0">-->
-<!--            <PrivateAssets>all</PrivateAssets>-->
-<!--            <IncludeAssets>runtime; native; analyzers; buildtransitive</IncludeAssets>-->
-<!--        </PackageReference>-->
-<!--    </ItemGroup>-->
-    <!--        <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>-->
-    <!--        <ProjectReference Include="PolySharp" Version="1.10.0" OutputItemType="Analyzer" ReferenceOutputAssembly="false" PrivateAssets="contentfiles;build" />-->
 
 </Project>

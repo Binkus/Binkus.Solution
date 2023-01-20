@@ -1,4 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
+#if !NET6_0_OR_GREATER
+using System.Runtime.CompilerServices;
+#endif
 
 // ReSharper disable MemberCanBePrivate.Global
 
@@ -15,6 +18,9 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
 #if NET6_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(serviceType);
         ArgumentNullException.ThrowIfNull(implType);
+#else
+        ThrowIfNull(serviceType);
+        ThrowIfNull(implType);
 #endif
         _lifetime = ThrowOnInvalidLifetime(lifetime);
         ServiceType = serviceType;
@@ -25,11 +31,32 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     }
     
     [SetsRequiredMembers]
+    public IocDescriptor(
+        IocLifetime lifetime, 
+        Type serviceType, 
+        Func<IServiceProvider, Type, object> openGenericFactory)
+    {
+#if NET6_0_OR_GREATER
+        ArgumentNullException.ThrowIfNull(serviceType);
+        ArgumentNullException.ThrowIfNull(openGenericFactory);
+#else
+        ThrowIfNull(serviceType);
+        ThrowIfNull(openGenericFactory);
+#endif
+        _lifetime = ThrowOnInvalidLifetime(lifetime);
+        ServiceType = serviceType;
+        OpenGenericFactory = openGenericFactory;
+    }
+    
+    [SetsRequiredMembers]
     public IocDescriptor(IocLifetime lifetime, Type serviceType, Func<IServiceProvider, object> factory)
     {
 #if NET6_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(serviceType);
         ArgumentNullException.ThrowIfNull(factory);
+#else
+        ThrowIfNull(serviceType);
+        ThrowIfNull(factory);
 #endif
         _lifetime = ThrowOnInvalidLifetime(lifetime);
         ServiceType = serviceType;
@@ -45,6 +72,9 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
 #if NET6_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(serviceType);
         ArgumentNullException.ThrowIfNull(implementation);
+#else
+        ThrowIfNull(serviceType);
+        ThrowIfNull(implementation);
 #endif
         _lifetime = scoped ? IocLifetime.Scoped : IocLifetime.Singleton;
         ServiceType = serviceType;
@@ -60,6 +90,9 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
 #if NET6_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(descriptor);
         ArgumentNullException.ThrowIfNull(descriptor.ServiceType);
+#else
+        ThrowIfNull(descriptor);
+        ThrowIfNull(descriptor.ServiceType);
 #endif
         _lifetime = ThrowOnInvalidLifetime(descriptor.Lifetime);
         ServiceType = descriptor.ServiceType;
@@ -82,6 +115,16 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
         return new IocDescriptor(this);
     }
 
+#if !NET6_0_OR_GREATER
+    /// <summary>Throws an <see cref="ArgumentNullException"/> if <paramref name="argument"/> is null.</summary>
+    /// <param name="argument">The reference type argument to validate as non-null.</param>
+    /// <param name="paramName">The name of the parameter with which <paramref name="argument"/> corresponds.</param>
+    internal static void ThrowIfNull([NotNull] object? argument, [CallerArgumentExpression(nameof(argument))] string? paramName = null)
+    {
+        if (argument is null) throw new ArgumentNullException(paramName);
+    }
+#endif
+
     internal void ThrowIfImplTypeIsNotAssignableToServiceType()
     {
 #if NET5_0_OR_GREATER
@@ -101,7 +144,7 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     
     internal IocDescriptor ThrowOnInvalidity()
     {
-        if (ServiceType is null || (ImplType is null && Factory is null && Implementation is null))
+        if (ServiceType is null || (ImplType is null && Factory is null && OpenGenericFactory is null && Implementation is null))
             throw new InvalidOperationException($"Invalid {nameof(IocDescriptor)}");
         
         ThrowIfImplTypeIsNotAssignableToServiceType();
@@ -131,6 +174,7 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     public Type? ImplType { get; init; }
     public object? Implementation { get; init; }
     public Func<IServiceProvider, object>? Factory { get; init; }
+    public Func<IServiceProvider, Type, object>? OpenGenericFactory { get; init; }
     
     // Equality
 
@@ -139,7 +183,8 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
         if (ReferenceEquals(null, other)) return false;
         if (ReferenceEquals(this, other)) return true;
         return Lifetime == other.Lifetime && ServiceType == other.ServiceType && ImplType == other.ImplType &&
-               Equals(Factory, other.Factory) && Equals(Implementation, other.Implementation);
+               Equals(Factory, other.Factory) && Equals(OpenGenericFactory, other.OpenGenericFactory) &&
+               Equals(Implementation, other.Implementation);
     }
 
     public override bool Equals(object? obj)
@@ -150,9 +195,9 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     public override int GetHashCode()
     {
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
-        return HashCode.Combine((int)Lifetime, ServiceType, ImplType, Factory, Implementation);
+        return HashCode.Combine((int)Lifetime, ServiceType, ImplType, Factory, OpenGenericFactory, Implementation);
 #else
-        return ((int)Lifetime, ServiceType, ImplType, Factory, Implementation).GetHashCode();
+        return ((int)Lifetime, ServiceType, ImplType, Factory, OpenGenericFactory, Implementation).GetHashCode();
 #endif
     }
 
@@ -193,8 +238,14 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     public static IocDescriptor CreateScoped<T>(Func<IServiceProvider, T> factory) where T : class => new(IocLifetime.Scoped, typeof(T), factory) { ImplType = typeof(T) }; // ImplType not really needed
     public static IocDescriptor CreateTransient<T>(Func<IServiceProvider, T> factory) where T : class => new(IocLifetime.Transient, typeof(T), factory) { ImplType = typeof(T) }; // ImplType not really needed
     
+    // Open Generic Factories provided:
+    
+    public static IocDescriptor CreateSingleton(Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(IocLifetime.Singleton, serviceType, openGenericFactory);
+    public static IocDescriptor CreateScoped(Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(IocLifetime.Scoped, serviceType, openGenericFactory);
+    public static IocDescriptor CreateTransient(Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(IocLifetime.Transient, serviceType, openGenericFactory);
+    
     //
-    // ImplType for Activator: No factory, no life, no concrete Implementation provided:
+    // ImplType for Activator: No factory, no concrete Implementation provided:
     
     public static IocDescriptor CreateSingleton(Type serviceType, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type implType) => new(IocLifetime.Singleton, serviceType, implType);
     public static IocDescriptor CreateScoped(Type serviceType, [DynamicallyAccessedMembers(DynamicallyAccessedMemberTypes.PublicConstructors)] Type implType) => new(IocLifetime.Scoped, serviceType, implType);
@@ -235,6 +286,8 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, Func<IServiceProvider, object> factory) => new(lifetime, serviceType, factory);
     
     public static IocDescriptor Create<T>(IocLifetime lifetime, Func<IServiceProvider, T> factory) where T : class => new(lifetime, typeof(T), factory) { ImplType = typeof(T) }; // ImplType not really needed
+    
+    public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(lifetime, serviceType, openGenericFactory);
     
     // ImplType for Activator:
     

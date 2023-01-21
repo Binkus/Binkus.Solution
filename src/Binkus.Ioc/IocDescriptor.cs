@@ -34,7 +34,7 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     public IocDescriptor(
         IocLifetime lifetime, 
         Type serviceType, 
-        Func<IServiceProvider, Type, object> openGenericFactory)
+        Func<IServiceProvider, Type[], object> openGenericFactory)
     {
 #if NET6_0_OR_GREATER
         ArgumentNullException.ThrowIfNull(serviceType);
@@ -174,7 +174,7 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     public Type? ImplType { get; init; }
     public object? Implementation { get; init; }
     public Func<IServiceProvider, object>? Factory { get; init; }
-    public Func<IServiceProvider, Type, object>? OpenGenericFactory { get; init; }
+    public Func<IServiceProvider, Type[], object>? OpenGenericFactory { get; init; }
     
     // Equality
 
@@ -240,9 +240,13 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     
     // Open Generic Factories provided:
     
-    public static IocDescriptor CreateSingleton(Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(IocLifetime.Singleton, serviceType, openGenericFactory);
-    public static IocDescriptor CreateScoped(Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(IocLifetime.Scoped, serviceType, openGenericFactory);
-    public static IocDescriptor CreateTransient(Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(IocLifetime.Transient, serviceType, openGenericFactory);
+    public static IocDescriptor CreateSingleton(Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(IocLifetime.Singleton, serviceType, (p, genericArgs) => openGenericFactory.Invoke(p, genericArgs[0]));
+    public static IocDescriptor CreateScoped(Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(IocLifetime.Scoped, serviceType, (p, genericArgs) => openGenericFactory.Invoke(p, genericArgs[0]));
+    public static IocDescriptor CreateTransient(Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(IocLifetime.Transient, serviceType, (p, genericArgs) => openGenericFactory.Invoke(p, genericArgs[0]));
+    
+    public static IocDescriptor CreateSingleton(Type serviceType, Func<IServiceProvider, Type[], object> openGenericFactory) => new(IocLifetime.Singleton, serviceType, openGenericFactory);
+    public static IocDescriptor CreateScoped(Type serviceType, Func<IServiceProvider, Type[], object> openGenericFactory) => new(IocLifetime.Scoped, serviceType, openGenericFactory);
+    public static IocDescriptor CreateTransient(Type serviceType, Func<IServiceProvider, Type[], object> openGenericFactory) => new(IocLifetime.Transient, serviceType, openGenericFactory);
     
     //
     // ImplType for Activator: No factory, no concrete Implementation provided:
@@ -287,7 +291,8 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     
     public static IocDescriptor Create<T>(IocLifetime lifetime, Func<IServiceProvider, T> factory) where T : class => new(lifetime, typeof(T), factory) { ImplType = typeof(T) }; // ImplType not really needed
     
-    public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(lifetime, serviceType, openGenericFactory);
+    public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, Func<IServiceProvider, Type[], object> openGenericFactory) => new(lifetime, serviceType, openGenericFactory);
+    public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(lifetime, serviceType, (p, genericArgs) => openGenericFactory.Invoke(p, genericArgs[0]));
     
     // ImplType for Activator:
     

@@ -625,11 +625,11 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     }
     
     public bool IsDisposed { get; private set; }
-    ~IocContainerScope() => Dispose(false);
+    // ~IocContainerScope() => Dispose(false);
     private void Dispose(bool disposing)
     {
         // ReleaseUnmanagedResourcesIfSomeGetAdded:
-        // here
+        // here, and re-add commented-out finalizer as well as GC.SuppressFinalize(this)-calls 
         
         if (!disposing) return;
         LockScopedContainer();
@@ -646,7 +646,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         {
             if (IsDisposed) return;
             IsDisposed = true;
-            GC.SuppressFinalize(this);
+            // GC.SuppressFinalize(this);
 
             // sync dispose:
             Dispose(true);
@@ -664,7 +664,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         {
             if (IsDisposed) return default;
             IsDisposed = true;
-            GC.SuppressFinalize(this);
+            // GC.SuppressFinalize(this);
 
             // sync common and or unmanaged dispose (without executing SyncDispose()):
             Dispose(false);

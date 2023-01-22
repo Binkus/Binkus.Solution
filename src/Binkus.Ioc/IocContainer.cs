@@ -66,7 +66,15 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
 {
     public List<IocDescriptor>.Enumerator GetEnumerator()
     {
-        lock (Descriptors) return Descriptors.ToList().GetEnumerator();
+        Root.RwLock.EnterReadLock();
+        try
+        {
+            return Descriptors.ToList().GetEnumerator();
+        }
+        finally
+        {
+            Root.RwLock.ExitReadLock();
+        }
     }
     IEnumerator<IocDescriptor> IEnumerable<IocDescriptor>.GetEnumerator() => GetEnumerator();
     IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -111,6 +119,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         
         internal required IocContainerScope RootContainerScope { get; init; }
         
+        internal ReaderWriterLockSlim RwLock { get; } = new(LockRecursionPolicy.SupportsRecursion);
         internal required List<IocDescriptor> Descriptors { get; init; }
         internal required List<IocDescriptor> ScopedDescriptors { get; init; }
         
@@ -227,7 +236,8 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         Id = forkId ?? new ServiceScopeId();
         if (fork)
         {
-            lock (current.Descriptors)
+            current.Root.RwLock.EnterReadLock();
+            try
             {
                 Root = current.Root with
                 {
@@ -237,10 +247,15 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                 
                 Scoped = current.Scoped;
             }
+            finally
+            {
+                current.Root.RwLock.ExitReadLock();
+            }
         }
         else
         {
-            lock (current.Descriptors)
+            current.Root.RwLock.EnterReadLock();
+            try
             {
                 Root = current.Root with
                 {
@@ -249,6 +264,10 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                 };
                 
                 Scoped = current.Scoped;
+            }
+            finally
+            {
+                current.Root.RwLock.ExitReadLock();
             }
         }
     }
@@ -312,8 +331,16 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         descriptor.ThrowOnInvalidity();
         if (!lockDescriptors)
             return InternalUnsafeAdd(descriptor);
-        lock (Descriptors)
+        
+        Root.RwLock.EnterWriteLock();
+        try
+        {
             return InternalUnsafeAdd(descriptor);
+        }
+        finally
+        {
+            Root.RwLock.ExitWriteLock();
+        }
     }
 
     private bool InternalUnsafeAdd(IocDescriptor descriptor)
@@ -356,8 +383,16 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         if (CachedDescriptors.ContainsKey(descriptor.ServiceType)) return false;
         if (!lockDescriptors)
             return InternalUnsafeInnerLockTryAdd(descriptor);
-        lock (Descriptors)
+        
+        Root.RwLock.EnterWriteLock();
+        try
+        {
             return InternalUnsafeInnerLockTryAdd(descriptor);
+        }
+        finally
+        {
+            Root.RwLock.ExitWriteLock();
+        }
     }
 
     private bool InternalUnsafeInnerLockTryAdd(IocDescriptor descriptor)
@@ -606,7 +641,8 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     public void Dispose()
     {
         if (IsDisposed) return;
-        lock (Descriptors)
+        Root.RwLock.EnterReadLock();
+        try
         {
             if (IsDisposed) return;
             IsDisposed = true;
@@ -615,11 +651,16 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             // sync dispose:
             Dispose(true);
         }
+        finally
+        {
+            Root.RwLock.ExitReadLock();
+        }
     }
     public ValueTask DisposeAsync()
     {
         if (IsDisposed) return default;
-        lock (Descriptors)
+        Root.RwLock.EnterReadLock();
+        try
         {
             if (IsDisposed) return default;
             IsDisposed = true;
@@ -631,6 +672,10 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             
             // async dispose:
             return AsyncDispose();
+        }
+        finally
+        {
+            Root.RwLock.ExitReadLock();
         }
     }
 

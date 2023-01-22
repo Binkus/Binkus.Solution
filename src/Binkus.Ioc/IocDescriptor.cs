@@ -136,18 +136,29 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
                 $"{Implementation}'s Type {ImplType} can't be assigned to {ServiceType}");
     }
 
+    internal static Type? ImplTypeWhenConstructable(Type? implType) =>
+        IsImplTypeNotConstructable(implType) ? null : implType;
+    
+    internal static bool IsImplTypeNotConstructable(Type? implType) =>
+        implType is not null && (implType.IsAbstract || implType.IsGenericParameter);
+    
     internal void ThrowIfImplTypeIsNotConstructable()
     {
+        if (IsImplTypeNotConstructable(ImplType))
+            throw new InvalidOperationException($"{nameof(ImplType)}:'{ImplType}' for " +
+                                                $"{nameof(ServiceType)}:'{ServiceType}' is not constructable.");
+        
         // if ((!ImplType?.IsGenericTypeDefinition ?? true) || (ImplType?.IsAbstract ?? true))
         //     throw new InvalidOperationException($"{nameof(ImplType)}:'{ImplType}' is not constructable.");
     }
-    
+
     internal IocDescriptor ThrowOnInvalidity()
     {
-        if (ServiceType is null || (ImplType is null && Factory is null && OpenGenericFactory is null && Implementation is null))
+        if (ServiceType is null || (ImplType is null && Factory is null && OpenGenericFactory is null && Implementation is null))// || (ImplType is not null && ImplType.IsAbstract))
             throw new InvalidOperationException($"Invalid {nameof(IocDescriptor)}");
         
         ThrowIfImplTypeIsNotAssignableToServiceType();
+        ThrowIfImplTypeIsNotConstructable();
         
         return this;
     }
@@ -234,9 +245,9 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     public static IocDescriptor CreateScoped(Type serviceType, Func<IServiceProvider, object> factory) => new(IocLifetime.Scoped, serviceType, factory);
     public static IocDescriptor CreateTransient(Type serviceType, Func<IServiceProvider, object> factory) => new(IocLifetime.Transient, serviceType, factory);
     
-    public static IocDescriptor CreateSingleton<T>(Func<IServiceProvider, T> factory) where T : class => new(IocLifetime.Singleton, typeof(T), factory) { ImplType = typeof(T) }; // ImplType not really needed
-    public static IocDescriptor CreateScoped<T>(Func<IServiceProvider, T> factory) where T : class => new(IocLifetime.Scoped, typeof(T), factory) { ImplType = typeof(T) }; // ImplType not really needed
-    public static IocDescriptor CreateTransient<T>(Func<IServiceProvider, T> factory) where T : class => new(IocLifetime.Transient, typeof(T), factory) { ImplType = typeof(T) }; // ImplType not really needed
+    public static IocDescriptor CreateSingleton<T>(Func<IServiceProvider, T> factory) where T : class => new(IocLifetime.Singleton, typeof(T), factory) { ImplType = ImplTypeWhenConstructable(typeof(T)) }; // ImplType not really needed
+    public static IocDescriptor CreateScoped<T>(Func<IServiceProvider, T> factory) where T : class => new(IocLifetime.Scoped, typeof(T), factory) { ImplType = ImplTypeWhenConstructable(typeof(T)) }; // ImplType not really needed
+    public static IocDescriptor CreateTransient<T>(Func<IServiceProvider, T> factory) where T : class => new(IocLifetime.Transient, typeof(T), factory) { ImplType = ImplTypeWhenConstructable(typeof(T)) }; // ImplType not really needed
     
     // Open Generic Factories provided:
     
@@ -289,7 +300,7 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     
     public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, Func<IServiceProvider, object> factory) => new(lifetime, serviceType, factory);
     
-    public static IocDescriptor Create<T>(IocLifetime lifetime, Func<IServiceProvider, T> factory) where T : class => new(lifetime, typeof(T), factory) { ImplType = typeof(T) }; // ImplType not really needed
+    public static IocDescriptor Create<T>(IocLifetime lifetime, Func<IServiceProvider, T> factory) where T : class => new(lifetime, typeof(T), factory) { ImplType = ImplTypeWhenConstructable(typeof(T)) }; // ImplType not really needed
     
     public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, Func<IServiceProvider, Type[], object> openGenericFactory) => new(lifetime, serviceType, openGenericFactory);
     public static IocDescriptor Create(IocLifetime lifetime, Type serviceType, Func<IServiceProvider, Type, object> openGenericFactory) => new(lifetime, serviceType, (p, genericArgs) => openGenericFactory.Invoke(p, genericArgs[0]));

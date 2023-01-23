@@ -74,3 +74,12 @@ public record InnerRequesterTestRecordService : GuidProviderRecord, ISingletonSe
         Singleton = single;
     }
 }
+
+public interface IGenericService<T> : IGuidProvider { }
+public interface IDoubleGenericService<T0,T1> : IGuidProvider { }
+public interface ITripleGenericService<T0,T1,T2> : IGuidProvider { }
+
+public record TestGenericRecordService<T> : GuidProviderRecord, IGenericService<T>, ISingletonService, IScopedService, ITransientService;
+public record TestDoubleGenericRecordService<T0,T1> : GuidProviderRecord, IDoubleGenericService<T0,T1>, ISingletonService, IScopedService, ITransientService;
+public record TestTripleGenericRecordService<T,T1,T2> : GuidProviderRecord, ITripleGenericService<T,T1,T2>, ISingletonService, IScopedService, ITransientService;
+

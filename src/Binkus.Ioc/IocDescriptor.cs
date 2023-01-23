@@ -128,9 +128,9 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     internal void ThrowIfImplTypeIsNotAssignableToServiceType()
     {
 #if NET5_0_OR_GREATER
-        if (!ImplType?.IsAssignableTo(ServiceType) ?? false)
+        if (ImplType is not null && !ImplType.IsAssignableTo(ServiceType) && !ImplType.IsGenericTypeDefinition)
 #else
-        if (ImplType is not null && !ServiceType.IsAssignableFrom(ImplType))
+        if (ImplType is not null && !ServiceType.IsAssignableFrom(ImplType) && !ImplType.IsGenericTypeDefinition)
 #endif
             throw new InvalidOperationException(
                 $"{Implementation}'s Type {ImplType} can't be assigned to {ServiceType}");

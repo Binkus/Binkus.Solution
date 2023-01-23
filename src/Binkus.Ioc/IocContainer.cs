@@ -410,14 +410,23 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     }
 
     public object? GetService([Pure] Type serviceType) =>
-    {
-        return 
-            CachedDescriptors.TryGetValue(serviceType, out var descriptor)
+        InternalGetService(serviceType) ?? WrappedProvider?.GetService(serviceType);
+
+    internal object? InternalGetService([Pure] Type serviceType) =>
+        InternalGetBasicService(serviceType) ?? GetSpecialService(serviceType);
+    
+    internal object? InternalGetBasicService([Pure] Type serviceType) =>
+        CachedDescriptors.TryGetValue(serviceType, out var descriptor)
             ? GetServiceForDescriptor(descriptor)
-            : WrappedProvider?.GetService(serviceType);
+            : null;
+
+    // resolves special services like IEnumerable<T> or registered open generics
+    internal object? GetSpecialService([Pure] Type serviceType)
+    {
+        return null;
     }
 
-    private object? GetSpecialService(Type serviceType)
+    internal object? TryGetOpenGenericService([Pure] Type serviceType, [Pure] Type openGenericType)
     {
         bool isOpenGeneric = serviceType.IsGenericTypeDefinition;
         return null;
@@ -471,6 +480,20 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         return type.IsAbstract
             ? null
             : provider.GetRequiredService<IocUtilitiesDelegation>().CreateInstance(provider, type);
+        // return provider.TryCreateInstance(type);
+        // return IocUtilitiesDelegation.Default.CreateInstance(provider, type);
+    }
+    
+    internal static object? TryCreateService(IServiceProvider provider, [Pure] Type implType)
+    {
+        if (implType.IsGenericTypeDefinition)
+        {
+            // open generic
+            return null;
+        }
+        return implType.IsAbstract
+            ? null
+            : provider.GetRequiredService<IocUtilitiesDelegation>().CreateInstance(provider, implType);
         // return provider.TryCreateInstance(type);
         // return IocUtilitiesDelegation.Default.CreateInstance(provider, type);
     }

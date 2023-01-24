@@ -12,8 +12,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <Using Remove="System.Net.Http"
-               Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.0'))" />
+        <Using Remove="System.Net.Http" Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.0'))" />
     </ItemGroup>
 
     <ItemGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard1.0')) And $([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'net35'))">

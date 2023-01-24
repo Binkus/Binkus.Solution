@@ -64,6 +64,9 @@
     <RootNamespace>Binkus</RootNamespace>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>    
   </PropertyGroup>
+  <PropertyGroup Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.0'))">
+    <ImplicitUsings>disable</ImplicitUsings>    
+  </PropertyGroup>
   
   <PropertyGroup>
     <!-- Potential Fix partially from https://github.com/OmniSharp/omnisharp-roslyn/issues/1542 -->
@@ -82,6 +85,8 @@
     <ProjectReference Include="$(MSBuildThisFileDirectory)src\Binkus.Compat\Binkus.Compat.csproj" />
   </ItemGroup>
   <ItemGroup>
+<!--    Seems to not work from Directory.Build.props, to revert global using System.Net.Http for e.g. .NET Framework 3.5 : -->
+<!--    Has to be done in projects directly, which is why we disable implicit usings by default for not compatible TFMs -->
     <Using Remove="System.Net.Http"
            Condition="!$([MSBuild]::IsTargetFrameworkCompatible('$(TargetFramework)', 'netstandard2.0'))" />
   </ItemGroup>

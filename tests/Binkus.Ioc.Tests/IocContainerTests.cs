@@ -1,4 +1,6 @@
 // using Binkus.DependencyInjection.Extensions;
+
+using System.Collections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 
@@ -444,6 +446,96 @@ public sealed class IocContainerTests
 
 
     [Fact]
+    public void TestContainerSpecialsEnumerableOfLazyT()
+    {
+        Assert.NotNull(_containerScope);
+        var single00 = _containerScope.GetRequiredService<IEnumerable<IInnerRequesterSingletonService>>().GetEnumerator().TryGetNext();
+        
+        var single0 = _containerScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterSingletonService>>>().GetEnumerator().TryGetNext();
+        var scoped0 = _containerScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterScopedService>>>().GetEnumerator().TryGetNext();
+        var transient0 = _containerScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterTransientService>>>().GetEnumerator().TryGetNext();
+        
+        var single1 = _containerScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterSingletonService>>>().GetEnumerator().TryGetNext();
+        var scoped1 = _containerScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterScopedService>>>().GetEnumerator().TryGetNext();
+        var transient1 = _containerScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterTransientService>>>().GetEnumerator().TryGetNext();
+
+        var newScope = _containerScope.CreateScope();
+        Assert.NotNull(newScope);
+        
+        var newSingle0 = newScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterSingletonService>>>().GetEnumerator().TryGetNext();
+        var newScoped0 = newScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterScopedService>>>().GetEnumerator().TryGetNext();
+        var newTransient0 = newScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterTransientService>>>().GetEnumerator().TryGetNext();
+        
+        var newSingle1 = newScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterSingletonService>>>().GetEnumerator().TryGetNext();
+        var newScoped1 = newScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterScopedService>>>().GetEnumerator().TryGetNext();
+        var newTransient1 = newScope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterTransientService>>>().GetEnumerator().TryGetNext();
+        
+        var new2Scope = newScope.CreateScope();
+        Assert.NotNull(new2Scope);
+        
+        var new2Single0 = new2Scope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterSingletonService>>>().GetEnumerator().TryGetNext();
+        var new2Scoped0 = new2Scope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterScopedService>>>().GetEnumerator().TryGetNext();
+        var new2Transient0 = new2Scope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterTransientService>>>().GetEnumerator().TryGetNext();
+        
+        var new2Single1 = new2Scope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterSingletonService>>>().GetEnumerator().TryGetNext();
+        var new2Scoped1 = new2Scope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterScopedService>>>().GetEnumerator().TryGetNext();
+        var new2Transient1 = new2Scope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterTransientService>>>().GetEnumerator().TryGetNext();
+        
+        Assert.NotNull(single00);
+        
+        Assert.NotNull(single0);
+        Assert.NotNull(scoped0);
+        Assert.NotNull(transient0);
+        
+        Assert.NotNull(single1);
+        Assert.NotNull(scoped1);
+        Assert.NotNull(transient1);
+        
+        Assert.NotNull(newSingle0);
+        Assert.NotNull(newScoped0);
+        Assert.NotNull(newTransient0);
+        
+        Assert.NotNull(newSingle1);
+        Assert.NotNull(newScoped1);
+        Assert.NotNull(newTransient1);
+        
+        Assert.NotNull(new2Single0);
+        Assert.NotNull(new2Scoped0);
+        Assert.NotNull(new2Transient0);
+        
+        Assert.NotNull(new2Single1);
+        Assert.NotNull(new2Scoped1);
+        Assert.NotNull(new2Transient1);
+        
+        Assert.Equal(single0, single1);
+        Assert.Equal(scoped0, scoped1);
+        Assert.NotEqual(transient0, transient1);
+        
+        Assert.Equal(newSingle0, newSingle1);
+        Assert.Equal(newScoped0, newScoped1);
+        Assert.NotEqual(newTransient0, newTransient1);
+        
+        Assert.Equal(single0, newSingle0);
+        Assert.NotEqual(scoped0, newScoped0);
+        Assert.NotEqual(transient0, newTransient0);
+        
+        //
+        
+        Assert.Equal(new2Single0, new2Single1);
+        Assert.Equal(new2Scoped0, new2Scoped1);
+        Assert.NotEqual(new2Transient0, new2Transient1);
+        
+        Assert.Equal(single0, new2Single0);
+        Assert.NotEqual(scoped0, new2Scoped0);
+        Assert.NotEqual(newScoped0, new2Scoped0);
+        Assert.NotEqual(transient0, new2Transient0);
+        
+        Assert.Equal(newSingle0, new2Single0);
+        Assert.NotEqual(newScoped0, new2Scoped0);
+        Assert.NotEqual(newTransient0, new2Transient0);
+    }
+    
+    [Fact]
     public void TestContainerSpecialsLazyT()
     {
         var single0 = _containerScope.GetRequiredService<Lazy<IInnerRequesterSingletonService>>().Value;
@@ -690,4 +782,10 @@ public sealed class IocContainerTests
     }
     
     #endregion
+}
+
+internal static class Ext
+{
+    public static object? TryGetNext(this IEnumerator enumerator) => enumerator.MoveNext() ? enumerator.Current : null;
+    public static T? TryGetNext<T>(this IEnumerator<T> enumerator) => enumerator.MoveNext() ? enumerator.Current : default;
 }

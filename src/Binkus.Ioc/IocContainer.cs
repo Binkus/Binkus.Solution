@@ -469,29 +469,14 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         // return null;
     }
 
-    internal static object? TryCreateService(IServiceProvider provider, IocDescriptor descriptor)
-    {
-        if (descriptor.ServiceType.IsGenericTypeDefinition)
-        {
-            // open generic
-            return null;
-        }
-        var type = descriptor.ImplType ?? descriptor.ServiceType;
-        return type.IsAbstract
+    internal static object? TryCreateService(IServiceProvider provider, [Pure] IocDescriptor descriptor) =>
+        descriptor.ServiceType.IsGenericTypeDefinition
             ? null
-            : provider.GetRequiredService<IocUtilitiesDelegation>().CreateInstance(provider, type);
-        // return provider.TryCreateInstance(type);
-        // return IocUtilitiesDelegation.Default.CreateInstance(provider, type);
-    }
-    
+            : TryCreateService(provider, descriptor.ImplType ?? descriptor.ServiceType);
+
     internal static object? TryCreateService(IServiceProvider provider, [Pure] Type implType)
     {
-        if (implType.IsGenericTypeDefinition)
-        {
-            // open generic
-            return null;
-        }
-        return implType.IsAbstract
+        return implType.IsGenericTypeDefinition || implType.IsAbstract
             ? null
             : provider.GetRequiredService<IocUtilitiesDelegation>().CreateInstance(provider, implType);
         // return provider.TryCreateInstance(type);
@@ -504,18 +489,22 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         CachedInstance,
         ImplType,
         Factory,
+        OpenGenericFactory,
     }
 
-    internal ActionType GetDescriptorActionType([Pure] IocDescriptor descriptor) =>
+    [Pure]
+    internal static ActionType GetDescriptorActionType([Pure] IocDescriptor descriptor) =>
         descriptor switch
         {
             { Implementation: { } } => ActionType.CachedInstance,
             { Factory: { } } => ActionType.Factory,
             { ImplType: { } } => ActionType.ImplType,
+            { OpenGenericFactory: { } } => ActionType.OpenGenericFactory,
             _ => ActionType.Invalid
         };
 
-    private ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>? TryGetDictFor(IocLifetime lifetime) =>
+    [Pure] 
+    private ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>? TryGetDictFor([Pure] IocLifetime lifetime) =>
         lifetime switch
         {
             IocLifetime.Singleton => Singletons,
@@ -523,9 +512,11 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             _ => null
         };
 
+    [Pure]
     private object? TryGetImplFor([Pure] IocDescriptor descriptor) =>
         descriptor.Implementation ?? TryGetDictFor(descriptor)?.GetValueOrDefault(descriptor)?.Instance;
 
+    [Pure]
     private object? TryGetDisposingImplFor([Pure] IocDescriptor descriptor) =>
         IsRootContainerScope || descriptor.Lifetime is IocLifetime.Singleton
             ? TryGetImplFor(descriptor)

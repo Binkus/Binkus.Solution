@@ -423,7 +423,23 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     // resolves special services like IEnumerable<T> or registered open generics
     internal object? GetSpecialService([Pure] Type serviceType)
     {
-        return null;
+        /*
+         * serviceType -> IEnumerable<T> -> IEnumerable<> has to be registered
+         * registered implType for IEnumerable<> -> implType.MakeGenericType(serviceType.GetGenericParameters())
+         */
+        
+        // bool isOpenGeneric = serviceType.IsGenericTypeDefinition;
+        // bool isNotGeneric = !serviceType.IsGenericType;
+        if (serviceType.IsGenericTypeDefinition || !serviceType.IsGenericType) return null;
+        
+        var openGenericType = serviceType.GetGenericTypeDefinition();
+        
+        // try resolve special service like IEnumerable<> or Lazy<> or Lazy<IEnumerable<>> or Lazy<IEnumerable<Lazy<>>>:
+        // todo enable Special Service Resolve
+        // object? specialServiceResult = GetSpecialService(serviceType, openGenericType);
+        // if (specialServiceResult is not null) return specialServiceResult;
+        
+        return TryGetOpenGenericService(serviceType, openGenericType);
     }
 
     internal object? TryGetOpenGenericService([Pure] Type serviceType, [Pure] Type openGenericType)

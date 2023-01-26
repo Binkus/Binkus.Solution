@@ -25,8 +25,12 @@ public static class PerformanceLogger
 
     public static TimeLogDisposable UseTimeLogger(
         this long startTimestamp, string msg, bool print = true, bool saveResult = false, string? key = null) =>
-        // timestamp = timestamp == 0L ? 0L.AddTimestamp() : timestamp;
-        new TimeLogDisposable(StartTimestamp: startTimestamp, Msg: msg, Key: key, Print: print, SaveResult: saveResult);
+        new(startTimestamp, Msg: msg, Key: key, Print: print, SaveResult: saveResult);
+    
+    public static TimeLogDisposable UseTimeLogger<T>(
+        this long startTimestamp, bool print = true, bool saveResult = false)
+        where T : IPerformanceLoggerMarker =>
+        new(startTimestamp, Msg: T.LogMessage, Key: typeof(T).FullName, Print: print, SaveResult: saveResult);
 
     public static DurationLogEntry LogTime(this long timestamp, string msg, bool print = true, bool saveResult = false, string? key = null)
     {

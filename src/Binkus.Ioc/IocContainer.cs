@@ -1,7 +1,9 @@
 using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Reflection;
 using System.Runtime.CompilerServices;
 using Binkus.DependencyInjection.Extensions;
 
@@ -586,7 +588,9 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                 d.Dispose();
                 return;
             case IAsyncDisposable ad:
+#pragma warning disable VSTHRD002
                 ad.DisposeAsync().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
                 return;
         }
     }
@@ -608,14 +612,27 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     
     // Scope Disposal:
 
-    private async ValueTask AsyncDispose()
+#pragma warning disable VSTHRD200
+    private async ValueTask AsyncDispose(bool yield)
+#pragma warning restore VSTHRD200
     {
         // async dispose:
-        foreach (var descriptor in Descriptors)
+        // Singletons get disposed only when this is the root IoC Container:
+        if (!yield)
         {
-            if (!IsRootContainerScope && descriptor.Lifetime is not IocLifetime.Scoped) continue;
-            // Singletons get disposed only when this is the root IoC Container:
-            var impl = TryGetDisposingImplFor(descriptor);
+            foreach (object? impl in from descriptor in Descriptors
+                     where IsRootContainerScope || descriptor.Lifetime is IocLifetime.Scoped
+                     select TryGetDisposingImplFor(descriptor))
+            {
+                await TryDisposalOfAsync(impl).ConfigureAwait(false);
+            }
+            return;
+        }
+
+        foreach (object? impl in from descriptor in Descriptors
+                 where IsRootContainerScope || descriptor.Lifetime is IocLifetime.Scoped
+                 select TryGetDisposingImplFor(descriptor))
+        {
             switch (impl)
             {
                 case null:
@@ -648,7 +665,9 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                     disposable.Dispose();
                     continue;
                 case IAsyncDisposable asyncDisposable:
+#pragma warning disable VSTHRD002
                     asyncDisposable.DisposeAsync().GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
                     continue;
             }
         }
@@ -686,13 +705,15 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             Root.RwLock.ExitReadLock();
         }
     }
-    public ValueTask DisposeAsync()
+    public ValueTask DisposeAsync() => DisposeAsync(true);
+    public async ValueTask DisposeAsync(bool yield)
     {
-        if (IsDisposed) return default;
+        // has to be async cause of try-finally block for ReadLock
+        if (IsDisposed) return;
         Root.RwLock.EnterReadLock();
         try
         {
-            if (IsDisposed) return default;
+            if (IsDisposed) return;
             IsDisposed = true;
             // GC.SuppressFinalize(this);
 
@@ -701,7 +722,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             LockScopedContainer();
             
             // async dispose:
-            return AsyncDispose();
+            await AsyncDispose(yield).ConfigureAwait(false);
         }
         finally
         {

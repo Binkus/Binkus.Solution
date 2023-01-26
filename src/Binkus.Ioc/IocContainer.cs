@@ -589,9 +589,6 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                 return;
             case IAsyncDisposable ad:
 #pragma warning disable VSTHRD002
-                // var vt = ad.DisposeAsync();
-                // if(!vt.IsCompletedSuccessfully)
-                //     vt.AsTask().GetAwaiter().GetResult();
                 ad.DisposeAsync().AsTask().GetAwaiter().GetResult();
 #pragma warning restore VSTHRD002
                 return;
@@ -669,10 +666,6 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                     continue;
                 case IAsyncDisposable asyncDisposable:
 #pragma warning disable VSTHRD002
-                    // asyncDisposable.DisposeAsync().GetAwaiter().GetResult();
-                    // var vt = asyncDisposable.DisposeAsync();
-                    // if(!vt.IsCompletedSuccessfully)
-                    //     vt.AsTask().GetAwaiter().GetResult();
                     asyncDisposable.DisposeAsync().AsTask().GetAwaiter().GetResult();
 #pragma warning restore VSTHRD002
                     continue;
@@ -697,10 +690,9 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     public void Dispose()
     {
         if (IsDisposed) return;
-        Root.RwLock.EnterReadLock();
+        Root.RwLock.EnterWriteLock();
         try
         {
-            // todo evaluate re-adding an additional!! exclusive lock to prevent multiple simultaneous Dispose calls, or re-use WriteLock instead 
             if (IsDisposed) return;
             IsDisposed = true;
             // GC.SuppressFinalize(this);
@@ -710,7 +702,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         }
         finally
         {
-            Root.RwLock.ExitReadLock();
+            Root.RwLock.ExitWriteLock();
         }
     }
     public ValueTask DisposeAsync() => DisposeAsync(true);
@@ -718,10 +710,9 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     {
         // has to be async cause of try-finally block for ReadLock
         if (IsDisposed) return;
-        Root.RwLock.EnterReadLock();
+        Root.RwLock.EnterWriteLock();
         try
         {
-            // todo evaluate re-adding an additional!! exclusive lock to prevent multiple simultaneous Dispose calls, or re-use WriteLock instead
             if (IsDisposed) return;
             IsDisposed = true;
             // GC.SuppressFinalize(this);
@@ -735,7 +726,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         }
         finally
         {
-            Root.RwLock.ExitReadLock();
+            Root.RwLock.ExitWriteLock();
         }
     }
 

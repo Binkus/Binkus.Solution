@@ -9,14 +9,12 @@ namespace Binkus.Extensions;
 
 public static class PerformanceLogger
 {
-    // ReSharper disable once FieldCanBeMadeReadOnly.Global
-    // ReSharper disable once ConvertToConstant.Global
-    public static bool ClearLogsAfterInit = true;
+    public static bool ClearLogsAfterInit { get; set; } = true;
     
     private const bool UseOnlyDebugWriteLine = true;
     
 #pragma warning disable CS0162
-    public static readonly Action<string> LogAction = UseOnlyDebugWriteLine ?
+    public static Action<string> LogAction { get; set; } = UseOnlyDebugWriteLine ?
 #if DEBUG
         s => Debug.WriteLine(s) :
 #else
@@ -24,6 +22,11 @@ public static class PerformanceLogger
 #endif
         Console.WriteLine;
 #pragma warning restore CS0162
+
+    public static TimeLogDisposable UseTimeLogger(
+        this long startTimestamp, string msg, bool print = true, bool saveResult = false, string? key = null) =>
+        // timestamp = timestamp == 0L ? 0L.AddTimestamp() : timestamp;
+        new TimeLogDisposable(StartTimestamp: startTimestamp, Msg: msg, Key: key, Print: print, SaveResult: saveResult);
 
     public static DurationLogEntry LogTime(this long timestamp, string msg, bool print = true, bool saveResult = false, string? key = null)
     {
@@ -74,6 +77,15 @@ public static class PerformanceLogger
     {
         LogAction(log);
         return log;
+    }
+    
+    //
+    
+    public readonly record struct TimeLogDisposable(
+        long StartTimestamp, string Msg, string? Key, bool Print = true, bool SaveResult = false) 
+        : IDisposable
+    {
+        public void Dispose() => StartTimestamp.LogTime(msg: Msg, key: Key, print: Print, saveResult: SaveResult);
     }
 
     //

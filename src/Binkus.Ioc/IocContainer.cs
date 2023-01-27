@@ -35,8 +35,8 @@ public sealed class IocContainer // : IServiceProvider
 
     public bool IsReadOnly { get; internal set; }
     
-    public IocContainerScope RootContainerScope { get; set; }
-    public IocContainerScope ContainerScope { get; set; }
+    internal IocContainerScope RootContainerScope { get; set; }
+    internal IocContainerScope ContainerScope { get; set; }
 }
 
 public interface IContainerScopeFactory
@@ -63,8 +63,8 @@ internal sealed record ServiceInstanceProvider(object? Instance = null)
 
 // Scope Engine
 
-public sealed record IocContainerScope : IServiceProvider, IContainerScope,
-    IContainerScopeFactory, IAsyncDisposable, IDisposable, IEnumerable<IocDescriptor>
+internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
+    IContainerScopeFactory, IAsyncDisposable, IDisposable, IEnumerable<IocDescriptor>, ICollection<IocDescriptor>
 {
     [Pure]
     public List<IocDescriptor>.Enumerator GetEnumerator()
@@ -81,6 +81,69 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     }
     [Pure] IEnumerator<IocDescriptor> IEnumerable<IocDescriptor>.GetEnumerator() => GetEnumerator();
     [Pure] IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    
+    // ICollection<IocDescriptor>
+
+    void ICollection<IocDescriptor>.Add(IocDescriptor item) => Add(item);
+    
+    void ICollection<IocDescriptor>.Clear()
+    {
+        if (RootContainerScope.Options.IsReadOnly || Options.IsReadOnly) throw new NotSupportedException();
+
+        Root.RwLock.EnterWriteLock();
+        try
+        {
+            Dispose();
+            RootContainerScope.Dispose();
+            
+            Descriptors.Clear();
+            Singletons.Clear();
+            ScopedDescriptors.Clear();
+            
+            RootContainerScope.InternalAddThisAsService();
+            RootContainerScope.AddBasicServices();
+        }
+        finally
+        {
+            Root.RwLock.ExitWriteLock();
+        }
+    }
+
+    bool ICollection<IocDescriptor>.Contains(IocDescriptor item)
+    {
+        if (CachedDescriptors.Values.Contains(item))
+            return true;
+        Root.RwLock.EnterReadLock();
+        try
+        {
+            return Descriptors.Contains(item);
+        }
+        finally
+        {
+            Root.RwLock.ExitReadLock();
+        }
+    }
+
+    void ICollection<IocDescriptor>.CopyTo(IocDescriptor[] array, int arrayIndex)
+    {
+        var arr = this.ToArray();
+        Array.Copy(arr, 0, array, arrayIndex, arr.Length);
+        // var a = this.Skip(arrayIndex).ToArray();
+        // for (var i = 0; i < a.Length; i++) array[i] = a[i];
+    }
+
+    bool ICollection<IocDescriptor>.Remove(IocDescriptor item)
+    {
+        if (RootContainerScope.Options.IsReadOnly || Options.IsReadOnly) throw new NotSupportedException();
+
+        throw new NotImplementedException();
+    }
+
+    int ICollection<IocDescriptor>.Count => Descriptors.Count;
+
+    bool ICollection<IocDescriptor>.IsReadOnly => RootContainerScope.Options.IsReadOnly || Options.IsReadOnly;
+    
+    //
 
     // WIP
     public sealed record ContainerOptions

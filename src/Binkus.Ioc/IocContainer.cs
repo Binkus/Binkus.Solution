@@ -66,6 +66,7 @@ internal sealed record ServiceInstanceProvider(object? Instance = null)
 public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     IContainerScopeFactory, IAsyncDisposable, IDisposable, IEnumerable<IocDescriptor>
 {
+    [Pure]
     public List<IocDescriptor>.Enumerator GetEnumerator()
     {
         Root.RwLock.EnterReadLock();
@@ -78,8 +79,8 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             Root.RwLock.ExitReadLock();
         }
     }
-    IEnumerator<IocDescriptor> IEnumerable<IocDescriptor>.GetEnumerator() => GetEnumerator();
-    IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+    [Pure] IEnumerator<IocDescriptor> IEnumerable<IocDescriptor>.GetEnumerator() => GetEnumerator();
+    [Pure] IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
     // WIP
     public sealed record ContainerOptions
@@ -253,6 +254,8 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         if (!CachedDescriptors.TryAdd(type, d)) return;
         Descriptors.Add(d);
         Singletons.TryAdd(d, new ServiceInstanceProvider(d.Implementation));
+        
+        InternalUnsafeInnerLockTryAdd(IocDescriptor.CreateTransient<IEnumerable<IocDescriptor>>(_ => this.ToList()));
     }
     
     private void InternalAddThisAsService()
@@ -433,6 +436,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     {
         descriptor.ThrowOnInvalidity();
         if (CachedDescriptors.ContainsKey(descriptor.ServiceType)) return false;
+        
         if (!lockDescriptors)
             return InternalUnsafeInnerLockTryAdd(descriptor);
         
@@ -475,13 +479,6 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     // resolves special services like IEnumerable<T> or registered open generics
     internal object? GetSpecialService([Pure] Type serviceType)
     {
-        /*
-         * serviceType -> IEnumerable<T> -> IEnumerable<> has to be registered
-         * registered implType for IEnumerable<> -> implType.MakeGenericType(serviceType.GetGenericParameters())
-         */
-        
-        // bool isOpenGeneric = serviceType.IsGenericTypeDefinition;
-        // bool isNotGeneric = !serviceType.IsGenericType;
         if (serviceType.IsGenericTypeDefinition || !serviceType.IsGenericType) return null;
         
         var openGenericType = serviceType.GetGenericTypeDefinition();

@@ -112,6 +112,44 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         // {
         //     return services.GetService(serviceType);
         // }
+
+        // public bool RespectSynchronizationContextOnDisposal { get => ContinueOnCapturedContextWhenDisposeAsync; init => ContinueOnCapturedContextWhenDisposeAsync = value; }
+        public bool ContinueOnCapturedContextWhenDisposeAsync { get; init; } = false;
+
+        private Func<IAsyncDisposable, ConfiguredValueTaskAwaitable>? _disposeAsyncFunc;
+        internal Func<IAsyncDisposable, ConfiguredValueTaskAwaitable> DisposeAsyncFunc
+        {
+            get => _disposeAsyncFunc ??= ContinueOnCapturedContextWhenDisposeAsync
+                ? DisposeAsyncWithCapturedContext
+                : DisposeAsyncWithoutCapturedContext;
+            init => _disposeAsyncFunc = value;
+        }
+
+        private static readonly Func<IAsyncDisposable, ConfiguredValueTaskAwaitable>
+            DisposeAsyncWithCapturedContext = static ad => ad.DisposeAsync().ConfigureAwait(true);
+
+        private static readonly Func<IAsyncDisposable, ConfiguredValueTaskAwaitable>
+            DisposeAsyncWithoutCapturedContext = static ad => ad.DisposeAsync().ConfigureAwait(false);
+        
+        
+        private Action<IAsyncDisposable>? _syncDisposeAsyncFunc;
+        internal Action<IAsyncDisposable> SyncDisposeAsyncFunc
+        {
+            get => _syncDisposeAsyncFunc ??= ContinueOnCapturedContextWhenDisposeAsync
+                ? SyncDisposeAsyncWithCapturedContext
+                : SyncDisposeAsyncWithoutCapturedContext;
+            init => _syncDisposeAsyncFunc = value;
+        }
+
+#pragma warning disable VSTHRD002
+        private static readonly Action<IAsyncDisposable>
+            SyncDisposeAsyncWithCapturedContext = static ad =>
+                ad.DisposeAsync().AsTask().GetAwaiter().GetResult();
+
+        private static readonly Action<IAsyncDisposable>
+            SyncDisposeAsyncWithoutCapturedContext = static ad =>
+                Task.Run(() => ad.DisposeAsync().AsTask()).GetAwaiter().GetResult();
+#pragma warning restore VSTHRD002
     }
 
     internal sealed record RootProperties
@@ -131,6 +169,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     }
     
     internal RootProperties Root { get; }
+    internal ContainerOptions Options { get; }
     
     private readonly IServiceProvider? _wrappedProvider;
     public IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, this) || (!ReferenceEquals(this, RootContainerScope) && Equals(value, RootContainerScope)) ? _wrappedProvider : value; }
@@ -148,8 +187,10 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     public IocContainerScope() : this(default(IEnumerable<IocDescriptor>), default(ServiceScopeId)) { }
     internal IocContainerScope(ServiceScopeId? id) : this(default(IEnumerable<IocDescriptor>), id) { }
     public IocContainerScope(IEnumerable<IocDescriptor> services) : this(services, default(ServiceScopeId)) { }
-    internal IocContainerScope(IEnumerable<IocDescriptor>? services, ServiceScopeId? id)
+    internal IocContainerScope(IEnumerable<IocDescriptor>? services, ServiceScopeId? id, ContainerOptions? options = null)
     {
+        Options = options ?? ContainerOptions.Default;
+        
         // WrappedProvider ...
         
         Id = id ?? new ServiceScopeId();
@@ -233,8 +274,9 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     }
 
     // fork - WIP
-    private IocContainerScope(bool fork, IocContainerScope current, ServiceScopeId? forkId = null)
+    private IocContainerScope(bool fork, IocContainerScope current, ContainerOptions? options = null, ServiceScopeId? forkId = null)
     {
+        Options = options ?? current.Options;
         Id = forkId ?? new ServiceScopeId();
         if (fork)
         {
@@ -275,20 +317,28 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     }
     
     // WIP
-    internal IocContainerScope AsRootScope(bool sameId = true)
+    internal IocContainerScope AsRootScope(bool sameId = true, ContainerOptions? options = null)
     {
-        return new IocContainerScope(false, this, sameId ? Id : null);
+        return new IocContainerScope(false, this, options, sameId ? Id : null);
     }
     
     // WIP
-    internal IocContainerScope Fork(bool sameId)
+    internal IocContainerScope Fork(bool sameId, ContainerOptions? options = null)
     {
-        return new IocContainerScope(true, this, sameId ? Id : null);
+        return new IocContainerScope(true, this, options, sameId ? Id : null);
     }
+
+#nullable disable
+    // Record's copy-ctor
+    // ReSharper disable NotNullOrRequiredMemberIsNotInitialized
+    private IocContainerScope(IocContainerScope parentContainerScope) => throw new NotSupportedException();
+    // ReSharper restore NotNullOrRequiredMemberIsNotInitialized
+#nullable restore
     
     // Creates Scope
-    private IocContainerScope(IocContainerScope parentContainerScope)
+    private IocContainerScope(IocContainerScope parentContainerScope, ContainerOptions? options)
     {
+        Options = options ?? parentContainerScope.Options;
         Root = parentContainerScope.Root;
         _wrappedProvider =
             parentContainerScope._wrappedProvider?.GetService<IContainerScopeFactory>()?.CreateScope().Services ??
@@ -302,10 +352,10 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
             InternalAddServiceImpls(Scoped, descriptor);
     }
 
-    internal IocContainerScope CreateScope(ServiceScopeId id) => new(this) { Id = id };
+    internal IocContainerScope CreateScope(ServiceScopeId id) => new(this, null) { Id = id };
     
     IContainerScope IContainerScopeFactory.CreateScope() => CreateScope();
-    public IocContainerScope CreateScope() => new(this);
+    public IocContainerScope CreateScope(ContainerOptions? options = null) => new(this, options);
 
     internal List<IocDescriptor> Descriptors => Root.Descriptors;
     internal List<IocDescriptor> ScopedDescriptors => Root.ScopedDescriptors;
@@ -459,9 +509,9 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         descriptor.Lifetime switch
         {
             IocLifetime.Singleton => GetSingletonOrScopedService(Singletons, descriptor),
-            IocLifetime.Scoped => IsDisposed && !IsRootContainerScope 
-                ? throw new InvalidOperationException("Scope is disposed.")
-                : GetSingletonOrScopedService(Scoped, descriptor),
+            IocLifetime.Scoped => // IsDisposed && !IsRootContainerScope 
+                // ? throw new InvalidOperationException("Scope is disposed.") :
+                GetSingletonOrScopedService(Scoped, descriptor),
             IocLifetime.Transient => GetTransientService(descriptor),
             _ => null
         };
@@ -475,8 +525,9 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
         object? Locke()
         {
             lock (instanceProvider)
-                return instanceProvider.Instance ??=
-                    descriptor.Factory?.Invoke(this) ?? TryCreateService(this, descriptor);
+                return instanceProvider.Instance ??= WhenDisposedDispose(
+                    descriptor.Factory?.Invoke(this) ?? TryCreateService(this, descriptor),
+                    descriptor);
         }
     }
     
@@ -570,16 +621,28 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     //     var impl = TryGetImplFor(descriptor);
     //     TryDisposalOf(impl);
     // }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private bool ShouldServiceBeDisposed(IocLifetime lifetime) =>
+        RootContainerScope.IsDisposed || (IsDisposed && lifetime != IocLifetime.Singleton);
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private object? WhenDisposedDispose(object? impl, IocLifetime lifetime)
+    {
+        if (ShouldServiceBeDisposed(lifetime))
+            TryDisposalOf(impl);
+        return impl;
+    }
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void WhenDisposedDisposeImplFrom(IocDescriptor descriptor)
     {
-        if ((IsDisposed && descriptor == IocLifetime.Scoped) || RootContainerScope.IsDisposed)
+        if (ShouldServiceBeDisposed(descriptor))
             TryDisposalOf(descriptor.Implementation);
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void TryDisposalOf(object? obj)
+    private void TryDisposalOf(object? obj)
     {
         switch (obj)
         {
@@ -588,9 +651,8 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                 d.Dispose();
                 return;
             case IAsyncDisposable ad:
-#pragma warning disable VSTHRD002
-                ad.DisposeAsync().AsTask().GetAwaiter().GetResult();
-#pragma warning restore VSTHRD002
+                // in case the service only implements IAsyncDisposable and not IDisposable:
+                Options.SyncDisposeAsyncFunc(ad);
                 return;
         }
     }
@@ -613,22 +675,28 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     // Scope Disposal:
 
 #pragma warning disable VSTHRD200
-    private async ValueTask AsyncDispose(bool yield)
+    private async ValueTask AsyncDispose(bool yieldBeforeEachDispose)
 #pragma warning restore VSTHRD200
     {
         // async dispose:
         // Singletons get disposed only when this is the root IoC Container:
-        if (!yield)
+        if (!yieldBeforeEachDispose)
         {
+            Func<object?, ConfiguredValueTaskAwaitable> disposeObjectAsync =
+                Options.ContinueOnCapturedContextWhenDisposeAsync
+                    ? static o => TryDisposalOfAsync(o).ConfigureAwait(true)
+                    : static o => TryDisposalOfAsync(o).ConfigureAwait(false);
+            
             foreach (object? impl in from descriptor in Descriptors
                      where IsRootContainerScope || descriptor.Lifetime is IocLifetime.Scoped
                      select TryGetDisposingImplFor(descriptor))
             {
-                await TryDisposalOfAsync(impl).ConfigureAwait(false);
+                await disposeObjectAsync(impl);
             }
             return;
         }
 
+        var disposeAsync = Options.DisposeAsyncFunc;
         foreach (object? impl in from descriptor in Descriptors
                  where IsRootContainerScope || descriptor.Lifetime is IocLifetime.Scoped
                  select TryGetDisposingImplFor(descriptor))
@@ -639,7 +707,7 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                     continue;
                 case IAsyncDisposable asyncDisposable:
                     await Task.Yield();
-                    await asyncDisposable.DisposeAsync();
+                    await disposeAsync(asyncDisposable);
                     continue;
                 case IDisposable disposable:
                     await Task.Yield();
@@ -665,9 +733,8 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
                     disposable.Dispose();
                     continue;
                 case IAsyncDisposable asyncDisposable:
-#pragma warning disable VSTHRD002
-                    asyncDisposable.DisposeAsync().AsTask().GetAwaiter().GetResult();
-#pragma warning restore VSTHRD002
+                    // in case the service only implements IAsyncDisposable and not IDisposable
+                    Options.SyncDisposeAsyncFunc(asyncDisposable);
                     continue;
             }
         }
@@ -690,43 +757,47 @@ public sealed record IocContainerScope : IServiceProvider, IContainerScope,
     public void Dispose()
     {
         if (IsDisposed) return;
+        Root.RwLock.EnterUpgradeableReadLock();
         Root.RwLock.EnterWriteLock();
         try
         {
             if (IsDisposed) return;
             IsDisposed = true;
             // GC.SuppressFinalize(this);
+            Root.RwLock.ExitWriteLock();
 
             // sync dispose:
             Dispose(true);
         }
         finally
         {
-            Root.RwLock.ExitWriteLock();
+            Root.RwLock.ExitUpgradeableReadLock();
         }
     }
     public ValueTask DisposeAsync() => DisposeAsync(true);
-    public async ValueTask DisposeAsync(bool yield)
+    public async ValueTask DisposeAsync(bool yieldBeforeEachDispose)
     {
         // has to be async cause of try-finally block for ReadLock
         if (IsDisposed) return;
+        Root.RwLock.EnterUpgradeableReadLock();
         Root.RwLock.EnterWriteLock();
         try
         {
             if (IsDisposed) return;
             IsDisposed = true;
             // GC.SuppressFinalize(this);
+            Root.RwLock.ExitWriteLock();
 
             // sync common and or unmanaged dispose (without executing SyncDispose()):
             Dispose(false);
             LockScopedContainer();
             
             // async dispose:
-            await AsyncDispose(yield).ConfigureAwait(false);
+            await AsyncDispose(yieldBeforeEachDispose).ConfigureAwait(false);
         }
         finally
         {
-            Root.RwLock.ExitWriteLock();
+            Root.RwLock.ExitUpgradeableReadLock();
         }
     }
 

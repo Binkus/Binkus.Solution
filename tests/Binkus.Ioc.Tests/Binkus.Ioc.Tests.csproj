@@ -11,6 +11,10 @@
 <!--        <USE_MEDI>true</USE_MEDI>-->
     </PropertyGroup>
     
+    <ItemGroup>
+        <InternalsVisibleTo Include="Benchmarks" />
+    </ItemGroup>
+    
 <!--    <PropertyGroup>-->
 <!--        <DefineConstants>$(DefineConstants);USE_MEDI</DefineConstants>-->
 <!--    </PropertyGroup>-->

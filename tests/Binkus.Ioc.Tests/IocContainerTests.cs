@@ -10,6 +10,8 @@ public sealed class IocContainerTests
 {
     private readonly IocContainerScope _containerScope;
     private readonly IServiceProvider _msDiServiceProvider;
+    internal IocContainerScope ContainerScope => _containerScope;
+    internal IServiceProvider MsServiceProvider => _msDiServiceProvider;
 
     private const bool UseImplTypeInsteadOfFactory = true;
     private const bool UseContainerScopeWithDescriptorList = true;
@@ -592,6 +594,11 @@ public sealed class IocContainerTests
         Assert.Equal(newSingle0, new2Single0);
         Assert.NotEqual(newScoped0, new2Scoped0);
         Assert.NotEqual(newTransient0, new2Transient0);
+
+        // newScope.Dispose();
+        // new2Scope.Dispose();
+        // Assert.True(newScope.IsDisposed);
+        // Assert.True(new2Scope.IsDisposed);
     }
     
     //

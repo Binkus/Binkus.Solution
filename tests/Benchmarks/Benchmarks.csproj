@@ -8,4 +8,12 @@
         <WarningsAsErrors>Nullable</WarningsAsErrors>
     </PropertyGroup>
 
+    <ItemGroup>
+      <PackageReference Include="BenchmarkDotNet" Version="0.13.4" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\Binkus.Ioc.Tests\Binkus.Ioc.Tests.csproj" />
+    </ItemGroup>
+
 </Project>

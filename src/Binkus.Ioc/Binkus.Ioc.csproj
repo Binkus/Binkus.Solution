@@ -11,6 +11,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <InternalsVisibleTo Include="Benchmarks" />        
         <InternalsVisibleTo Include="$(AssemblyName).Microsoft.Extensions.DependencyInjection.Abstractions" />
         <InternalsVisibleTo Include="$(AssemblyName).Tests" />
     </ItemGroup>

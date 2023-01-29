@@ -235,8 +235,43 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     internal RootProperties Root { get; }
     internal ContainerOptions Options { get; }
     
-    private readonly IServiceProvider? _wrappedProvider;
-    public IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, this) || (!ReferenceEquals(this, RootContainerScope) && Equals(value, RootContainerScope)) ? _wrappedProvider : value; }
+    private IServiceProvider[]? _firstWrappedProviders;
+    private IServiceProvider[]? _lastWrappedProviders;
+
+    internal IServiceProvider[] FirstWrappedProviders
+    {
+        set
+        {
+            Monitor.Enter(this);
+            _firstWrappedProviders = value;
+            var len = value.Length;
+            if (len == 0) GetServiceFunc = static (scope, type) => scope.InternalGetServiceWithLastWrappers(type);
+            else if (len == 1)
+                GetServiceFunc = static (scope, type) => scope._firstWrappedProviders![0].GetService(type) ??
+                                                         scope.InternalGetServiceWithLastWrappers(type);
+            else if (len == 2)
+                GetServiceFunc = static (scope, type) => scope._firstWrappedProviders![0].GetService(type) ??
+                                                         scope._firstWrappedProviders[1].GetService(type) ??
+                                                         scope.InternalGetServiceWithLastWrappers(type);
+            else if (len == 3)
+                GetServiceFunc = static (scope, type) => scope._firstWrappedProviders![0].GetService(type) ??
+                                                         scope._firstWrappedProviders[1].GetService(type) ??
+                                                         scope._firstWrappedProviders[2].GetService(type) ??
+                                                         scope.InternalGetServiceWithLastWrappers(type);
+            else if (len == 4)
+                GetServiceFunc = static (scope, type) => scope._firstWrappedProviders![0].GetService(type) ??
+                                                         scope._firstWrappedProviders[1].GetService(type) ??
+                                                         scope._firstWrappedProviders[2].GetService(type) ??
+                                                         scope._firstWrappedProviders[3].GetService(type) ??
+                                                         scope.InternalGetServiceWithLastWrappers(type);
+            else GetServiceFunc = static (scope, type) => scope.InternalGetServiceWithWrapperArrays(type);
+            Monitor.Exit(this);
+        }
+    }
+
+    internal IServiceProvider[] LastWrappedProviders { set => _lastWrappedProviders = value; }
+    // private readonly IServiceProvider? _wrappedProvider;
+    // public IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, this) || (!ReferenceEquals(this, RootContainerScope) && Equals(value, RootContainerScope)) ? _wrappedProvider : value; }
     // public IServiceProvider? WrappedProvider { get => Root.WrappedProvider; init => _wrappedProvider = Equals(value, this) ? _wrappedProvider : value; }
     public IServiceProvider Services => this;
     public IocContainerScope RootContainerScope => Root.RootContainerScope;
@@ -406,9 +441,28 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     {
         Options = options ?? parentContainerScope.Options;
         Root = parentContainerScope.Root;
-        _wrappedProvider =
-            parentContainerScope._wrappedProvider?.GetService<IContainerScopeFactory>()?.CreateScope().Services ??
-            parentContainerScope._wrappedProvider; // create scope from wrapped provider
+        // _wrappedProvider =
+        //     parentContainerScope._wrappedProvider?.GetService<IContainerScopeFactory>()?.CreateScope().Services ??
+        //     parentContainerScope._wrappedProvider; // create scope from wrapped provider
+        SetWrapped(out _firstWrappedProviders, parentContainerScope._firstWrappedProviders);
+        SetWrapped(out _lastWrappedProviders, parentContainerScope._lastWrappedProviders);
+        void SetWrapped(out IServiceProvider[]? providersRef, IServiceProvider[]? providers)
+        {
+            providersRef = providers is null ? null : CreateScopedWrappedProviders();
+            IServiceProvider[] CreateScopedWrappedProviders()
+            {
+                int len = providers.Length;
+                var result = new IServiceProvider[len];
+                Array.Copy(providers, result, len);
+                for (int i = 0; i < len; i++)
+                {
+                    // create scope from wrapped provider when IContainerScopeFactory is registered 
+                    ref var r = ref result[i];
+                    r = r.GetService<IContainerScopeFactory>()?.CreateScope().Services ?? r;                     
+                }
+                return result;
+            }
+        }
         WeakParentContainerScope = new WeakReference<IocContainerScope>(parentContainerScope);
         Id = new ServiceScopeId();
         IsRootContainerScope = false;
@@ -528,19 +582,53 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         return true;
     }
 
-    public object? GetService([Pure] Type serviceType) =>
-        InternalGetService(serviceType) ?? WrappedProvider?.GetService(serviceType);
+    public object? GetService(Type serviceType) => GetServiceFunc(this, serviceType);
+    
+    internal Func<IocContainerScope, Type, object?> GetServiceFunc { get; set; } =
+        static (scope, type) => scope.InternalGetServiceWithLastWrappers(type);
 
+    internal object? InternalGetServiceWithWrapperArrays(Type serviceType)
+    {
+        object? result;
+        var len = _firstWrappedProviders?.Length ?? 0;
+        for (int i = 0; i < len; i++)
+            if ((result = _firstWrappedProviders![i].GetService(serviceType)) is not null)
+                return result;
+        if ((result = InternalGetService(serviceType)) is not null) return result;
+        len = _lastWrappedProviders?.Length ?? 0;
+        for (int i = 0; i < len; i++)
+            if ((result = _lastWrappedProviders![i].GetService(serviceType)) is not null)
+                return result;
+        return null;
+    }
+    
+    internal object? InternalLastWrapperArrayGetService(Type serviceType)
+    {
+        object? result;
+        var len = _lastWrappedProviders?.Length ?? 0;
+        for (int i = 0; i < len; i++)
+            if ((result = _lastWrappedProviders![i].GetService(serviceType)) is not null)
+                return result;
+        return null;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal object? InternalGetServiceWithLastWrappers(Type serviceType) =>
+        InternalGetService(serviceType) ?? InternalLastWrapperArrayGetService(serviceType);
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal object? InternalGetService([Pure] Type serviceType) =>
         InternalGetBasicService(serviceType) ?? GetSpecialService(serviceType);
     
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal object? InternalGetBasicService([Pure] Type serviceType) =>
         CachedDescriptors.TryGetValue(serviceType, out var descriptor)
             ? GetServiceForDescriptor(descriptor)
             : null;
 
     // resolves special services like IEnumerable<T> or registered open generics
-    internal object? GetSpecialService([Pure] Type serviceType)
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    internal object? GetSpecialService(Type serviceType)
     {
         if (serviceType.IsGenericTypeDefinition || !serviceType.IsGenericType) return null;
         
@@ -554,7 +642,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         return TryGetOpenGenericService(serviceType, openGenericType);
     }
 
-    internal object? TryGetOpenGenericService([Pure] Type serviceType, [Pure] Type openGenericType)
+    internal object? TryGetOpenGenericService(Type serviceType, Type openGenericType)
     {
         bool isOpenGeneric = serviceType.IsGenericTypeDefinition;
         return null;

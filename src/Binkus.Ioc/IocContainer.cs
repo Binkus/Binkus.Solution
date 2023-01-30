@@ -39,6 +39,18 @@ public sealed class IocContainer // : IServiceProvider
     internal IocContainerScope ContainerScope { get; set; }
 }
 
+public static class IocContainerBuilder
+{
+    public static IContainerScope BuildIocContainer() => new IocContainerScope();
+    
+    public static IContainerScope BuildIocContainer(this IEnumerable<IocDescriptor> services)
+    {
+        // Action<IocContainerScope.ContainerOptions>? configure = null;
+        // configure?.Invoke(new IocContainerScope.ContainerOptions());
+        return new IocContainerScope(services);
+    }
+}
+
 public interface IContainerScopeFactory
 {
     IContainerScope CreateScope();
@@ -48,6 +60,8 @@ public interface IContainerScope : IContainerScopeFactory, IAsyncDisposable, IDi
 {
     public IServiceProvider Services { get; }
 }
+
+// public interface IContainerScopeProvider : IServiceProvider, IContainerScope { }
 
 
 internal sealed record ServiceInstanceProvider(object? Instance = null)
@@ -176,6 +190,8 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         // {
         //     return services.GetService(serviceType);
         // }
+        
+        public bool YieldBeforeEachDispose { get; init; }
 
         // public bool RespectSynchronizationContextOnDisposal { get => ContinueOnCapturedContextWhenDisposeAsync; init => ContinueOnCapturedContextWhenDisposeAsync = value; }
         public bool ContinueOnCapturedContextWhenDisposeAsync { get; init; } = false;
@@ -915,6 +931,12 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
             Root.RwLock.ExitWriteLock();
 
             // sync dispose:
+            // wrapped:
+            var len = _firstWrappedProviders?.Length ?? 0;
+            for (int i = 0; i < len; i++) DisposeWrapped(in _firstWrappedProviders![i]);
+            len = _lastWrappedProviders?.Length ?? 0;
+            for (int i = 0; i < len; i++) DisposeWrapped(in _lastWrappedProviders![i]);
+            // this internal async dispose:
             Dispose(true);
         }
         finally
@@ -922,7 +944,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
             Root.RwLock.ExitUpgradeableReadLock();
         }
     }
-    public ValueTask DisposeAsync() => DisposeAsync(true);
+    public ValueTask DisposeAsync() => DisposeAsync(Options.YieldBeforeEachDispose);
     public async ValueTask DisposeAsync(bool yieldBeforeEachDispose)
     {
         // has to be async cause of try-finally block for ReadLock
@@ -939,14 +961,46 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
             // sync common and or unmanaged dispose (without executing SyncDispose()):
             Dispose(false);
             LockScopedContainer();
-            
+
             // async dispose:
+            // wrapped:
+            var len = _firstWrappedProviders?.Length ?? 0;
+            for (int i = 0; i < len; i++)
+            {
+                if(yieldBeforeEachDispose) await Task.Yield();
+                await DisposeWrappedAsync(in _firstWrappedProviders![i]);
+            }
+            len = _lastWrappedProviders?.Length ?? 0;
+            for (int i = 0; i < len; i++)
+            {
+                if(yieldBeforeEachDispose) await Task.Yield();
+                await DisposeWrappedAsync(in _lastWrappedProviders![i]);
+            }
+            // this internal async dispose:
             await AsyncDispose(yieldBeforeEachDispose).ConfigureAwait(false);
         }
         finally
         {
             Root.RwLock.ExitUpgradeableReadLock();
         }
+    }
+
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private ConfiguredValueTaskAwaitable DisposeWrappedAsync(scoped in IServiceProvider wrapped)
+    {
+        if (wrapped is IAsyncDisposable a)
+            return Options.DisposeAsyncFunc(a);
+        (wrapped as IDisposable)?.Dispose();
+        return default;
+    }
+    
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private void DisposeWrapped(scoped in IServiceProvider wrapped)
+    {
+        if (wrapped is IDisposable d)
+            d.Dispose();
+        else if (wrapped is IAsyncDisposable a)
+            Options.SyncDisposeAsyncFunc(a);
     }
 
     private void LockScopedContainer()

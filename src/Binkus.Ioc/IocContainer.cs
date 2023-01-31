@@ -457,24 +457,34 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     {
         Options = options ?? parentContainerScope.Options;
         Root = parentContainerScope.Root;
+        GetServiceFunc = parentContainerScope.GetServiceFunc;
         // _wrappedProvider =
         //     parentContainerScope._wrappedProvider?.GetService<IContainerScopeFactory>()?.CreateScope().Services ??
         //     parentContainerScope._wrappedProvider; // create scope from wrapped provider
         SetWrapped(out _firstWrappedProviders, parentContainerScope._firstWrappedProviders);
         SetWrapped(out _lastWrappedProviders, parentContainerScope._lastWrappedProviders);
-        void SetWrapped(out IServiceProvider[]? providersRef, IServiceProvider[]? providers)
+        void SetWrapped(out IServiceProvider[]? providersRef, IServiceProvider[]? parentProviders)
         {
-            providersRef = providers is null ? null : CreateScopedWrappedProviders();
+            providersRef = parentProviders is null ? null : CreateScopedWrappedProviders();
+            
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
             IServiceProvider[] CreateScopedWrappedProviders()
             {
-                int len = providers.Length;
+                int len = parentProviders.Length;
                 var result = new IServiceProvider[len];
-                Array.Copy(providers, result, len);
+                Array.Copy(parentProviders, result, len);
                 for (int i = 0; i < len; i++)
                 {
                     // create scope from wrapped provider when IContainerScopeFactory is registered 
                     ref var r = ref result[i];
-                    r = r.GetService<IContainerScopeFactory>()?.CreateScope().Services ?? r;                     
+                    IContainerScope? s = r.GetService<IContainerScopeFactory>()?.CreateScope();
+                    r = s?.Services ?? r;
+                    if (r is IDisposable or IAsyncDisposable || s is null) continue;
+                    DisposeCancellationTokenSource ??= new CancellationTokenSource();
+                    DisposeCancellationTokenSource.Token.Register(static state =>
+                            (((IContainerScope, Action<IAsyncDisposable> action))state!)
+                            .action((((IContainerScope scope, Action<IAsyncDisposable>))state).scope),
+                        (s, Options.SyncDisposeAsyncFunc), Options.ContinueOnCapturedContextWhenDisposeAsync);
                 }
                 return result;
             }
@@ -904,6 +914,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         }
     }
     
+    internal CancellationTokenSource? DisposeCancellationTokenSource { get; private set; }
     public bool IsDisposed { get; private set; }
     // ~IocContainerScope() => Dispose(false);
     private void Dispose(bool disposing)
@@ -936,6 +947,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
             for (int i = 0; i < len; i++) DisposeWrapped(in _firstWrappedProviders![i]);
             len = _lastWrappedProviders?.Length ?? 0;
             for (int i = 0; i < len; i++) DisposeWrapped(in _lastWrappedProviders![i]);
+            DisposeCancellationTokenSource?.Cancel();
             // this internal async dispose:
             Dispose(true);
         }
@@ -976,6 +988,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
                 if(yieldBeforeEachDispose) await Task.Yield();
                 await DisposeWrappedAsync(in _lastWrappedProviders![i]);
             }
+            DisposeCancellationTokenSource?.Cancel();
             // this internal async dispose:
             await AsyncDispose(yieldBeforeEachDispose).ConfigureAwait(false);
         }
@@ -988,6 +1001,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private ConfiguredValueTaskAwaitable DisposeWrappedAsync(scoped in IServiceProvider wrapped)
     {
+        if (!IsRootContainerScope && wrapped.GetService<IContainerScopeFactory>() is null) return default;
         if (wrapped is IAsyncDisposable a)
             return Options.DisposeAsyncFunc(a);
         (wrapped as IDisposable)?.Dispose();
@@ -997,6 +1011,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private void DisposeWrapped(scoped in IServiceProvider wrapped)
     {
+        if (!IsRootContainerScope && wrapped.GetService<IContainerScopeFactory>() is null) return;
         if (wrapped is IDisposable d)
             d.Dispose();
         else if (wrapped is IAsyncDisposable a)

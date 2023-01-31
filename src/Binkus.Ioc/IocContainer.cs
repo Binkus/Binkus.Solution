@@ -86,7 +86,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         Root.RwLock.EnterReadLock();
         try
         {
-            return Descriptors.ToList().GetEnumerator();
+            return Root.Descriptors.ToList().GetEnumerator();
         }
         finally
         {
@@ -102,20 +102,20 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     
     void ICollection<IocDescriptor>.Clear()
     {
-        if (RootContainerScope.Options.IsReadOnly || Options.IsReadOnly) throw new NotSupportedException();
+        if (Root.Container.Options.IsReadOnly || Options.IsReadOnly) throw new NotSupportedException();
 
         Root.RwLock.EnterWriteLock();
         try
         {
             Dispose();
-            RootContainerScope.Dispose();
+            Root.Container.Dispose();
             
-            Descriptors.Clear();
-            Singletons.Clear();
-            ScopedDescriptors.Clear();
+            Root.Descriptors.Clear();
+            Root.Singletons.Clear();
+            Root.ScopedDescriptors.Clear();
             
-            RootContainerScope.InternalAddThisAsService();
-            RootContainerScope.AddBasicServices();
+            Root.Container.InternalAddThisAsService();
+            Root.Container.AddBasicServices();
         }
         finally
         {
@@ -125,12 +125,12 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
 
     bool ICollection<IocDescriptor>.Contains(IocDescriptor item)
     {
-        if (CachedDescriptors.Values.Contains(item))
+        if (Root.CachedDescriptors.Values.Contains(item))
             return true;
         Root.RwLock.EnterReadLock();
         try
         {
-            return Descriptors.Contains(item);
+            return Root.Descriptors.Contains(item);
         }
         finally
         {
@@ -148,14 +148,14 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
 
     bool ICollection<IocDescriptor>.Remove(IocDescriptor item)
     {
-        if (RootContainerScope.Options.IsReadOnly || Options.IsReadOnly) throw new NotSupportedException();
+        if (Root.Container.Options.IsReadOnly || Options.IsReadOnly) throw new NotSupportedException();
 
         throw new NotImplementedException();
     }
 
-    int ICollection<IocDescriptor>.Count => Descriptors.Count;
+    public int Count => Root.Descriptors.Count;
 
-    bool ICollection<IocDescriptor>.IsReadOnly => RootContainerScope.Options.IsReadOnly || Options.IsReadOnly;
+    bool ICollection<IocDescriptor>.IsReadOnly => Root.Container.Options.IsReadOnly || Options.IsReadOnly;
     
     //
 
@@ -237,9 +237,11 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         // private readonly IServiceProvider? _wrappedProvider;
         // internal IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, RootContainerScope) ? _wrappedProvider : value; }
         
-        internal required IocContainerScope RootContainerScope { get; init; }
-        
+        internal required IocContainerScope Container { get; init; }
+
+        internal readonly object Gate = new();
         internal ReaderWriterLockSlim RwLock { get; } = new(LockRecursionPolicy.SupportsRecursion);
+        internal List<IocDescriptor> InternalDescriptors { get; init; } = new(6);
         internal required List<IocDescriptor> Descriptors { get; init; }
         internal required List<IocDescriptor> ScopedDescriptors { get; init; }
         
@@ -258,7 +260,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     {
         set
         {
-            Monitor.Enter(this);
+            Monitor.Enter(Root.Gate);
             _firstWrappedProviders = value;
             var len = value.Length;
             if (len == 0) GetServiceFunc = static (scope, type) => scope.InternalGetServiceWithLastWrappers(type);
@@ -281,7 +283,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
                                                          scope._firstWrappedProviders[3].GetService(type) ??
                                                          scope.InternalGetServiceWithLastWrappers(type);
             else GetServiceFunc = static (scope, type) => scope.InternalGetServiceWithWrapperArrays(type);
-            Monitor.Exit(this);
+            Monitor.Exit(Root.Gate);
         }
     }
 
@@ -290,7 +292,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     // public IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, this) || (!ReferenceEquals(this, RootContainerScope) && Equals(value, RootContainerScope)) ? _wrappedProvider : value; }
     // public IServiceProvider? WrappedProvider { get => Root.WrappedProvider; init => _wrappedProvider = Equals(value, this) ? _wrappedProvider : value; }
     public IServiceProvider Services => this;
-    public IocContainerScope RootContainerScope => Root.RootContainerScope;
+    public IocContainerScope RootContainerScope => Root.Container;
     public IocContainerScope? ParentContainerScope => WeakParentContainerScope?.TryGetTarget(out var target) ?? false ? target : null;
     private WeakReference<IocContainerScope>? WeakParentContainerScope { get; }
     public ServiceScopeId Id { get; internal init; }
@@ -315,7 +317,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         
         Root = new RootProperties
         {
-            RootContainerScope = this,
+            Container = this,
             Descriptors = descriptors,
             CachedDescriptors = new ConcurrentDictionary<Type, IocDescriptor>(),
             ScopedDescriptors = new List<IocDescriptor>(),
@@ -329,18 +331,18 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         
         if (services == null) return;
 
-        foreach (var descriptor in Descriptors)
+        foreach (var descriptor in Root.Descriptors)
         {
             descriptor.ThrowOnInvalidity();
             
             // Newer descriptors (farther in the list) replace old ones when ServiceType is equal
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_0_OR_GREATER
-            CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
+            Root.CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
                 static (_, d) => d, 
                 static (_, _, d) => d,
                 descriptor);
 #else
-            CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
+            Root.CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
                 (_) => descriptor, 
                 (_, _) => descriptor);
 #endif
@@ -352,7 +354,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
                     continue;
                 case IocLifetime.Scoped:
                     InternalAddServiceImpls(Scoped, descriptor);
-                    ScopedDescriptors.Add(descriptor);
+                    Root.ScopedDescriptors.Add(descriptor);
                     continue;
                 case IocLifetime.Transient:
                 default: continue;
@@ -363,10 +365,10 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     private void AddBasicServices()
     {
         var type = typeof(IocUtilitiesDelegation);
-        if (CachedDescriptors.ContainsKey(type)) return;
+        if (Root.CachedDescriptors.ContainsKey(type)) return;
         var d = IocDescriptor.CreateSingleton(IocUtilitiesDelegation.NewUninitializedIocUtilitiesDelegation());
-        if (!CachedDescriptors.TryAdd(type, d)) return;
-        Descriptors.Add(d);
+        if (!Root.CachedDescriptors.TryAdd(type, d)) return;
+        Root.Descriptors.Add(d);
         Singletons.TryAdd(d, new ServiceInstanceProvider(d.Implementation));
         
         InternalUnsafeInnerLockTryAdd(IocDescriptor.CreateTransient<IEnumerable<IocDescriptor>>(_ => this.ToList()));
@@ -379,15 +381,15 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         
         Scoped.TryAdd(d1, new ServiceInstanceProvider());
         Scoped.TryAdd(d2, new ServiceInstanceProvider());
-        CachedDescriptors.TryAdd(d1.ServiceType, d1);
-        CachedDescriptors.TryAdd(d2.ServiceType, d2);
+        Root.CachedDescriptors.TryAdd(d1.ServiceType, d1);
+        Root.CachedDescriptors.TryAdd(d2.ServiceType, d2);
         
         // not necessarily needed to add them here but for more consistency:
         // todo evaluate inserting at the beginning of the lists, for better extensibility:
-        ScopedDescriptors.Add(d1);
-        ScopedDescriptors.Add(d2);
-        Descriptors.Add(d1);
-        Descriptors.Add(d2);
+        Root.ScopedDescriptors.Add(d1);
+        Root.ScopedDescriptors.Add(d2);
+        Root.Descriptors.Add(d1);
+        Root.Descriptors.Add(d2);
     }
 
     // fork - WIP
@@ -402,8 +404,8 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
             {
                 Root = current.Root with
                 {
-                    RootContainerScope = this,
-                    Descriptors = current.Descriptors.ToList(),
+                    Container = this,
+                    Descriptors = current.Root.Descriptors.ToList(),
                 };
                 
                 Scoped = current.Scoped;
@@ -420,8 +422,8 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
             {
                 Root = current.Root with
                 {
-                    RootContainerScope = this,
-                    Descriptors = current.Descriptors.ToList(),
+                    Container = this,
+                    Descriptors = current.Root.Descriptors.ToList(),
                 };
                 
                 Scoped = current.Scoped;
@@ -494,7 +496,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         IsRootContainerScope = false;
         Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
 
-        foreach (var descriptor in ScopedDescriptors) 
+        foreach (var descriptor in Root.ScopedDescriptors) 
             InternalAddServiceImpls(Scoped, descriptor);
     }
 
@@ -503,10 +505,10 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     IContainerScope IContainerScopeFactory.CreateScope() => CreateScope();
     public IocContainerScope CreateScope(ContainerOptions? options = null) => new(this, options);
 
-    internal List<IocDescriptor> Descriptors => Root.Descriptors;
-    internal List<IocDescriptor> ScopedDescriptors => Root.ScopedDescriptors;
+    // internal List<IocDescriptor> Descriptors => Root.Descriptors;
+    // internal List<IocDescriptor> ScopedDescriptors => Root.ScopedDescriptors;
 
-    internal ConcurrentDictionary<Type, IocDescriptor> CachedDescriptors => Root.CachedDescriptors;
+    // internal ConcurrentDictionary<Type, IocDescriptor> CachedDescriptors => Root.CachedDescriptors;
 
     internal ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> Singletons => Root.Singletons;
     
@@ -545,15 +547,15 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     {
         // if (IsReadOnly) return false;
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_0_OR_GREATER
-        CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
+        Root.CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
             static (_, d) => d, static (_, _, d) => d, descriptor);
 #else
-        CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
+        Root.CachedDescriptors.AddOrUpdate(descriptor.ServiceType, 
             (_) => descriptor, (_, _) => descriptor);
 #endif
-        Descriptors.Add(descriptor);
+        Root.Descriptors.Add(descriptor);
         if (descriptor.Lifetime is IocLifetime.Transient) return true;
-        if (descriptor.Lifetime is IocLifetime.Scoped) ScopedDescriptors.Add(descriptor);
+        if (descriptor.Lifetime is IocLifetime.Scoped) Root.ScopedDescriptors.Add(descriptor);
         var dict =
             descriptor.Lifetime is IocLifetime.Scoped ? Scoped : Singletons;
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_0_OR_GREATER
@@ -578,7 +580,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     private bool TryAdd(IocDescriptor descriptor, bool lockDescriptors)
     {
         descriptor.ThrowOnInvalidity();
-        if (CachedDescriptors.ContainsKey(descriptor.ServiceType)) return false;
+        if (Root.CachedDescriptors.ContainsKey(descriptor.ServiceType)) return false;
         
         if (!lockDescriptors)
             return InternalUnsafeInnerLockTryAdd(descriptor);
@@ -597,10 +599,10 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     private bool InternalUnsafeInnerLockTryAdd(IocDescriptor descriptor)
     {
         // if (IsReadOnly) return false;
-        if (!CachedDescriptors.TryAdd(descriptor.ServiceType, descriptor)) return false;
-        Descriptors.Add(descriptor);
+        if (!Root.CachedDescriptors.TryAdd(descriptor.ServiceType, descriptor)) return false;
+        Root.Descriptors.Add(descriptor);
         if (descriptor.Lifetime is IocLifetime.Transient) return true;
-        if (descriptor.Lifetime is IocLifetime.Scoped) ScopedDescriptors.Add(descriptor);
+        if (descriptor.Lifetime is IocLifetime.Scoped) Root.ScopedDescriptors.Add(descriptor);
         var dict = 
             descriptor.Lifetime is IocLifetime.Scoped ? Scoped : Singletons;
         dict.TryAdd(descriptor, new ServiceInstanceProvider(descriptor.Implementation));
@@ -648,7 +650,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     internal object? InternalGetBasicService([Pure] Type serviceType) =>
-        CachedDescriptors.TryGetValue(serviceType, out var descriptor)
+        Root.CachedDescriptors.TryGetValue(serviceType, out var descriptor)
             ? GetServiceForDescriptor(descriptor)
             : null;
 
@@ -861,7 +863,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
                     ? static o => TryDisposalOfAsync(o).ConfigureAwait(true)
                     : static o => TryDisposalOfAsync(o).ConfigureAwait(false);
             
-            foreach (object? impl in from descriptor in Descriptors
+            foreach (object? impl in from descriptor in Root.Descriptors
                      where IsRootContainerScope || descriptor.Lifetime is IocLifetime.Scoped
                      select TryGetDisposingImplFor(descriptor))
             {
@@ -871,7 +873,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         }
 
         var disposeAsync = Options.DisposeAsyncFunc;
-        foreach (object? impl in from descriptor in Descriptors
+        foreach (object? impl in from descriptor in Root.Descriptors
                  where IsRootContainerScope || descriptor.Lifetime is IocLifetime.Scoped
                  select TryGetDisposingImplFor(descriptor))
         {
@@ -894,7 +896,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     private void SyncDispose()
     {
         // sync dispose:
-        foreach (var descriptor in Descriptors)
+        foreach (var descriptor in Root.Descriptors)
         {
             if (!IsRootContainerScope && descriptor.Lifetime is not IocLifetime.Scoped) continue;
             // Singletons get disposed only when this is the root IoC Container:

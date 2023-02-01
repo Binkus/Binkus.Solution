@@ -2,9 +2,11 @@ using System.Collections;
 using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Diagnostics.Contracts;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using Binkus.DependencyInjection.Extensions;
 
 // ReSharper disable UnusedAutoPropertyAccessor.Global
@@ -171,6 +173,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         
         // if true handle RegisterUnregisteredServicesOnHandleUnregistered as false:
         public bool IsReadOnly { get; init; }
+        public bool StoreWeakReferenceToParent { get; init; }
         public bool TriesCreatingScopeForWrappedProvider { get; init; } = true;
 
         public WrappedProviderExecutionChainPositionEnum WrappedProviderExecutionChainPosition { get; init; } =
@@ -292,9 +295,15 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     // public IServiceProvider? WrappedProvider { get => _wrappedProvider; init => _wrappedProvider = Equals(value, this) || (!ReferenceEquals(this, RootContainerScope) && Equals(value, RootContainerScope)) ? _wrappedProvider : value; }
     // public IServiceProvider? WrappedProvider { get => Root.WrappedProvider; init => _wrappedProvider = Equals(value, this) ? _wrappedProvider : value; }
     public IServiceProvider Services => this;
-    public IocContainerScope RootContainerScope => Root.Container;
-    public IocContainerScope? ParentContainerScope => WeakParentContainerScope?.TryGetTarget(out var target) ?? false ? target : null;
+    // public IocContainerScope RootContainerScope => Root.Container;
+    [NotNullIfNotNull(nameof(HardParentContainerScope))]
+    public IocContainerScope? ParentContainer => HardParentContainerScope ??
+                                                 (WeakParentContainerScope?
+                                                     .TryGetTarget(out var target) ?? false
+                                                     ? target
+                                                     : null);
     private WeakReference<IocContainerScope>? WeakParentContainerScope { get; }
+    private IocContainerScope? HardParentContainerScope { get; }
     public ServiceScopeId Id { get; internal init; }
     public bool IsRootContainerScope { get; internal init; }
 
@@ -463,18 +472,19 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         // _wrappedProvider =
         //     parentContainerScope._wrappedProvider?.GetService<IContainerScopeFactory>()?.CreateScope().Services ??
         //     parentContainerScope._wrappedProvider; // create scope from wrapped provider
-        SetWrapped(out _firstWrappedProviders, parentContainerScope._firstWrappedProviders);
-        SetWrapped(out _lastWrappedProviders, parentContainerScope._lastWrappedProviders);
-        void SetWrapped(out IServiceProvider[]? providersRef, IServiceProvider[]? parentProviders)
+        SetWrapped(ref _firstWrappedProviders, parentContainerScope._firstWrappedProviders, this);
+        SetWrapped(ref _lastWrappedProviders, parentContainerScope._lastWrappedProviders, this);
+        static void SetWrapped(ref IServiceProvider[]? providersRef, IServiceProvider[]? parentProviders, IocContainerScope @this)
         {
-            providersRef = parentProviders is null ? null : CreateScopedWrappedProviders();
+            int len = parentProviders?.Length ?? 0;
+            if (len is 0) return;
+            providersRef = CreateScopedWrappedProviders();
             
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             IServiceProvider[] CreateScopedWrappedProviders()
             {
-                int len = parentProviders.Length;
                 var result = new IServiceProvider[len];
-                Array.Copy(parentProviders, result, len);
+                Array.Copy(parentProviders!, result, len);
                 for (int i = 0; i < len; i++)
                 {
                     // create scope from wrapped provider when IContainerScopeFactory is registered 
@@ -482,16 +492,17 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
                     IContainerScope? s = r.GetService<IContainerScopeFactory>()?.CreateScope();
                     r = s?.Services ?? r;
                     if (r is IDisposable or IAsyncDisposable || s is null) continue;
-                    DisposeCancellationTokenSource ??= new CancellationTokenSource();
-                    DisposeCancellationTokenSource.Token.Register(static state =>
+                    @this.DisposeCancellationTokenSource ??= new CancellationTokenSource();
+                    @this.DisposeCancellationTokenSource.Token.Register(static state =>
                             (((IContainerScope, Action<IAsyncDisposable> action))state!)
                             .action((((IContainerScope scope, Action<IAsyncDisposable>))state).scope),
-                        (s, Options.SyncDisposeAsyncFunc), Options.ContinueOnCapturedContextWhenDisposeAsync);
+                        (s, @this.Options.SyncDisposeAsyncFunc), @this.Options.ContinueOnCapturedContextWhenDisposeAsync);
                 }
                 return result;
             }
         }
-        WeakParentContainerScope = new WeakReference<IocContainerScope>(parentContainerScope);
+        if (Options.StoreWeakReferenceToParent) // ~200ns cost when enabled, WeakReferences super slow to create. Hard reference would be usually bad.
+            WeakParentContainerScope = new WeakReference<IocContainerScope>(parentContainerScope);
         Id = new ServiceScopeId();
         IsRootContainerScope = false;
         Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
@@ -800,7 +811,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private bool ShouldServiceBeDisposed(IocLifetime lifetime) =>
-        RootContainerScope.IsDisposed || (IsDisposed && lifetime != IocLifetime.Singleton);
+        Root.Container.IsDisposed || (IsDisposed && lifetime != IocLifetime.Singleton);
     
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
     private object? WhenDisposedDispose(object? impl, IocLifetime lifetime)
@@ -896,8 +907,17 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     private void SyncDispose()
     {
         // sync dispose:
+#if NET5_0_OR_GREATER // Root.Descriptors is read-locked anyway. For few ns performance gain:
+        var descriptorsAsSpan = CollectionsMarshal.AsSpan(Root.Descriptors);
+        ref var firstDescriptorManagedSmartPointer = ref MemoryMarshal.GetReference(descriptorsAsSpan);
+        var len = descriptorsAsSpan.Length;
+        for (var i = 0; i < len; i++)
+        {
+            var descriptor = Unsafe.Add(ref firstDescriptorManagedSmartPointer, i);
+#else
         foreach (var descriptor in Root.Descriptors)
         {
+#endif
             if (!IsRootContainerScope && descriptor.Lifetime is not IocLifetime.Scoped) continue;
             // Singletons get disposed only when this is the root IoC Container:
             var impl = TryGetDisposingImplFor(descriptor);

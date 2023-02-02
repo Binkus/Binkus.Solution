@@ -210,9 +210,7 @@ public sealed class IocDescriptor : IEquatable<IocDescriptor>
     
     internal int ComputeHashCode()
     {
-        // return ServiceType.GetHashCode();
 #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP2_1_OR_GREATER
-        // return HashCode.Combine(ServiceType, (int)Lifetime);
         return HashCode.Combine((int)Lifetime, ServiceType, ImplType, Factory, OpenGenericFactory, Implementation);
 #else
         return ((int)Lifetime, ServiceType, ImplType, Factory, OpenGenericFactory, Implementation).GetHashCode();

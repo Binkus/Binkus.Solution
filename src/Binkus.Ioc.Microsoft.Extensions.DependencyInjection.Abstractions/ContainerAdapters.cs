@@ -16,6 +16,14 @@ public static class IocAdapterRegistration
         
         return descriptors;
     }
+    
+    public static IServiceCollection AddServiceScopeFactoryAdapter(this IServiceCollection services)
+    {
+        var d = ServiceDescriptor.Scoped<IContainerScopeFactory>(
+            p => new ServiceScopeFactoryAdapter(p.GetRequiredService<IServiceScopeFactory>()));
+        services.Add(d);
+        return services;
+    }
 }
 
 public interface IContainerScopeFactoryAdapter : IContainerScopeFactory, IServiceScopeFactory
@@ -84,6 +92,34 @@ public sealed record ServiceScopeAdapter : IContainerScopeAdapter
         if (_scopeImpl is IAsyncDisposable a)
             return a.DisposeAsync();
         _scopeImpl.Dispose();
+        return default;
+    }
+}
+
+public sealed record ServiceProviderScopeAdapter(IServiceProvider Services) : IContainerScopeAdapter
+{
+    public IContainerScopeAdapter CreateScope()
+        => new ServiceScopeAdapter(Services.CreateAsyncScope());
+
+    public void Dispose()
+    {
+        // (Services as IDisposable)?.Dispose();
+        switch (Services)
+        {
+            case IDisposable d:
+                d.Dispose();
+                return;
+            case IAsyncDisposable a:
+                Task.Run(() => a.DisposeAsync().AsTask()).GetAwaiter().GetResult();
+                return;
+        }
+    }
+
+    public ValueTask DisposeAsync()
+    {
+        if (Services is IAsyncDisposable a)
+            return a.DisposeAsync();
+        (Services as IDisposable)?.Dispose();
         return default;
     }
 }

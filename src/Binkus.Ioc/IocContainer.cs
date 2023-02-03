@@ -322,18 +322,22 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         Id = id ?? new ServiceScopeId();
         IsRootContainerScope = true;
         
+        const int defaultCapacity = 31;
         var descriptors = services?.ToList() ?? new List<IocDescriptor>();
+        var capacity = descriptors.Count;
+        capacity = capacity < defaultCapacity ? defaultCapacity : capacity;
+        var specificCapacity = capacity / 2 < defaultCapacity ? defaultCapacity : capacity / 2;
         
         Root = new RootProperties
         {
             Container = this,
             Descriptors = descriptors,
-            CachedDescriptors = new ConcurrentDictionary<Type, IocDescriptor>(),
+            CachedDescriptors = new ConcurrentDictionary<Type, IocDescriptor>(1, capacity),
             ScopedDescriptors = new List<IocDescriptor>(),
             // ScopedDescriptors = descriptors.Where(d => d.Lifetime is IocLifetime.Scoped).ToList(),
-            Singletons = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>(),
+            Singletons = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>(1, specificCapacity),
         };
-        Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
+        Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>(1, specificCapacity);
         
         InternalAddThisAsService();
         AddBasicServices();
@@ -505,7 +509,7 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
             WeakParentContainerScope = new WeakReference<IocContainerScope>(parentContainerScope);
         Id = new ServiceScopeId();
         IsRootContainerScope = false;
-        Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>();
+        Scoped = new ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider>(1, Root.ScopedDescriptors.Count);
 
         foreach (var descriptor in Root.ScopedDescriptors) 
             InternalAddServiceImpls(Scoped, descriptor);

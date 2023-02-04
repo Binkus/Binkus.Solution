@@ -3,11 +3,13 @@
 using System.Collections;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Xunit.Abstractions;
 
 namespace Binkus.Ioc.Tests;
 
 public sealed class IocContainerTests
 {
+    private readonly ITestOutputHelper _testOutputHelper;
     private readonly IocContainerScope _containerScope;
     private readonly IServiceProvider _msDiServiceProvider;
     internal IocContainerScope ContainerScope => _containerScope;
@@ -17,10 +19,39 @@ public sealed class IocContainerTests
     private const bool UseContainerScopeWithDescriptorList = true;
     private const bool UseIocUtilitiesInsteadOfActivatorUtilities = true;
     
-    public IocContainerTests()
+    
+    // public interface IContainerScopeProvider2 : IContainerScopeProvider
+    // {
+    //     IServiceProvider IContainerScope.Services => this;
+    //     IContainerScope IContainerScopeFactory.CreateScope() => new ServiceScopeAdapter(Services.CreateAsyncScope());
+    //     void IDisposable.Dispose() {}
+    //     ValueTask IAsyncDisposable.DisposeAsync() => default;
+    // }
+    public struct DummyServiceProviderStruct : IServiceProvider { public object? GetService(Type serviceType) => null; }
+    public class DummyServiceProvider : IServiceProvider { public object? GetService(Type serviceType) => null; }
+    
+    public IocContainerTests(ITestOutputHelper testOutputHelper)
     {
+        _testOutputHelper = testOutputHelper;
         _msDiServiceProvider = CreateMsDiServiceProvider();
         _containerScope = CreateContainerScope();
+
+        // var msContainerScope = new ServiceProviderScopeAdapter(_msDiServiceProvider);
+        
+        // _containerScope.FirstWrappedProviders = new IServiceProvider[] { _msDiServiceProvider };
+        
+        // _containerScope.FirstWrappedProviders = new IServiceProvider[] { default(DummyServiceProviderStruct),default(DummyServiceProviderStruct),default(DummyServiceProviderStruct), };
+        // _containerScope.FirstWrappedProviders = new IServiceProvider[] { new DummyServiceProvider(),new DummyServiceProvider(),new DummyServiceProvider(), };
+        // _containerScope.FirstWrappedProviders = new IServiceProvider[] { new DummyServiceProvider(),new DummyServiceProvider(),new DummyServiceProvider(),new DummyServiceProvider(), };
+        // _containerScope.FirstWrappedProviders = new IServiceProvider[] { new DummyServiceProvider(),new DummyServiceProvider(),new DummyServiceProvider(),new DummyServiceProvider(),new DummyServiceProvider(), };
+        
+        // _containerScope.FirstWrappedProviders = new IServiceProvider[] { new DummyServiceProvider(),_msDiServiceProvider, };
+        // _containerScope.FirstWrappedProviders = new IServiceProvider[] { new DummyServiceProvider(),new DummyServiceProvider(),_msDiServiceProvider, };
+        // _containerScope.FirstWrappedProviders = new IServiceProvider[] { new DummyServiceProvider(),new DummyServiceProvider(),new DummyServiceProvider(),_msDiServiceProvider, };
+        // _containerScope.FirstWrappedProviders = new IServiceProvider[] { new DummyServiceProvider(),new DummyServiceProvider(),new DummyServiceProvider(),new DummyServiceProvider(),new DummyServiceProvider(),_msDiServiceProvider, };
+
+        
+        
         SetIocUtilities(_containerScope);
         SetIocUtilities(_msDiServiceProvider);
     }
@@ -44,7 +75,9 @@ public sealed class IocContainerTests
 
     private static IocContainerScope AddSpecials(IocContainerScope services)
     {
-        // AddLazyResolution(services);
+        AddLazyResolution(services);
+        AddEnumerableResolution(services);
+        AddExampleOpenGenericResolution(services);
         return services;
     }
 
@@ -52,6 +85,41 @@ public sealed class IocContainerTests
     {
         var lazyResolution = IocDescriptor.CreateTransient(typeof(Lazy<>), typeof(LazilyResolved<>));
         services.Add(lazyResolution);
+    }
+    
+    private static void AddEnumerableResolution(IocContainerScope services)
+    {
+        var enumerableResolution = IocDescriptor.CreateTransient(typeof(IEnumerable<>), typeof(List<>));
+        services.Add(enumerableResolution);
+    }
+    
+    private static void AddExampleOpenGenericResolution(IocContainerScope services)
+    {
+        var resolution = IocDescriptor.CreateTransient(typeof(Dictionary<,>), typeof(Dictionary<,>));
+        // resolution = IocDescriptor.CreateTransient(typeof(Dictionary<,>), (_, ts) => Activator.CreateInstance(typeof(Dictionary<,>).MakeGenericType(ts[0],ts[1]), Array.Empty<object>())!);
+        services.Add(resolution);
+    }
+    
+    private static void AddExampleOpenGenericResolution(IServiceCollection services)
+    {
+        var resolution = ServiceDescriptor.Transient(typeof(Dictionary<,>), typeof(Dictionary<,>));
+        services.Add(resolution);
+    }
+
+    [Fact] public void BinkusTestExampleOpenGeneric() => TestExampleOpenGeneric(_containerScope); 
+    [Fact] public void MsTestExampleOpenGeneric() => TestExampleOpenGeneric(_msDiServiceProvider); 
+    
+    private static void TestExampleOpenGeneric(IServiceProvider services)
+    {
+        var o = services.GetService(typeof(Dictionary<int, string>));
+        Assert.NotNull(o);
+        Assert.IsAssignableFrom<Dictionary<int, string>>(o);
+        var d = (Dictionary<int, string>)o;
+        const string expected = "Hi";
+        d[42] = expected;
+        var has = d.TryGetValue(42, out var v);
+        Assert.True(has);
+        Assert.Equal(expected, v);
     }
 
     private static IocContainerScope CreateContainerScopeWithCollectionInitializer() =>
@@ -105,12 +173,14 @@ public sealed class IocContainerTests
         return AddSpecials(new IocContainerScope(descriptors));
     }
 
-    private static IServiceProvider CreateMsDiServiceProvider()
+    private static ServiceProvider CreateMsDiServiceProvider()
     {
         // ReSharper disable once UseObjectOrCollectionInitializer
         ServiceCollection services = new();
 
         AddLazyResolution(services);
+        AddExampleOpenGenericResolution(services);
+        services.AddServiceScopeFactoryAdapter();
 
         if (UseImplTypeInsteadOfFactory)
         {
@@ -484,6 +554,7 @@ public sealed class IocContainerTests
         var new2Transient1 = new2Scope.GetRequiredService<IEnumerable<Lazy<IInnerRequesterTransientService>>>().GetEnumerator().TryGetNext();
         
         Assert.NotNull(single00);
+        _testOutputHelper.WriteLine("Enumerable<T> not null");
         
         Assert.NotNull(single0);
         Assert.NotNull(scoped0);

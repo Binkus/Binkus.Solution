@@ -47,16 +47,12 @@ public abstract class IocSetup
     public virtual int ServicesParamIndex { get; set; }
 
     private protected IServiceProvider Services => ServicesParams[ServicesParamIndex];
-    
-    //
+}
 
-    // public IServiceProvider[] ServicesParams { get; }
-    // public IEnumerable<IServiceProvider> ServicesParams() => new IServiceProvider[] { ContainerScope, MsServiceProvider };
-    // public IEnumerable<IServiceProvider> ServicesParams2()
-    // {
-    //     yield return ContainerScope;
-    //     yield return MsServiceProvider;
-    // }
+public abstract class IocSetupParams : IocSetup
+{
+    [Params(0,1)]
+    public override int ServicesParamIndex { get; set; }
 }
 
 [MemoryDiagnoser]
@@ -191,7 +187,6 @@ public class BenchmarkServiceResolutionBasic : IocSetup
     [Benchmark]
     public void MsResolveMultiple()
     {
-        // var s = MsServiceProvider.GetService<IInnerRequesterSingletonService>();
         var single = MsServiceProvider.GetService<ISingletonService>();
         var scoped = MsServiceProvider.GetService<IScopedService>();
         var transient = MsServiceProvider.GetService<ITransientService>();
@@ -200,7 +195,6 @@ public class BenchmarkServiceResolutionBasic : IocSetup
     [Benchmark]
     public void BinkusResolveMultiple()
     {
-        // var s = ContainerScope.GetService<IInnerRequesterSingletonService>();
         var single = ContainerScope.GetService<ISingletonService>();
         var scoped = ContainerScope.GetService<IScopedService>();
         var transient = ContainerScope.GetService<ITransientService>();
@@ -209,42 +203,36 @@ public class BenchmarkServiceResolutionBasic : IocSetup
     [Benchmark]
     public void MsResolve_Transient()
     {
-        // var s = MsServiceProvider.GetService<IInnerRequesterTransientService>();
         var transient = MsServiceProvider.GetService<ITransientService>();
     }
     
     [Benchmark]
     public void BinkusResolve_Transient()
     {
-        // var s = ContainerScope.GetService<IInnerRequesterTransientService>();
         var transient = ContainerScope.GetService<ITransientService>();
     }
     
     [Benchmark]
     public void MsResolve_Scoped()
     {
-        // var s = MsServiceProvider.GetService<IInnerRequesterScopedService>();
         var scoped = MsServiceProvider.GetService<IScopedService>();
     }
     
     [Benchmark]
     public void BinkusResolve_Scoped()
     {
-        // var s = ContainerScope.GetService<IInnerRequesterScopedService>();
         var scoped = ContainerScope.GetService<IScopedService>();
     }
     
     [Benchmark]
     public void MsResolve_Singleton()
     {
-        // var s = MsServiceProvider.GetService<IInnerRequesterSingletonService>();
         var single = MsServiceProvider.GetService<ISingletonService>();
     }
     
     [Benchmark]
     public void BinkusResolve_Singleton()
     {
-        // var s = ContainerScope.GetService<IInnerRequesterSingletonService>();
         var single = ContainerScope.GetService<ISingletonService>();
     }
 }
@@ -308,21 +296,8 @@ public class BenchmarkServiceResolutionComplex : IocSetup
 //
 
 [MemoryDiagnoser]
-public class BenchmarkServiceResolutionBasicToComplex : IocSetup
+public class BenchmarkServiceResolutionBasicToComplex : IocSetupParams
 {
-    // public IServiceProvider[] ServicesParams = new IServiceProvider[2];
-    // public IServiceProvider[] ServicesParams => new IServiceProvider[] { ContainerScope, MsServiceProvider };
-    
-    // ReSharper disable once MemberCanBePrivate.Global
-    // [ParamsSource(nameof(ServicesParams))]
-    // public IServiceProvider Services { get; set; } = null!;
-
-    // [GlobalSetup] public void Setup() => ServicesParams = new IServiceProvider[] { ContainerScope, MsServiceProvider };
-    // [IterationSetup] public void IterationSetup() => ServicesParams = new IServiceProvider[] { ContainerScope, MsServiceProvider };
-    
-    [Params(0,1)]
-    public override int ServicesParamIndex { get; set; }
-    
     [Benchmark]
     public void ResolveMultipleBasic()
     {

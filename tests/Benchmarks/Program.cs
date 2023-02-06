@@ -4,7 +4,7 @@ using BenchmarkDotNet.Reports;
 using BenchmarkDotNet.Running;
 using Binkus;
 
-IConfig config = new Conf();
+// IConfig config = new Conf();
 
 // Type type;
 // type = typeof(BenchmarkServiceResolutionBasicToComplex);
@@ -19,7 +19,7 @@ IConfig config = new Conf();
 // // type = typeof();
 // // BenchmarkRunner.Run(type);
 
-BenchmarkRunner.Run<BenchmarkServiceResolutionBasicToComplex>(config);
+BenchmarkRunner.Run<BenchmarkServiceResolutionBasicToComplex>();
 // BenchmarkRunner.Run<BenchmarkServiceResolutionBasic>();
 // BenchmarkRunner.Run<BenchmarkServiceResolutionComplex>();
 // BenchmarkRunner.Run<BenchmarkGeneralIocContainerTests>();
@@ -29,7 +29,7 @@ BenchmarkRunner.Run<BenchmarkServiceResolutionBasicToComplex>(config);
 // BenchmarkRunner.Run<BenchmarkGetHashCode>();
 // BenchmarkRunner.Run<BenchmarkConcurrentDictionaryLookup>();
 
-class Conf : ManualConfig
-{
-    public Conf() => SummaryStyle = SummaryStyle.Default.WithRatioStyle(RatioStyle.Value);
-}
+// class Conf : ManualConfig
+// {
+//     public Conf() => SummaryStyle = SummaryStyle.Default.WithRatioStyle(RatioStyle.Value);
+// }

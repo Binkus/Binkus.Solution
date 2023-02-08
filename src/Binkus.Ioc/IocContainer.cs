@@ -15,30 +15,47 @@ using Binkus.DependencyInjection.Extensions;
 
 namespace Binkus.DependencyInjection;
 
-public sealed class IocContainer // : IServiceProvider
+public sealed class IocContainer : IServiceProvider, IContainerScope, IEquatable<IocContainer>
 {
-    public IocContainer(IEnumerable<IocDescriptor> services, bool readOnly = true) : this(services, null, readOnly) { }
-    public IocContainer(IEnumerable<IocDescriptor> services, ServiceScopeId? id, bool readOnly = true) : this(readOnly)
-    {
-        ContainerScope = RootContainerScope = new IocContainerScope(services, id);
-    }
+    public IocContainer(IEnumerable<IocDescriptor> services, bool readOnly = false) : this(services, null, readOnly) { }
+    internal IocContainer(IEnumerable<IocDescriptor> services, ServiceScopeId? id, bool readOnly = false) : this(readOnly) =>
+        ContainerScope = new IocContainerScope(services, id);
 
-    public IocContainer(ServiceScopeId? id = null) : this(false)
-    {
-        ContainerScope = RootContainerScope = new IocContainerScope(id);
-    }
+    public IocContainer(ServiceScopeId? id = null) : this(false) => 
+        ContainerScope = new IocContainerScope(id);
+
+    private IocContainer(IocContainerScope containerScope) => ContainerScope = containerScope;
 
 #nullable disable
     private IocContainer(bool readOnly)
     {
-        IsReadOnly = readOnly;
+        // ContainerScope.Options.IsReadOnly = readOnly;
     }
 #nullable enable
 
-    public bool IsReadOnly { get; internal set; }
+    internal IocContainerScope ContainerScope { get; }
     
-    internal IocContainerScope RootContainerScope { get; set; }
-    internal IocContainerScope ContainerScope { get; set; }
+    IServiceProvider IContainerScope.Services => this;
+
+    public object? GetService(Type serviceType) => ContainerScope.GetService(serviceType);
+
+    // public IContainerScope CreateScope() => ((IContainerScopeFactory)ContainerScope).CreateScope();
+    public IContainerScope CreateScope() => new IocContainer(ContainerScope.CreateScope());
+
+    public ValueTask DisposeAsync() => ContainerScope.DisposeAsync();
+
+    public void Dispose() => ContainerScope.Dispose();
+    
+    public bool Equals(IocContainer? other) =>
+        !ReferenceEquals(null, other) && (ReferenceEquals(this, other) || ContainerScope.Equals(other.ContainerScope));
+
+    public override bool Equals(object? obj) => ReferenceEquals(this, obj) || obj is IocContainer other && Equals(other);
+
+    public override int GetHashCode() => ContainerScope.GetHashCode();
+
+    public static bool operator ==(IocContainer? left, IocContainer? right) => Equals(left, right);
+
+    public static bool operator !=(IocContainer? left, IocContainer? right) => !Equals(left, right);
 }
 
 public static class IocContainerBuilder

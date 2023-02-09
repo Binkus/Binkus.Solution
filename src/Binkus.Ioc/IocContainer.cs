@@ -97,7 +97,8 @@ internal sealed record ServiceInstanceProvider(object? Instance = null)
 // Scope Engine
 
 internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
-    IContainerScopeFactory, IAsyncDisposable, IDisposable, IEnumerable<IocDescriptor>, ICollection<IocDescriptor>
+    IContainerScopeFactory, IAsyncDisposable, IDisposable, IEnumerable<IocDescriptor>, 
+    ICollection<IocDescriptor>, IReadOnlyCollection<IocDescriptor>
 {
     [Pure]
     public List<IocDescriptor>.Enumerator GetEnumerator()
@@ -176,6 +177,28 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
 
     bool ICollection<IocDescriptor>.IsReadOnly => Root.Container.Options.IsReadOnly || Options.IsReadOnly;
     
+    // IList
+
+    public IocDescriptor this[int index]
+    {
+        get
+        {
+            Root.RwLock.EnterReadLock();
+            try
+            {
+                return Root.Descriptors[index];
+            }
+            finally
+            {
+                Root.RwLock.ExitReadLock();
+            }
+        }
+        set
+        {
+            
+        }
+    }
+
     //
 
     // WIP

@@ -669,6 +669,51 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
     
     internal Func<IocContainerScope, Type, object?> GetServiceFunc { get; set; } =
         static (scope, type) => scope.InternalGetServiceWithLastWrappers(type);
+    
+    // public object? GetServiceForProperty(object current, Type serviceType)
+    // {
+    //     return null;
+    // }
+
+    // public object? GetService(Type serviceType)
+    // {
+    //     object? result = null;
+    //     result = GetService2(serviceType);
+    //     return result;
+    // }
+
+// // #if NETCOREAPP3_0_OR_GREATER
+// //     [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+// // #endif
+//     // [MethodImpl(MethodImplOptions.NoInlining)]
+//     public object? GetService(Type serviceType)
+//     {
+//         // // return _firstWrappedProviders?[0].GetService(serviceType);
+//         // // return InternalGetService(serviceType);
+//         return GetWrapped(_firstWrappedProviders) ?? InternalGetService(serviceType) ?? GetWrapped(_lastWrappedProviders);
+//         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+// // #if NETCOREAPP3_0_OR_GREATER
+// //         [MethodImpl(MethodImplOptions.AggressiveInlining | MethodImplOptions.AggressiveOptimization)]
+// // #else
+// //         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+// // #endif
+//         object? GetWrapped(IServiceProvider[]? wrapped)
+//         {
+//             // return null;
+//             int len = wrapped?.Length ?? 0;
+//             return InnerLocalGet(0);
+// #if NETCOREAPP3_0_OR_GREATER
+//             [MethodImpl(MethodImplOptions.AggressiveOptimization)]
+//             // [MethodImpl(MethodImplOptions.AggressiveOptimization | MethodImplOptions.AggressiveInlining)]
+// #else
+//             [MethodImpl(MethodImplOptions.AggressiveInlining)]
+// #endif
+//             object? InnerLocalGet(int i) => len == i ? null : wrapped![i].GetService(serviceType) ?? InnerLocalGet(++i);
+//         }
+//     }
+
+    // public object? GetService([Pure] Type serviceType) =>
+    //     InternalGetService(serviceType) ?? WrappedProvider?.GetService(serviceType);
 
     internal object? InternalGetServiceWithWrapperArrays(Type serviceType)
     {
@@ -719,22 +764,498 @@ internal sealed record IocContainerScope : IServiceProvider, IContainerScope,
         
         // try resolve special service like IEnumerable<> or Lazy<> or Lazy<IEnumerable<>> or Lazy<IEnumerable<Lazy<>>>:
         // todo enable Special Service Resolve
-        // object? specialServiceResult = GetSpecialService(serviceType, openGenericType);
-        // if (specialServiceResult is not null) return specialServiceResult;
+        object? specialServiceResult = GetSpecialService(serviceType, openGenericType);
+        if (specialServiceResult is not null) return specialServiceResult;
         
         return TryGetOpenGenericService(serviceType, openGenericType);
     }
 
     internal object? TryGetOpenGenericService(Type serviceType, Type openGenericType)
     {
-        bool isOpenGeneric = serviceType.IsGenericTypeDefinition;
-        return null;
+        // if (!Root.CachedDescriptors.TryGetValue(openGenericType, out var descriptor) || descriptor.ImplType is null ||
+        //     !descriptor.ImplType.IsGenericTypeDefinition) // todo add factory support for open generic service 
+        //     return null;
+        
+        if (!Root.CachedDescriptors.TryGetValue(openGenericType, out var descriptor) ||
+            descriptor.OpenGenericFactory is null && 
+            (descriptor.ImplType is null || !descriptor.ImplType.IsGenericTypeDefinition))
+            return null;
+
+        // var dict = TryGetDictFor(descriptor);
+        // var d = dict is null ? descriptor : new IocDescriptor
+        // {
+        //     Lifetime = descriptor.Lifetime,
+        //     ServiceType = serviceType,
+        // };
+        if (descriptor.Lifetime is not IocLifetime.Transient)
+        {
+            // todo refac
+            Root.RwLock.EnterUpgradeableReadLock();
+            try
+            {
+                if (Root.CachedDescriptors.ContainsKey(serviceType))
+                    return GetService(serviceType);
+                
+                var d = new IocDescriptor
+                {
+                    Lifetime = descriptor.Lifetime,
+                    ServiceType = serviceType,
+                    Factory = p =>
+                        descriptor.OpenGenericFactory is { } ogf
+                            ? ogf.Invoke(p, serviceType.GetGenericArguments())
+                            : TryCreateService(p,
+                                descriptor.ImplType!.MakeGenericType(serviceType.GetGenericArguments()))!,
+                };
+                
+                TryAdd(d);
+            }
+            finally
+            {
+                Root.RwLock.ExitUpgradeableReadLock();
+            }
+            return GetService(serviceType);
+        }
+
+        if (descriptor.OpenGenericFactory is { } f)
+            return f.Invoke(this, serviceType.GetGenericArguments());
+
+        var implType = descriptor.ImplType!.MakeGenericType(serviceType.GetGenericArguments());
+        return TryCreateService(this, implType);
     }
 
-    private void SpecialService(IocDescriptor descriptor)
+    internal object? SetA(ConcurrentDictionary<IocDescriptor, ServiceInstanceProvider> dict, IocDescriptor descriptor)
     {
+        dict = TryGetDictFor(descriptor)!;
         
+        if (!dict.TryGetValue(descriptor, out var instanceProvider)) return null;
+        
+        return instanceProvider.Instance ?? Locke();
+            
+        object? Locke()
+        {
+            lock (instanceProvider)
+                return instanceProvider.Instance ??=
+                    descriptor.Factory?.Invoke(this) ?? TryCreateService(this, descriptor);
+        }
     }
+
+    internal static Type LazyOpenGenericType => typeof(Lazy<>);
+    internal static Type ListOpenGenericType => typeof(List<>);
+    internal static Type ListIOpenGenericType => typeof(IList<>);
+    internal static Type CollectionOpenGenericType => typeof(ICollection<>);
+    internal static Type EnumerableOpenGenericType => typeof(IEnumerable<>);
+    internal static Type EnumerableOfLazyOpenGenericType => EnumerableOpenGenericType.MakeGenericType(LazyOpenGenericType);
+    internal static Type LazyEnumerableOfLazyOpenGenericType => LazyOpenGenericType.MakeGenericType(EnumerableOfLazyOpenGenericType);
+    internal static Type LazyEnumerableOpenGenericType => LazyOpenGenericType.MakeGenericType(EnumerableOpenGenericType);
+    
+    internal static Type ListOfLazyOpenGenericType => ListOpenGenericType.MakeGenericType(LazyOpenGenericType);
+    internal static Type LazyListOfLazyOpenGenericType => LazyOpenGenericType.MakeGenericType(ListOfLazyOpenGenericType);
+    internal static Type LazyListOpenGenericType => LazyOpenGenericType.MakeGenericType(ListOpenGenericType);
+    
+    internal static Type ListIOfLazyOpenGenericType => ListIOpenGenericType.MakeGenericType(LazyOpenGenericType);
+    internal static Type LazyListIOfLazyOpenGenericType => LazyOpenGenericType.MakeGenericType(ListIOfLazyOpenGenericType);
+    internal static Type LazyListIOpenGenericType => LazyOpenGenericType.MakeGenericType(ListIOpenGenericType);
+    
+    internal static Type CollectionOfLazyOpenGenericType => CollectionOpenGenericType.MakeGenericType(LazyOpenGenericType);
+    internal static Type LazyCollectionOfLazyOpenGenericType => LazyOpenGenericType.MakeGenericType(CollectionOfLazyOpenGenericType);
+    internal static Type LazyCollectionOpenGenericType => LazyOpenGenericType.MakeGenericType(CollectionOpenGenericType);
+
+    private static Lazy<TGenericArgument> LazyFactory<TGenericArgument>(Func<object> factory) 
+        where TGenericArgument : notnull => 
+        new Lazy<TGenericArgument>(() => (TGenericArgument)factory());
+        // new Lazy<TGenericArgument>((Func<TGenericArgument>)factory);
+    
+    private static readonly MethodInfo LazyFactoryOpenGenericMethodInfo = 
+        ((Func<Func<object>, Lazy<int>>)LazyFactory<int>).GetMethodInfo().GetGenericMethodDefinition();
+
+    private static object? LazyFactory(Type genericArgument, Func<object?> factory) =>
+        LazyFactoryOpenGenericMethodInfo.MakeGenericMethod(genericArgument)
+            .Invoke(null, new object[] { factory });
+
+    private static List<T> ListFactory<T>(IEnumerable<object> items) => items.Cast<T>().ToList();
+    
+    private static readonly MethodInfo ListFactoryOpenGenericMethodInfo = 
+        ((Func<IEnumerable<object>, List<int>>)ListFactory<int>).GetMethodInfo().GetGenericMethodDefinition();
+    
+    private static object? ListFactory(Type genericArgument, IEnumerable<object?> items) =>
+        ListFactoryOpenGenericMethodInfo.MakeGenericMethod(genericArgument)
+            .Invoke(null, new object[] { items });
+
+    //     private static object? LazyFactory2(Type genericArgument, Func<object?> factory)
+//     {
+// #if !NETSTANDARD2_1_OR_GREATER && !NETCOREAPP1_0_OR_GREATER
+//         var parameters = new object[] { factory };
+// #else
+//         var parameters = SingleObjectArrayPool.Rent(1);
+//         parameters[0] = factory;
+//         // parameters = parameters.AsSpan(0, 1);
+//         // ReadOnlySpan<object> a = parameters.AsSpan(0, 1);
+//         // parameters = a;
+//
+//         // var b = System.Buffers.ArrayPool<object>.Create(1, 6);
+//         // var b = new System.Buffers.ArrayBufferWriter<object>(5);
+//         // b.GetMemory()
+//         try
+//         {
+// #endif
+//         return LazyFactoryOpenGenericMethodInfo.MakeGenericMethod(genericArgument)
+//             .Invoke(null, parameters);
+//             // .Invoke(null, new object[] { factory });
+//
+// #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP1_0_OR_GREATER
+//         }
+//         finally
+//         {
+//             SingleObjectArrayPool.Return(parameters);
+//         }
+// // #endif
+//     }
+//
+// // #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP1_0_OR_GREATER
+//     internal static readonly System.Buffers.ArrayPool<object> SingleObjectArrayPool =
+//         System.Buffers.ArrayPool<object>.Create(1, 6);
+// #else
+//     } //
+// #endif
+    
+    internal object? GetSpecialService([Pure] Type serviceType, [Pure] Type openGenericType)
+    {
+        // Func<Func<object>, Lazy<object>> a = CreateLazy<object>;
+        // Func<Func<object>, Lazy<IocDescriptor>> b = CreateLazy<IocDescriptor>;
+        if (serviceType.IsGenericParameter) return null;
+        
+        Type genericArgument;
+
+        // Lazy<TGenericArgument> CreateLazy<TGenericArgument>(Func<object> factory) where TGenericArgument : class =>
+        //     new Lazy<TGenericArgument>((Func<TGenericArgument>)factory);
+        
+        // todo change order of special type checks
+        // todo evaluate partially using compiled lambdas instead of using any Activator or LazyFactory,
+        // probably using LazyFactory (defined above) is fine; but Activator.CreateInstance definitely is not
+
+        if (LazyOpenGenericType.IsAssignableFrom(openGenericType))
+        {
+            genericArgument = serviceType.GetGenericArguments()[0];
+            // return Activator.CreateInstance(typeof(Lazy<>).MakeGenericType(genericArgument),
+            //     Convert.ChangeType(() => Convert.ChangeType(GetService(genericArgument), genericArgument), typeof(Func<>).MakeGenericType(genericArgument)));
+
+            // var ff = () => (object)"";
+            //
+            // var m = ff.GetMethodInfo().MakeGenericMethod(genericArgument);
+            // var d = m.CreateDelegate(typeof(Func<>).MakeGenericType(typeof(string)));
+            //
+            // var fft = () => ff.GetMethodInfo().MakeGenericMethod(genericArgument).CreateDelegate(ff.GetType());
+            
+            // return Activator.CreateInstance(typeof(Lazy<>).MakeGenericType(genericArgument),
+            //     new object[] { () => GetService(genericArgument) });
+            
+            // return Activator.CreateInstance(typeof(Lazy<>).MakeGenericType(genericArgument),
+            //     () => GetService(genericArgument));
+
+            // return LazyFactoryOpenGenericMethodInfo.MakeGenericMethod(genericArgument).Invoke(null, new object[] { () => GetService(genericArgument) });
+
+            return LazyFactory(genericArgument, () => GetService(genericArgument));
+        }
+
+        if (EnumerableOpenGenericType.IsAssignableFrom(openGenericType) ||
+            ListOpenGenericType.IsAssignableFrom(openGenericType) ||
+            ListIOpenGenericType.IsAssignableFrom(openGenericType) ||
+            CollectionOpenGenericType.IsAssignableFrom(openGenericType))
+        {
+            genericArgument = serviceType.GetGenericArguments()[0];
+            try
+            {
+                // todo probably EnterUpgradeableReadLock required, evaluate that, same for the other IEnumerable special types
+                // cause I forgot, it might - when recursively GetService e.g. for OpenGeneric type, it might create a descriptor
+                // this at least would or could trigger one level of recursion for ReaderWriterLock, which is why I proactively
+                // configured it with recursion enabled. There is at least one other place where it can recursively GetService
+                // which might do recursive EnterReadLock (not this one here)
+                Root.RwLock.EnterReadLock();
+                
+                // var enumerable = Root.Descriptors.Where(d => d.ServiceType == genericArgument)
+                //     .Select(GetServiceForDescriptor);
+                // var p = new object?[] { enumerable };
+                // var m = enumerable.Cast<object>;
+                // var enumerableT = (IEnumerable<object>)m.Method.GetGenericMethodDefinition().MakeGenericMethod(genericArgument).Invoke(null, p)!;
+                // var ml = enumerableT.ToList<object?>;
+                // return ml.Method.GetGenericMethodDefinition().MakeGenericMethod(genericArgument).Invoke(null, p);
+                
+                // return Root.Descriptors.Where(d => d.ServiceType == genericArgument)
+                //     .Select(GetServiceForDescriptor)
+                //     .ToList();
+                
+                return ListFactory(genericArgument, 
+                    Root.Descriptors.Where(d => d.ServiceType == genericArgument)
+                        // .Select(GetServiceForDescriptor));
+                        .Select(d => GetDescriptorActionType(d) switch
+                        {
+                            ActionType.CachedInstance => GetServiceForDescriptor(d),
+                            ActionType.Factory => GetServiceForDescriptor(d),
+                            ActionType.ImplType => d.ImplType!.IsGenericTypeDefinition
+                                ? TryGetOpenGenericService(d.ServiceType, d.ServiceType.GetGenericTypeDefinition())
+                                : GetServiceForDescriptor(d),
+                            ActionType.OpenGenericFactory => GetService(d.ServiceType),
+                            _ => null
+                        }));
+                
+                // var e = Root.Descriptors.Where(d => d.ServiceType == genericArgument)
+                //     .Select(GetServiceForDescriptor);
+                // var p = new object?[] { e };
+                // var m = e.Cast<object>;
+                // var enumerableT = (IEnumerable<object>)m.Method.GetGenericMethodDefinition().MakeGenericMethod(genericArgument).Invoke(null, p)!;
+                // var ml = enumerableT.ToArray<object?>;
+                // var a = (object[])ml.Method.GetGenericMethodDefinition().MakeGenericMethod(genericArgument).Invoke(null, p)!;
+                // var listType = typeof(List<>).MakeGenericType(genericArgument);
+                // var l = (List<object>)Activator.CreateInstance(listType, a.Length)!;
+                // l.AddRange(a);
+                // return l;
+            }
+            finally
+            {
+                Root.RwLock.ExitReadLock();
+            }
+        }
+
+        if (EnumerableOfLazyOpenGenericType.IsAssignableFrom(openGenericType) ||
+            ListOfLazyOpenGenericType.IsAssignableFrom(openGenericType) ||
+            ListIOfLazyOpenGenericType.IsAssignableFrom(openGenericType) ||
+            CollectionOfLazyOpenGenericType.IsAssignableFrom(openGenericType))
+        {
+            genericArgument = serviceType.GetGenericArguments()[0].GetGenericArguments()[0];
+            try
+            {
+                Root.RwLock.EnterReadLock();
+                return ListFactory(genericArgument,
+                    Root.Descriptors.Where(d => d.ServiceType == genericArgument).Select(d =>
+                        LazyFactory(genericArgument, () => GetServiceForDescriptor(d))));
+
+                // return Root.Descriptors.Where(d => d.ServiceType == genericArgument).Select(d =>
+                //     LazyFactory(genericArgument, () => GetServiceForDescriptor(d))).ToList();
+
+                // return Root.Descriptors.Where(d => d.ServiceType == genericArgument).Select(d =>
+                //     Activator.CreateInstance(typeof(Lazy<>).MakeGenericType(genericArgument),
+                //         () => GetServiceForDescriptor(d))).ToList();
+            }
+            finally
+            {
+                Root.RwLock.ExitReadLock();
+            }
+        }
+        
+        Type t;
+        if ((t = LazyEnumerableOfLazyOpenGenericType).IsAssignableFrom(openGenericType) ||
+            (t = LazyListOfLazyOpenGenericType).IsAssignableFrom(openGenericType) ||
+            (t = LazyListIOfLazyOpenGenericType).IsAssignableFrom(openGenericType) ||
+            (t = LazyCollectionOfLazyOpenGenericType).IsAssignableFrom(openGenericType))
+        {
+            genericArgument = serviceType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0];
+            return LazyFactory(t.MakeGenericType(genericArgument).GetGenericArguments()[0], () =>
+            {
+                try
+                {
+                    Root.RwLock.EnterReadLock();
+                    return ListFactory(genericArgument,
+                        Root.Descriptors.Where(d => d.ServiceType == genericArgument)
+                            .Select(d => LazyFactory(genericArgument, () => GetServiceForDescriptor(d))));
+
+                    // return Root.Descriptors.Where(d => d.ServiceType == genericArgument).Select(d =>
+                    //     LazyFactory(genericArgument, () => GetServiceForDescriptor(d))).ToList();
+                }
+                finally
+                {
+                    Root.RwLock.ExitReadLock();
+                }
+            });
+
+            // genericArgument = serviceType.GetGenericArguments()[0].GetGenericArguments()[0].GetGenericArguments()[0];
+            // return Activator.CreateInstance(t.MakeGenericType(genericArgument), () =>
+            // {
+            //     try
+            //     {
+            //         Root.RwLock.EnterReadLock();
+            //         return Root.Descriptors.Where(d => d.ServiceType == genericArgument).Select(d =>
+            //             Activator.CreateInstance(typeof(Lazy<>).MakeGenericType(genericArgument),
+            //                 () => GetServiceForDescriptor(d))).ToList();
+            //     }
+            //     finally
+            //     {
+            //         Root.RwLock.ExitReadLock();
+            //     }
+            // });
+        }
+
+        if ((t = LazyEnumerableOpenGenericType).IsAssignableFrom(openGenericType) ||
+            (t = LazyListOpenGenericType).IsAssignableFrom(openGenericType) ||
+            (t = LazyListIOpenGenericType).IsAssignableFrom(openGenericType) ||
+            (t = LazyCollectionOpenGenericType).IsAssignableFrom(openGenericType))
+        {
+            genericArgument = serviceType.GetGenericArguments()[0].GetGenericArguments()[0];
+            return LazyFactory(t.MakeGenericType(genericArgument).GetGenericArguments()[0], () =>
+            {
+                try
+                {
+                    Root.RwLock.EnterReadLock();
+                    return ListFactory(genericArgument,
+                        Root.Descriptors.Where(d => d.ServiceType == genericArgument)
+                            .Select(GetServiceForDescriptor));
+                    
+                    // return Root.Descriptors.Where(d => d.ServiceType == genericArgument)
+                    //     .Select(GetServiceForDescriptor)
+                    //     .ToList();
+                }
+                finally
+                {
+                    Root.RwLock.ExitReadLock();
+                }
+            });
+            
+            // genericArgument = serviceType.GetGenericArguments()[0].GetGenericArguments()[0];
+            // return Activator.CreateInstance(t.MakeGenericType(genericArgument), () =>
+            // {
+            //     try
+            //     {
+            //         Root.RwLock.EnterReadLock();
+            //         return Root.Descriptors.Where(d => d.ServiceType == genericArgument)
+            //             .Select(GetServiceForDescriptor)
+            //             .ToList();
+            //     }
+            //     finally
+            //     {
+            //         Root.RwLock.ExitReadLock();
+            //     }
+            // });
+        }
+        
+        return null;
+    }
+    
+    // internal static readonly Type LazyOpenGenericType = typeof(Lazy<>);
+    // internal static readonly Type ListOpenGenericType = typeof(List<>);
+    // internal static readonly Type ListIOpenGenericType = typeof(IList<>);
+    // internal static readonly Type CollectionOpenGenericType = typeof(ICollection<>);
+    // internal static readonly Type EnumerableOpenGenericType = typeof(IEnumerable<>);
+    // internal static readonly Type EnumerableOfLazyOpenGenericType = EnumerableOpenGenericType.MakeGenericType(LazyOpenGenericType);
+    // internal static readonly Type LazyEnumerableOfLazyOpenGenericType = LazyOpenGenericType.MakeGenericType(EnumerableOfLazyOpenGenericType);
+    // internal static readonly Type LazyEnumerableOpenGenericType = LazyOpenGenericType.MakeGenericType(EnumerableOpenGenericType);
+    //
+    // internal static readonly Type ListOfLazyOpenGenericType = ListOpenGenericType.MakeGenericType(LazyOpenGenericType);
+    // internal static readonly Type LazyListOfLazyOpenGenericType = LazyOpenGenericType.MakeGenericType(ListOfLazyOpenGenericType);
+    // internal static readonly Type LazyListOpenGenericType = LazyOpenGenericType.MakeGenericType(ListOpenGenericType);
+    //
+    // internal static readonly Type ListIOfLazyOpenGenericType = ListIOpenGenericType.MakeGenericType(LazyOpenGenericType);
+    // internal static readonly Type LazyListIOfLazyOpenGenericType = LazyOpenGenericType.MakeGenericType(ListIOfLazyOpenGenericType);
+    // internal static readonly Type LazyListIOpenGenericType = LazyOpenGenericType.MakeGenericType(ListIOpenGenericType);
+    //
+    // internal static readonly Type CollectionOfLazyOpenGenericType = CollectionOpenGenericType.MakeGenericType(LazyOpenGenericType);
+    // internal static readonly Type LazyCollectionOfLazyOpenGenericType = LazyOpenGenericType.MakeGenericType(CollectionOfLazyOpenGenericType);
+    // internal static readonly Type LazyCollectionOpenGenericType = LazyOpenGenericType.MakeGenericType(CollectionOpenGenericType);
+
+    // private class GenericTest<T0, T1>
+    // {
+    //     internal object? GetSpecialService22([Pure] Type serviceType, [Pure] Type openGenericType)
+    //     {
+    //         var genericTestType = typeof(GenericTest<,>);
+    //         var enumerableOfGenericTestTypeType = typeof(IEnumerable<>).MakeGenericType(genericTestType);
+    //
+    //         if (LazyOpenGenericType.IsAssignableFrom(serviceType))
+    //         {
+    //         
+    //         } 
+    //         else if (EnumerableOpenGenericType.IsAssignableFrom(serviceType) || ListOpenGenericType.IsAssignableFrom(serviceType) || ListIOpenGenericType.IsAssignableFrom(serviceType) || CollectionOpenGenericType.IsAssignableFrom(serviceType))
+    //         {
+    //         
+    //         }
+    //         else if (EnumerableOfLazyOpenGenericType.IsAssignableFrom(serviceType) || ListOfLazyOpenGenericType.IsAssignableFrom(serviceType) || ListIOfLazyOpenGenericType.IsAssignableFrom(serviceType) || CollectionOfLazyOpenGenericType.IsAssignableFrom(serviceType))
+    //         {
+    //         
+    //         }
+    //         else if (LazyEnumerableOfLazyOpenGenericType.IsAssignableFrom(serviceType) || LazyListOfLazyOpenGenericType.IsAssignableFrom(serviceType) || LazyListIOfLazyOpenGenericType.IsAssignableFrom(serviceType) || LazyCollectionOfLazyOpenGenericType.IsAssignableFrom(serviceType))
+    //         {
+    //         
+    //         }
+    //         else if (LazyEnumerableOpenGenericType.IsAssignableFrom(serviceType) || LazyListOpenGenericType.IsAssignableFrom(serviceType) || LazyListIOpenGenericType.IsAssignableFrom(serviceType) || LazyCollectionOpenGenericType.IsAssignableFrom(serviceType))
+    //         {
+    //         
+    //         }
+    //
+    //
+    //
+    //         return null;
+    //     }
+    // }
+    
+    
+//     private const int MaxInnerGenericDepth = 5; // +1 cause one stored outside array
+// #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP1_0_OR_GREATER
+//     internal static readonly System.Buffers.ArrayPool<Type> TypeArrayPool =
+//         System.Buffers.ArrayPool<Type>.Create(MaxInnerGenericDepth, 5);
+// #endif
+//     
+//     internal object? GetSpecialService2([Pure] Type serviceType, [Pure] Type openGenericType)
+//     {
+// #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP1_0_OR_GREATER
+//         var buffer = TypeArrayPool.Rent(MaxInnerGenericDepth);
+// #else
+//         var buffer = new Type[MaxInnerGenericDepth];
+// #endif
+//         // The most insane loop concept in the light of the seven you could ever encounter:
+//         (Type type, int depth) mostInnerOpenGeneric = (openGenericType, 0);
+//         for ((Type? innerType, int depth) i = (InnerGeneric(serviceType), 1);
+//              i.innerType is not null && i.depth < MaxInnerGenericDepth;
+//              i = (InnerGeneric(serviceType), ++i.depth))
+//         {
+//             mostInnerOpenGeneric = i!;
+//             buffer[i.depth - 1] = i.innerType;
+//         }
+//
+//         if (mostInnerOpenGeneric.depth >= MaxInnerGenericDepth) return null;
+//
+//         for (int i = 0; i < buffer.Length && i < mostInnerOpenGeneric.depth; i++)
+//         {
+//             
+//         }
+//
+//         // var arr = new object[] { new object() };
+//         // // Span<object> a0 = stackalloc object[] { new object() };
+//         // Span<object> a = null;
+//         // ReadOnlySpan<object> b = null;
+//         // a = arr;
+//         // b = a;
+//         // ref var r = ref System.Runtime.InteropServices.MemoryMarshal.GetArrayDataReference(arr);
+//         
+//
+// #if NETSTANDARD2_1_OR_GREATER || NETCOREAPP1_0_OR_GREATER
+//         System.Buffers.ArrayPool<Type>.Shared.Return(buffer, false);
+// #endif
+//         
+//         
+//         // bool isEnumerable = mostInnerOpenGeneric.type == EnumerableOpenGenericType;
+//         //
+//         //
+//         // bool isTypeLazy = openGenericType == LazyOpenGenericType;
+//         //
+//         //
+//         // bool isTypeEnumerableOfLazy = openGenericType == EnumerableOfLazyOpenGenericType;
+//         //
+//         // bool isTypeLazyEnumerable = openGenericType == LazyEnumerableOpenGenericType;
+//         //
+//         // bool isTypeLazyEnumerableOfLazy = openGenericType == LazyEnumerableOfLazyOpenGenericType;
+//         
+//         if (serviceType.IsGenericTypeDefinition || !serviceType.IsGenericType) return null;
+//         openGenericType = serviceType.GetGenericTypeDefinition();
+//         return TryGetOpenGenericService(serviceType, openGenericType);
+//     }
+//
+//     internal Type? InnerGeneric([Pure] Type serviceType)
+//     {
+//         var genericArguments = serviceType.GetGenericArguments();
+//         return genericArguments.Length == 1 ? genericArguments[0] : null;
+//     }
+//
+//     internal void GetSpecialService(IocDescriptor descriptor)
+//     {
+//         
+//     }
     
     internal object? GetServiceForDescriptor(IocDescriptor descriptor) => 
         descriptor.Lifetime switch

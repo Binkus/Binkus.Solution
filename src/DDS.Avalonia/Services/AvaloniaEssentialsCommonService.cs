@@ -25,7 +25,7 @@ public class AvaloniaEssentialsCommonService : IAvaloniaEssentials
     {
         if (Globals.IsDesignMode) return default;
 
-        var topLevel = await _topLevelService.CurrentTopLevel();
+        var topLevel = await _topLevelService.GetCurrentTopLevelAsync();
         
         // var results = await (await _topLevel.Value).StorageProvider.OpenFilePickerAsync(
         var results = await topLevel.StorageProvider.OpenFilePickerAsync(

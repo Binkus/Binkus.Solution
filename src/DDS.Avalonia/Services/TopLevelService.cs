@@ -13,7 +13,7 @@ public class TopLevelService
     private const string TopLevelWindowExceptionMessage = $"TopLevel Window {ExceptionMessage}";
     private const string FailedMessage = " failed.";
     
-    public async Task<TopLevel> CurrentTopLevel()
+    public async Task<TopLevel> GetCurrentTopLevelAsync()
     {
         int count = 0;
         while(_currentTopLevel is null)
@@ -26,7 +26,7 @@ public class TopLevelService
                 if (tls != _services.GetRequiredService<TopLevelService>() || tls == this)
                     throw new InvalidOperationException(TopLevelExceptionMessage + FailedMessage);
                 await Console.Error.WriteLineAsync(TopLevelExceptionMessage);
-                return await tls.CurrentTopLevel();
+                return await tls.GetCurrentTopLevelAsync();
             }
             
             if (count == 10) await Task.Delay(16);
@@ -41,7 +41,7 @@ public class TopLevelService
     
     //
     
-    public async Task<Window> CurrentWindow()
+    public async Task<Window> GetCurrentWindowAsync()
     {
         if (Globals.IsClassicDesktopStyleApplicationLifetime is false)
         {
@@ -59,7 +59,7 @@ public class TopLevelService
                 if (tls != _services.GetRequiredService<TopLevelService>() || tls == this)
                     throw new InvalidOperationException(TopLevelWindowExceptionMessage + FailedMessage);
                 await Console.Error.WriteLineAsync(TopLevelWindowExceptionMessage);
-                return await tls.CurrentWindow();
+                return await tls.GetCurrentWindowAsync();
             }
             
             if (count == 10) await Task.Delay(16);

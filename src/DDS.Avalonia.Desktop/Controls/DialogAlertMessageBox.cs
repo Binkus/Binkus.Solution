@@ -24,7 +24,7 @@ public class DialogAlertMessageBox : AbstractAsyncDialogAlertMessageBox, IDialog
         if (Globals.IsDesignMode) return;
         
         var vm = new DialogViewModel(Services, dialogConfig);
-        var topLevelWindow = await vm.GetRequiredService<TopLevelService>().CurrentWindow();
+        var topLevelWindow = await vm.GetRequiredService<TopLevelService>().GetCurrentWindowAsync();
         // var dialogWindow = new DialogWindow(topLevelWindow) { DataContext = vm};
         var dialogWindow = new DialogWindow() { DataContext = vm};
 

@@ -13,7 +13,7 @@ using DDS.Core;
 using DDS.Core.Controls;
 using DDS.Core.Helper;
 using DDS.Core.Services;
-using DDS.Core.ViewModels;
+// using DDS.Core.ViewModels;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace DDS.Avalonia.Android

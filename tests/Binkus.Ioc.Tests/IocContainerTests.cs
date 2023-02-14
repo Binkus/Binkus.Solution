@@ -5,6 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using Xunit.Abstractions;
 
+#pragma warning disable CS0162
+
 namespace Binkus.Ioc.Tests;
 
 public sealed class IocContainerTests

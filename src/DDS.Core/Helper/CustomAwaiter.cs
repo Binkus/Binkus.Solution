@@ -1,7 +1,10 @@
+using System.Reactive.Concurrency;
 using System.Runtime.CompilerServices;
+using Microsoft.VisualStudio.Threading;
 
 namespace DDS.Core.Helper;
 
+[SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits")]
 public static class CustomAwaiterExtensions
 {
     
@@ -58,6 +61,7 @@ public interface ICustomAwaiter<out TResult> : ICustomAwaiter
     new TResult GetResult();
 }
 
+[SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits")]
 public class CustomDelegateTaskAwaiterBase<T>
     where T : Task
 {
@@ -68,11 +72,12 @@ public class CustomDelegateTaskAwaiterBase<T>
     public bool IsCompleted => _t.IsCompleted;
     public void GetResult() => _t.GetAwaiter().GetResult();
 
-    public void OnCompleted(Action continuation) => _t.ContinueWith(task => continuation);
+    public void OnCompleted(Action continuation) => _t.ContinueWith(task => continuation, TaskScheduler.Current);
 
-    public void UnsafeOnCompleted(Action continuation) => _t.ContinueWith(task => continuation);
+    public void UnsafeOnCompleted(Action continuation) => _t.ContinueWith(task => continuation, TaskScheduler.Current);
 }
 
+[SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits")]
 public readonly struct CustomDelegateTaskAwaiter : ICustomAwaiter
 {
     private readonly Task _task;
@@ -82,11 +87,12 @@ public readonly struct CustomDelegateTaskAwaiter : ICustomAwaiter
     public bool IsCompleted => _task.IsCompleted;
     public void GetResult() => _task.GetAwaiter().GetResult();
 
-    public void OnCompleted(Action continuation) => _task.ContinueWith(task => continuation);
+    public void OnCompleted(Action continuation) => _task.ContinueWith(task => continuation, TaskScheduler.Current);
 
-    public void UnsafeOnCompleted(Action continuation) => _task.ContinueWith(task => continuation);
+    public void UnsafeOnCompleted(Action continuation) => _task.ContinueWith(task => continuation, TaskScheduler.Current);
 }
 
+[SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits")]
 public readonly struct CustomDelegateTaskAwaiter<TResult> : ICustomAwaiter<TResult>
 {
     private readonly Task<TResult> _task;
@@ -96,13 +102,14 @@ public readonly struct CustomDelegateTaskAwaiter<TResult> : ICustomAwaiter<TResu
     public bool IsCompleted => _task.IsCompleted;
     public TResult GetResult() => _task.GetAwaiter().GetResult();
 
-    public void OnCompleted(Action continuation) => _task.ContinueWith(task => continuation);
+    public void OnCompleted(Action continuation) => _task.ContinueWith(task => continuation, TaskScheduler.Current);
 
-    public void UnsafeOnCompleted(Action continuation) => _task.ContinueWith(task => continuation);
+    public void UnsafeOnCompleted(Action continuation) => _task.ContinueWith(task => continuation, TaskScheduler.Current);
 }
 
 //
 
+[SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits")]
 public readonly struct CustomDelegateAwaiter : ICustomAwaiter
 {
     private readonly ICriticalNotifyCompletion _delegate;

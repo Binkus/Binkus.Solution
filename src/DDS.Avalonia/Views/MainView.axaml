@@ -143,7 +143,7 @@
             <!--     <WindowTransparencyLevel>Mica</WindowTransparencyLevel> -->
             <!--   </ComboBox.Items> -->
             <!-- </ComboBox> -->
-            <ComboBox x:Name="FlowDirection"
+            <ComboBox x:Name="NewFlowDirection"
                       HorizontalAlignment="Stretch"
                       SelectedIndex="0">
               <ComboBox.Items>

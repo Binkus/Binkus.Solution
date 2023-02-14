@@ -5,6 +5,8 @@ using System.Runtime.CompilerServices;
 
 namespace DDS.Core.Helper;
 
+[SuppressMessage("Style", "VSTHRD200:Use \"Async\" suffix for async methods")]
+[SuppressMessage("Usage", "VSTHRD003:Avoid awaiting foreign Tasks")]
 public static class Extensions
 {
     [MethodImpl(MethodImplOptions.AggressiveInlining)]

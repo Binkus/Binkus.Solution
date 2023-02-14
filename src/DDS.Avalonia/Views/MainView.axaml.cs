@@ -93,7 +93,7 @@ public sealed partial class MainView : BaseUserControl<MainViewModel>
                 // }
             // };
 
-            var flowDirections = this.Get<ComboBox>("FlowDirection");
+            var flowDirections = this.Get<ComboBox>("NewFlowDirection");
             flowDirections.SelectionChanged += (sender, e) =>
             {
                 if (flowDirections.SelectedItem is FlowDirection flowDirection)

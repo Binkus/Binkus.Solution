@@ -83,7 +83,7 @@ public interface IDialogAlertMessageBox
         public DialogConfigBuilder SetIcon()
         {
             throw new NotImplementedException();
-            return this;
+            // return this;
         }
     }
 }
@@ -113,6 +113,7 @@ public abstract class AbstractDialogAlertMessageBox : IDialogAlertMessageBox
     }
 }
 
+[SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits")]
 public abstract class AbstractAsyncDialogAlertMessageBox : IDialogAlertMessageBox
 {
     public void Show(IDialogAlertMessageBox.DialogConfigBuilder dialogConfig)

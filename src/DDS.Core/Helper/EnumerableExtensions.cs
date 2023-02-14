@@ -2,6 +2,7 @@ using System.Runtime.CompilerServices;
 
 namespace DDS.Core.Helper;
 
+[SuppressMessage("Style", "VSTHRD200:Use \"Async\" suffix for async methods")]
 public static class EnumerableExtensions
 {
     public static TaskAwaiter GetAwaiter(this IEnumerable<Task> tasks) => TryWhenAllAsync(tasks).GetAwaiter();

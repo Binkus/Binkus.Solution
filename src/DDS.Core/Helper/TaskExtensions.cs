@@ -3,6 +3,9 @@ using Microsoft.VisualStudio.Threading;
 
 namespace DDS.Core.Helper;
 
+[SuppressMessage("Usage", "VSTHRD003:Avoid awaiting foreign Tasks")]
+[SuppressMessage("Style", "VSTHRD200:Use \"Async\" suffix for async methods")]
+[SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits")]
 public static class TaskExtensions
 {
     public static async Task<ExceptionDispatchInfo?> TryAwaitAsync(this Task task, bool logToDebug = false)

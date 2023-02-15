@@ -57,10 +57,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <WarningsAsErrors>Nullable</WarningsAsErrors>
-<!--    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>-->
-<!--    <AnalysisLevel>7</AnalysisLevel>-->
-<!--    <AnalysisLevelStyle>7-all</AnalysisLevelStyle>-->
-<!--    <Features>strict</Features>-->
+    
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <AnalysisLevel>7</AnalysisLevel>
+    <AnalysisLevelStyle>7-all</AnalysisLevelStyle>
+    <Features>strict</Features>
+    
     <RootNamespace>Binkus</RootNamespace>
     <EmitCompilerGeneratedFiles>true</EmitCompilerGeneratedFiles>    
   </PropertyGroup>

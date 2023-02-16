@@ -123,6 +123,24 @@ public abstract partial class NavigationViewModelBase<TForViewModel> : ViewModel
         using var cmd = this.NavigateReactiveCommand(viewModelType, canExecute);
         return cmd.ExecuteIfExecutable();
     }
+    
+    // Navigation to routes
+    
+    public bool To(string route, IObservable<bool>? canExecute = default)
+    {
+        // using var cmd = NavigateReactiveCommand<TViewModel>(canExecute);
+        // return cmd.ExecuteIfExecutable();
+        
+        return true;
+    }
+    
+    public bool ResetTo(string route, IObservable<bool>? canExecute = default)
+    {
+        // using var cmd = NavigateAndResetReactiveCommand<TViewModel>(canExecute);
+        // return cmd.ExecuteIfExecutable();
+
+        return true;
+    }
 }
 
 // using DDS.Core.Helper; temp alternative:

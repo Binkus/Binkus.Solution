@@ -7,6 +7,117 @@ namespace DDS.Core.Helper;
 [SuppressMessage("Usage", "VSTHRD002:Avoid problematic synchronous waits")]
 public static class CustomAwaiterExtensions
 {
+    public static TaskAwaiter GetAwaiter(this TaskAwaiter taskAwaiter) => taskAwaiter;
+    public static TaskAwaiter<T> GetAwaiter<T>(this TaskAwaiter<T> taskAwaiter) => taskAwaiter;
+
+    
+    public static ConfiguredTaskAwaitable.ConfiguredTaskAwaiter GetAwaiter(
+        this ConfiguredTaskAwaitable.ConfiguredTaskAwaiter taskAwaiter) => taskAwaiter;
+    
+    public static ConfiguredTaskAwaitable<T>.ConfiguredTaskAwaiter GetAwaiter<T>(
+        this ConfiguredTaskAwaitable<T>.ConfiguredTaskAwaiter taskAwaiter) => taskAwaiter;
+    
+    public static ConfiguredValueTaskAwaitable.ConfiguredValueTaskAwaiter GetAwaiter(
+        this ConfiguredValueTaskAwaitable.ConfiguredValueTaskAwaiter taskAwaiter) => taskAwaiter;
+    
+    public static ConfiguredValueTaskAwaitable<T>.ConfiguredValueTaskAwaiter GetAwaiter<T>(
+        this ConfiguredValueTaskAwaitable<T>.ConfiguredValueTaskAwaiter taskAwaiter) => taskAwaiter;
+    
+    public static void GetResult(this ConfiguredTaskAwaitable taskAwaiter) => taskAwaiter.GetAwaiter().GetResult();
+    public static T GetResult<T>(this ConfiguredTaskAwaitable<T> taskAwaiter) => taskAwaiter.GetAwaiter().GetResult();
+    
+    public static void GetResult(this ConfiguredValueTaskAwaitable taskAwaiter) => taskAwaiter.GetAwaiter().GetResult();
+    public static T GetResult<T>(this ConfiguredValueTaskAwaitable<T> taskAwaiter) => taskAwaiter.GetAwaiter().GetResult();
+    
+    // public static ConfiguredTaskAwaitable GetAwaiter(this ConfiguredTaskAwaitable taskAwaiter) => taskAwaiter;
+
+    //
+    
+    public static void AwaitSync(this TaskAwaiter taskAwaiter) => taskAwaiter.GetResult();
+    public static T AwaitSync<T>(this TaskAwaiter<T> taskAwaiter) => taskAwaiter.GetResult();
+    
+    public static void AwaitSync(this ValueTaskAwaiter taskAwaiter) => taskAwaiter.GetResult();
+    public static T AwaitSync<T>(this ValueTaskAwaiter<T> taskAwaiter) => taskAwaiter.GetResult();
+    
+    public static void AwaitSync(this ConfiguredValueTaskAwaitable taskAwaiter) => taskAwaiter.GetResult();
+    public static T AwaitSync<T>(this ConfiguredValueTaskAwaitable<T> taskAwaiter) => taskAwaiter.GetResult();
+    
+    public static void AwaitSync(this ConfiguredTaskAwaitable taskAwaiter) => taskAwaiter.GetResult();
+    public static T AwaitSync<T>(this ConfiguredTaskAwaitable<T> taskAwaiter) => taskAwaiter.GetResult();
+    
+    //
+    
+    public static void AwaitSync(this ConfiguredTaskAwaitable.ConfiguredTaskAwaiter taskAwaiter)
+        => taskAwaiter.GetResult();
+    
+    public static T AwaitSync<T>(this ConfiguredTaskAwaitable<T>.ConfiguredTaskAwaiter taskAwaiter)
+        => taskAwaiter.GetResult();
+    
+    public static void AwaitSync(this ConfiguredValueTaskAwaitable.ConfiguredValueTaskAwaiter taskAwaiter)
+        => taskAwaiter.GetResult();
+    
+    public static T AwaitSync<T>(this ConfiguredValueTaskAwaitable<T>.ConfiguredValueTaskAwaiter taskAwaiter)
+        => taskAwaiter.GetResult();
+    
+    //
+    
+    public static void AwaitSync(this Task task) => task.GetAwaiter().GetResult();
+    public static T AwaitSync<T>(this Task<T> task) => task.GetAwaiter().GetResult();
+    
+    public static void AwaitSync(this ValueTask task) => task.GetAwaiter().GetResult();
+    public static T AwaitSync<T>(this ValueTask<T> task) => task.GetAwaiter().GetResult();
+    
+    //
+    
+    public static void AwaitSync(this JoinableTask task, CancellationToken cancellationToken = default)
+        => task.Join(cancellationToken);
+    public static T AwaitSync<T>(this JoinableTask<T> task, CancellationToken cancellationToken = default)
+        => task.Join(cancellationToken);
+    
+    //
+    
+    //
+    
+    public static void AwaitOn(this TaskAwaiter taskAwaiter, IScheduler scheduler) => taskAwaiter.GetResult();
+    public static T AwaitOn<T>(this TaskAwaiter<T> taskAwaiter, IScheduler scheduler) => taskAwaiter.GetResult();
+    
+    public static void AwaitOn(this ValueTaskAwaiter taskAwaiter, IScheduler scheduler) => taskAwaiter.GetResult();
+    public static T AwaitOn<T>(this ValueTaskAwaiter<T> taskAwaiter, IScheduler scheduler) => taskAwaiter.GetResult();
+    
+    public static void AwaitOn(this ConfiguredValueTaskAwaitable taskAwaiter, IScheduler scheduler) => taskAwaiter.GetResult();
+    public static T AwaitOn<T>(this ConfiguredValueTaskAwaitable<T> taskAwaiter, IScheduler scheduler) => taskAwaiter.GetResult();
+    
+    public static void AwaitOn(this ConfiguredTaskAwaitable taskAwaiter, IScheduler scheduler) => taskAwaiter.GetResult();
+    public static T AwaitOn<T>(this ConfiguredTaskAwaitable<T> taskAwaiter, IScheduler scheduler) => taskAwaiter.GetResult();
+    
+    //
+    
+    public static void AwaitOn(this ConfiguredTaskAwaitable.ConfiguredTaskAwaiter taskAwaiter, IScheduler scheduler)
+        => taskAwaiter.GetResult();
+    
+    public static T AwaitOn<T>(this ConfiguredTaskAwaitable<T>.ConfiguredTaskAwaiter taskAwaiter, IScheduler scheduler)
+        => taskAwaiter.GetResult();
+    
+    public static void AwaitOn(this ConfiguredValueTaskAwaitable.ConfiguredValueTaskAwaiter taskAwaiter, IScheduler scheduler)
+        => taskAwaiter.GetResult();
+    
+    public static T AwaitOn<T>(this ConfiguredValueTaskAwaitable<T>.ConfiguredValueTaskAwaiter taskAwaiter, IScheduler scheduler)
+        => taskAwaiter.GetResult();
+    
+    //
+    
+    public static void AwaitOn(this Task task, IScheduler scheduler) => task.GetAwaiter().GetResult();
+    public static T AwaitOn<T>(this Task<T> task, IScheduler scheduler) => task.GetAwaiter().GetResult();
+    
+    public static void AwaitOn(this ValueTask task, IScheduler scheduler) => task.GetAwaiter().GetResult();
+    public static T AwaitOn<T>(this ValueTask<T> task, IScheduler scheduler) => task.GetAwaiter().GetResult();
+    
+    //
+    
+    public static void AwaitOn(this JoinableTask task, IScheduler scheduler, CancellationToken cancellationToken = default)
+        => task.Join(cancellationToken);
+    public static T AwaitOn<T>(this JoinableTask<T> task, IScheduler scheduler, CancellationToken cancellationToken = default)
+        => task.Join(cancellationToken);
     
 }
 

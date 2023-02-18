@@ -1,5 +1,7 @@
 using System.ComponentModel.DataAnnotations;
+using System.Runtime.ExceptionServices;
 using System.Text.RegularExpressions;
+using Binkus.ReactiveMvvm;
 using DDS.Core.Helper;
 using DDS.Core.Services;
 using Microsoft.VisualStudio.Threading;
@@ -62,6 +64,7 @@ public sealed partial class LoginViewModel : ViewModel
     public class MySecretInitException : Exception { public MySecretInitException(string message = "") : base(message) { } }
     public class MySecretPrepareException : Exception { public MySecretPrepareException(string message = "") : base(message) { } }
     public class MySecretActivationException : Exception { public MySecretActivationException(string message = "") : base(message) { } }
+    public class MySecretActivationFinishingException : Exception { public MySecretActivationFinishingException(string message = "") : base(message) { } }
 
     protected override async Task InitializeAsync(CancellationToken cancellationToken)
     {
@@ -107,8 +110,16 @@ public sealed partial class LoginViewModel : ViewModel
     protected override void OnActivationFinishing(CompositeDisposable disposables, CancellationToken cancellationToken)
     {
         Console.WriteLine("void OnActivationFinishing");
+        throw new MySecretActivationFinishingException("Evil OnActivationFinishing");
     }
-    
+
+    protected override Task OnExceptionAsync(InitializableExceptionSource initializableExceptionSource, ExceptionDispatchInfo exceptionDispatchInfo, CompositeDisposable? disposables,
+        CancellationToken cancellationToken)
+    {
+        // return base.OnExceptionAsync(initializableExceptionSource, exceptionDispatchInfo, disposables, cancellationToken);
+        return Task.CompletedTask;
+    }
+
     //
 
     protected override void OnDeactivation()
